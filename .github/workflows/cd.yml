@@ -1,12 +1,11 @@
-name: CD # Continuous Deployment
+name: CD
 
 on:
   push:
     tags:
-      - '[v]?[0-9]+.[0-9]+.[0-9]+'
+      - "[v]?[0-9]+.[0-9]+.[0-9]+"
 
 jobs:
-
   publish:
     name: Publishing for ${{ matrix.job.os }}
     runs-on: ${{ matrix.job.os }}

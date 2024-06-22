@@ -1,0 +1,69 @@
+mod decoder;
+mod packbits;
+mod zeroruns;
+
+use image::DynamicImage;
+
+pub use decoder::{DecodeError, Decoder};
+pub(crate) use packbits::PackBitsReader;
+pub(crate) use zeroruns::ZeroRunsReader;
+
+#[derive(Clone, Debug)]
+pub struct SpriteSheet {
+    pub texture: DynamicImage,
+    pub atlas_layout: AtlasLayout,
+    pub frames: Vec<Frame>,
+}
+
+/// Provides information about how the sprite sheet is laid out.
+#[derive(Clone, Debug)]
+pub struct AtlasLayout {
+    pub tile_size: (u16, u16),
+    pub columns: usize,
+    pub rows: usize,
+    pub padding: Option<(u16, u16)>,
+    pub offset: Option<(u16, u16)>,
+}
+
+#[derive(Clone, Debug)]
+pub struct Frame {
+    pub frame_type: FrameType,
+    pub x: i16,
+    pub y: i16,
+    pub width: u16,
+    pub height: u16,
+}
+
+/// Provides information about how to interpret a frame image.
+#[derive(Clone, Debug, PartialEq)]
+#[repr(u8)]
+pub enum FrameType {
+    /// Indicates the frame is a repeat of a previous frame.
+    FrameTypeRepeat,
+    // Indicates the frame should be flipped horizontally.
+    FrameTypeFlipHorizontally,
+    // Indicates the frame should be flipped vertically.
+    FrameTypeFlipVertically,
+    // Indicates the frame should be flipped horizontally and vertically.
+    FrameTypeFlipHorizontallyAndVertically,
+    // Indicates a normal frame.
+    FrameTypeNormal,
+    // Indicates the frame is empty.
+    // There is no frame or palette data associated with the frame.
+    // The frame's width and height are 0.
+    FrameTypeEmpty,
+}
+
+impl From<u8> for FrameType {
+    fn from(value: u8) -> Self {
+        match value {
+            0 => FrameType::FrameTypeRepeat,
+            1 => FrameType::FrameTypeFlipHorizontally,
+            2 => FrameType::FrameTypeFlipVertically,
+            3 => FrameType::FrameTypeFlipHorizontallyAndVertically,
+            4 => FrameType::FrameTypeNormal,
+            5 => FrameType::FrameTypeEmpty,
+            _ => panic!("invalid frame type"),
+        }
+    }
+}
