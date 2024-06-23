@@ -1,4 +1,4 @@
-name: CI # Continuous Integration
+name: CI
 
 on:
   push:
@@ -7,9 +7,8 @@ on:
   pull_request:
 
 jobs:
-
   test:
-    name: Test Suite
+    name: Test suite
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -17,8 +16,21 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
+      - name: Set up Dark Omen game files cache
+        uses: actions/cache@v4
+        id: cache
+        with:
+          path: DARKOMEN
+          key: ${{ runner.os }}-darkomen-game-files-v0.1.0-bump2
+      - name: Download Dark Omen game files for testing
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          curl -L -o DARKOMEN.zip -H 'Authorization: token ${{ secrets.DARKOMEN_GAME_FILES_PAT }}' -H 'Accept: application/octet-stream' -L https://api.github.com/repos/mgi388/darkomen-game-files/releases/assets/175295196
+          unzip -qq DARKOMEN.zip -d ./
       - name: Run tests
-        run: cargo test --all-features --workspace
+        run: |
+          export DARKOMEN_PATH=$(pwd)/DARKOMEN
+          cargo test --all-features --workspace
 
   rustfmt:
     name: Rustfmt
@@ -61,4 +73,3 @@ jobs:
         env:
           RUSTDOCFLAGS: -D warnings
         run: cargo doc --no-deps --document-private-items --all-features --workspace --examples
-
