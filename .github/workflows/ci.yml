@@ -26,6 +26,7 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
           curl -L -o DARKOMEN.zip -H 'Authorization: token ${{ secrets.DARKOMEN_GAME_FILES_PAT }}' -H 'Accept: application/octet-stream' -L https://api.github.com/repos/mgi388/darkomen-game-files/releases/assets/175295196
+          rm -rf ./DARKOMEN
           unzip -qq DARKOMEN.zip -d ./
       - name: Run tests
         run: |
