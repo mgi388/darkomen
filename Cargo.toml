@@ -7,7 +7,7 @@ repository = "https://github.com/mgi388/darkomen"
 license = "MIT OR Apache-2.0"
 
 [dependencies]
-bitflags = "2.3"
+bitflags = { version = "2.3", features = ["serde"] }
 glam = { version = "0.27.0", default-features = false, features = ["serde"] }
 image = "0.25.1"
 indexmap = { version = "2.2.6", features = ["serde"] }

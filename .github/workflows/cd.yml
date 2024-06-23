@@ -69,7 +69,7 @@ jobs:
           toolchain: ${{ matrix.rust }}
           args: --release --target ${{ matrix.job.target }}
 
-      - name: install strip command
+      - name: Install strip command
         shell: bash
         run: |
           if [[ ${{ matrix.job.target }} == aarch64-unknown-linux-gnu ]]; then
