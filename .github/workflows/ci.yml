@@ -21,7 +21,7 @@ jobs:
         id: cache
         with:
           path: DARKOMEN
-          key: ${{ runner.os }}-darkomen-game-files-v0.1.0-bump2
+          key: ${{ runner.os }}-darkomen-game-files-v0.1.0
       - name: Download Dark Omen game files for testing
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
