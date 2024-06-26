@@ -1,3 +1,4 @@
+pub mod army;
 pub mod battle;
 pub mod graphics;
 pub mod light;
