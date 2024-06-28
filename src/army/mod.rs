@@ -48,7 +48,7 @@ pub struct Regiment {
     /// - 0x00 (decimal 0) is good.
     /// - 0x40 (decimal 64) is neutral.
     /// - 0x80 (decimal 128) is evil.
-    pub alignment: u8,
+    pub alignment: RegimentAlignment,
     /// The regiment's type.
     pub typ: RegimentType,
     /// The regiment's race.
@@ -124,6 +124,14 @@ pub struct Regiment {
     unknown5: u8,
     unknown6: [u8; 4],
     unknown7: [u8; 12],
+}
+
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive)]
+pub enum RegimentAlignment {
+    Good = 0,
+    Neutral = 64,
+    Evil = 128,
 }
 
 #[repr(u8)]
