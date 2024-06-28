@@ -12,6 +12,7 @@ pub enum DecodeError {
     IoError(IoError),
     InvalidFormat(u32),
     InvalidString,
+    InvalidClass(u8),
 }
 
 impl std::error::Error for DecodeError {}
@@ -28,6 +29,7 @@ impl fmt::Display for DecodeError {
             DecodeError::IoError(e) => write!(f, "IO error: {}", e),
             DecodeError::InvalidFormat(format) => write!(f, "invalid format: {}", format),
             DecodeError::InvalidString => write!(f, "invalid string"),
+            DecodeError::InvalidClass(v) => write!(f, "invalid class: {}", v),
         }
     }
 }
@@ -181,6 +183,9 @@ impl<R: Read + Seek> Decoder<R> {
         let mut buf = vec![0; REGIMENT_BLOCK_SIZE];
         self.reader.read_exact(&mut buf)?;
 
+        let (typ, race) = Regiment::decode_class(buf[76])
+            .map_err(|_| -> DecodeError { DecodeError::InvalidClass(buf[76]) })?;
+
         Ok(Regiment {
             status: buf[0..2].try_into().unwrap(),
             unknown1: buf[2..4].try_into().unwrap(),
@@ -214,7 +219,8 @@ impl<R: Read + Seek> Decoder<R> {
             mount: buf[73],
             armor: buf[74],
             weapon: buf[75],
-            typ: buf[76],
+            typ,
+            race,
             point_value: buf[77],
             missile_weapon: buf[78],
             unknown5: buf[79],

@@ -118,7 +118,7 @@ impl<W: Write> Encoder<W> {
         self.writer.write_all(&[r.mount])?;
         self.writer.write_all(&[r.armor])?;
         self.writer.write_all(&[r.weapon])?;
-        self.writer.write_all(&[r.typ])?;
+        self.writer.write_all(&[r.encode_class()])?;
         self.writer.write_all(&[r.point_value])?;
         self.writer.write_all(&[r.missile_weapon])?;
         self.writer.write_all(&[r.unknown5])?;
