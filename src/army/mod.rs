@@ -1,7 +1,9 @@
 mod decoder;
 mod encoder;
 
+use num_enum::{IntoPrimitive, TryFromPrimitive, TryFromPrimitiveError};
 use serde::Serialize;
+use thiserror::Error;
 
 pub use decoder::{DecodeError, Decoder};
 pub use encoder::{EncodeError, Encoder};
@@ -47,11 +49,10 @@ pub struct Regiment {
     /// - 0x40 (decimal 64) is neutral.
     /// - 0x80 (decimal 128) is evil.
     alignment: u8,
-    /// A bitfield for the regiment's type and race.
-    ///
-    /// The lower 3 bits determine the race. The higher 5 bits determine the
-    /// regiment's type.
-    typ: u8,
+    /// The regiment's type.
+    typ: RegimentType,
+    /// The regiment's race.
+    race: RegimentRace,
     /// The index into the list of sprite file names found in ENGREL.EXE for the
     /// regiment's banner.
     banner_index: u16,
@@ -123,6 +124,64 @@ pub struct Regiment {
     unknown5: u8,
     unknown6: [u8; 4],
     unknown7: [u8; 12],
+}
+
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive)]
+pub enum RegimentType {
+    Unknown,
+    Infantry,
+    Cavalry,
+    Archers,
+    Artillery,
+    MagicUsers,
+    Monsters,
+    Chariots,
+    Misc,
+}
+
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive)]
+pub enum RegimentRace {
+    Human,
+    WoodElf,
+    Dwarf,
+    NightGoblin,
+    Orc,
+    Undead,
+    Townsfolk,
+    Ogre, // TODO: The Imperial Steam Tank sits under this so maybe a different name.
+}
+
+impl Regiment {
+    /// Decodes the regiment's class into the type and race components.
+    ///
+    /// The regiment's class is a single byte that encodes both the regiment
+    /// type and the regiment race.
+    ///
+    /// The lower 3 bits of the byte determine the race. The higher 5 bits
+    /// determine the regiment's type.
+    pub fn decode_class(value: u8) -> Result<(RegimentType, RegimentRace), DecodeClassError> {
+        let regiment_type =
+            RegimentType::try_from(value >> 3).map_err(DecodeClassError::InvalidType)?;
+        let regiment_race =
+            RegimentRace::try_from(value & 0x07).map_err(DecodeClassError::InvalidRace)?;
+        Ok((regiment_type, regiment_race))
+    }
+
+    pub fn encode_class(&self) -> u8 {
+        let typ: u8 = self.typ.into();
+        let race: u8 = self.race.into();
+        (typ << 3) | (race & 0x07) // use 5 bits for typ and 3 bits for race
+    }
+}
+
+#[derive(Error, Debug)]
+pub enum DecodeClassError {
+    #[error(transparent)]
+    InvalidType(#[from] TryFromPrimitiveError<RegimentType>),
+    #[error(transparent)]
+    InvalidRace(#[from] TryFromPrimitiveError<RegimentRace>),
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -247,11 +306,19 @@ mod tests {
         assert_eq!(a.large_banner_path, "[BOOKS]\\hlban.spr");
         assert_eq!(a.regiments.len(), 4);
         assert_eq!(a.regiments[0].name, "Grudgebringer Cavalry");
+        assert_eq!(a.regiments[0].typ, RegimentType::Cavalry);
+        assert_eq!(a.regiments[0].race, RegimentRace::Human);
         assert_eq!(a.regiments[0].leader.name, "Morgan Bernhardt");
         assert_eq!(a.regiments[0].mount, 1);
         assert_eq!(a.regiments[1].name, "Grudgebringer Infantry");
+        assert_eq!(a.regiments[1].typ, RegimentType::Infantry);
+        assert_eq!(a.regiments[1].race, RegimentRace::Human);
         assert_eq!(a.regiments[2].name, "Grudgebringer Crossbows");
+        assert_eq!(a.regiments[2].typ, RegimentType::Archers);
+        assert_eq!(a.regiments[2].race, RegimentRace::Human);
         assert_eq!(a.regiments[3].name, "Grudgebringer Cannon");
+        assert_eq!(a.regiments[3].typ, RegimentType::Artillery);
+        assert_eq!(a.regiments[3].race, RegimentRace::Human);
 
         roundtrip_test(&original_bytes, &a);
     }

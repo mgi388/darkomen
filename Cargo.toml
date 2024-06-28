@@ -13,8 +13,10 @@ encoding_rs_io = "0.1.7"
 glam = { version = "0.27.0", default-features = false, features = ["serde"] }
 image = "0.25.1"
 indexmap = { version = "2.2.6", features = ["serde"] }
+num_enum = "0.7.2"
 rand = "0.8.5"
 serde = { version = "1", features = ["derive"] }
+thiserror = "1.0.61"
 
 [dev-dependencies]
 pretty_assertions = "1.4.0"
