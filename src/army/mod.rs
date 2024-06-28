@@ -34,47 +34,47 @@ pub struct Army {
 
 #[derive(Debug, Clone, Serialize)]
 pub struct Regiment {
-    status: [u8; 2],
-    id: u16,
+    pub status: [u8; 2],
+    pub id: u16,
 
     /// The name of the regiment, e.g. "Grudgebringer Cavalry", "Zombies #1",
     /// "Imperial Steam Tank".
-    name: String,
+    pub name: String,
 
-    name_id: u16,
+    pub name_id: u16,
 
     /// The regiment's alignment to good or evil.
     ///
     /// - 0x00 (decimal 0) is good.
     /// - 0x40 (decimal 64) is neutral.
     /// - 0x80 (decimal 128) is evil.
-    alignment: u8,
+    pub alignment: u8,
     /// The regiment's type.
-    typ: RegimentType,
+    pub typ: RegimentType,
     /// The regiment's race.
-    race: RegimentRace,
+    pub race: RegimentRace,
     /// The index into the list of sprite file names found in ENGREL.EXE for the
     /// regiment's banner.
-    banner_index: u16,
+    pub banner_index: u16,
     /// The index into the list of sprite file names found in ENGREL.EXE for the
     /// regiment's troop sprite.
-    sprite_index: u16,
+    pub sprite_index: u16,
     /// The maximum number of troops allowed in this regiment.
-    max_troops: u8,
+    pub max_troops: u8,
     /// The number of troops currently alive in this regiment.
-    alive_troops: u8,
+    pub alive_troops: u8,
 
-    ranks: u8,
-    regiment_attributes: [u8; 4],
-    troop_attributes: TroopAttributes,
-    mount: u8,
-    armor: u8,
-    weapon: u8,
-    point_value: u8,
-    missile_weapon: u8,
+    pub ranks: u8,
+    pub regiment_attributes: [u8; 4],
+    pub troop_attributes: TroopAttributes,
+    pub mount: u8,
+    pub armor: u8,
+    pub weapon: u8,
+    pub point_value: u8,
+    pub missile_weapon: u8,
 
     /// The regiment's leader.
-    leader: Leader,
+    pub leader: Leader,
     /// A number that represents the regiment's total experience.
     ///
     /// It is a number between 0 and 6000. If experience is <1000 then the
@@ -82,13 +82,13 @@ pub struct Regiment {
     /// the regiment has a threat level of 2. If experience >= 3000 and <6000
     /// then the regiment has a threat level of 3. If experience >= 6000 then
     /// the regiment has a threat level of 4.
-    experience: u16,
+    pub experience: u16,
     /// The regiment's minimum or base level of armor.
     ///
     /// This is displayed as the gold shields in the troop roster.
-    min_armor: u8,
+    pub min_armor: u8,
     /// The regiment's maximum level of armor.
-    max_armor: u8,
+    pub max_armor: u8,
     /// The magic book that is equipped to the regiment. A magic book is one of
     /// the magic items.
     ///
@@ -98,24 +98,24 @@ pub struct Regiment {
     /// A value of 22 means the Bright Book is equipped. A value of 23 means the
     /// Ice Book is equipped. A value of 65535 means the regiment does not have
     /// a magic book slot—only magic users can equip magic books.
-    magic_book: u16,
+    pub magic_book: u16,
     /// A list of magic items that are equipped to the regiment.
     ///
     /// Each magic item is an index into the list of magic items. A value of 1
     /// means the Grudgebringer Sword is equipped in that slot. A value of 65535
     /// means the regiment does not have anything equipped in that slot.
-    magic_items: [u16; 3],
+    pub magic_items: [u16; 3],
 
-    cost: u16,
+    pub cost: u16,
 
-    wizard_type: u8,
+    pub wizard_type: u8,
 
-    duplicate_id: u8,
-    purchased_armor: u8,
-    max_purchasable_armor: u8,
-    repurchased_troops: u8,
-    max_purchasable_troops: u8,
-    book_profile: [u8; 4],
+    pub duplicate_id: u8,
+    pub purchased_armor: u8,
+    pub max_purchasable_armor: u8,
+    pub repurchased_troops: u8,
+    pub max_purchasable_troops: u8,
+    pub book_profile: [u8; 4],
 
     unknown1: [u8; 2],
     unknown2: [u8; 2],
@@ -186,40 +186,40 @@ pub enum DecodeClassError {
 
 #[derive(Debug, Clone, Serialize)]
 pub struct TroopAttributes {
-    movement: u8,
-    weapon_skill: u8,
-    ballistic_skill: u8,
-    strength: u8,
-    toughness: u8,
-    wounds: u8,
-    initiative: u8,
-    attacks: u8,
-    leadership: u8,
+    pub movement: u8,
+    pub weapon_skill: u8,
+    pub ballistic_skill: u8,
+    pub strength: u8,
+    pub toughness: u8,
+    pub wounds: u8,
+    pub initiative: u8,
+    pub attacks: u8,
+    pub leadership: u8,
 }
 
 #[derive(Debug, Clone, Serialize)]
 pub struct Leader {
     /// The name of the leader.
-    name: String,
+    pub name: String,
     /// There are some bytes after the null-terminated string. Not sure what
     /// they are for.
     name_remainder: Vec<u8>,
     /// The index into the list of sprite file names found in ENGREL.EXE for the
     /// leader's sprite.
-    sprite_index: u16,
+    pub sprite_index: u16,
 
-    attributes: TroopAttributes,
-    mount: u8,
-    armor: u8,
-    weapon: u8,
-    unit_type: u8,
-    point_value: u8,
-    missile_weapon: u8,
+    pub attributes: TroopAttributes,
+    pub mount: u8,
+    pub armor: u8,
+    pub weapon: u8,
+    pub unit_type: u8,
+    pub point_value: u8,
+    pub missile_weapon: u8,
     unknown1: [u8; 4],
     /// The leader's 3D head ID.
-    head_id: u16,
-    x: [u8; 4],
-    y: [u8; 4],
+    pub head_id: u16,
+    pub x: [u8; 4],
+    pub y: [u8; 4],
 }
 
 #[cfg(test)]
