@@ -87,6 +87,8 @@ impl<W: Write> Encoder<W> {
     }
 
     fn write_regiment(&mut self, r: &Regiment) -> Result<(), EncodeError> {
+        let alignment: u8 = r.alignment.into();
+
         self.writer.write_all(&r.status)?;
         self.writer.write_all(&r.unknown1)?;
         self.writer.write_all(&r.id.to_le_bytes())?;
@@ -100,7 +102,7 @@ impl<W: Write> Encoder<W> {
         self.writer.write_all(&r.sprite_index.to_le_bytes())?;
         self.write_string_with_limit(&r.name, 32)?;
         self.writer.write_all(&r.name_id.to_le_bytes())?;
-        self.writer.write_all(&[r.alignment])?;
+        self.writer.write_all(&[alignment])?;
         self.writer.write_all(&[r.max_troops])?;
         self.writer.write_all(&[r.alive_troops])?;
         self.writer.write_all(&[r.ranks])?;

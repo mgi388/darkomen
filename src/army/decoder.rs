@@ -12,7 +12,8 @@ pub enum DecodeError {
     IoError(IoError),
     InvalidFormat(u32),
     InvalidString,
-    InvalidClass(u8),
+    InvalidRegimentAlignment(u8),
+    InvalidRegimentClass(u8),
 }
 
 impl std::error::Error for DecodeError {}
@@ -29,7 +30,10 @@ impl fmt::Display for DecodeError {
             DecodeError::IoError(e) => write!(f, "IO error: {}", e),
             DecodeError::InvalidFormat(format) => write!(f, "invalid format: {}", format),
             DecodeError::InvalidString => write!(f, "invalid string"),
-            DecodeError::InvalidClass(v) => write!(f, "invalid class: {}", v),
+            DecodeError::InvalidRegimentAlignment(v) => {
+                write!(f, "invalid regiment alignment: {}", v)
+            }
+            DecodeError::InvalidRegimentClass(v) => write!(f, "invalid regiment class: {}", v),
         }
     }
 }
@@ -183,8 +187,11 @@ impl<R: Read + Seek> Decoder<R> {
         let mut buf = vec![0; REGIMENT_BLOCK_SIZE];
         self.reader.read_exact(&mut buf)?;
 
+        let alignment = RegimentAlignment::try_from(buf[56])
+            .map_err(|_| DecodeError::InvalidRegimentAlignment(buf[56]))?;
+
         let (typ, race) = Regiment::decode_class(buf[76])
-            .map_err(|_| -> DecodeError { DecodeError::InvalidClass(buf[76]) })?;
+            .map_err(|_| -> DecodeError { DecodeError::InvalidRegimentClass(buf[76]) })?;
 
         Ok(Regiment {
             status: buf[0..2].try_into().unwrap(),
@@ -200,7 +207,7 @@ impl<R: Read + Seek> Decoder<R> {
             sprite_index: u16::from_le_bytes(buf[20..22].try_into().unwrap()),
             name: self.read_string(&buf[22..54])?,
             name_id: u16::from_le_bytes(buf[54..56].try_into().unwrap()),
-            alignment: buf[56],
+            alignment,
             max_troops: buf[57],
             alive_troops: buf[58],
             ranks: buf[59],
