@@ -90,6 +90,7 @@ impl<W: Write> Encoder<W> {
 
     fn write_regiment(&mut self, r: &Regiment) -> Result<(), EncodeError> {
         let alignment: u8 = r.alignment.into();
+        let mount: u8 = r.mount.into();
 
         self.writer.write_all(&r.status)?;
         self.writer.write_all(&r.unknown1)?;
@@ -119,7 +120,7 @@ impl<W: Write> Encoder<W> {
         self.writer.write_all(&[r.troop_attributes.initiative])?;
         self.writer.write_all(&[r.troop_attributes.attacks])?;
         self.writer.write_all(&[r.troop_attributes.leadership])?;
-        self.writer.write_all(&[r.mount])?;
+        self.writer.write_all(&[mount])?;
         self.writer.write_all(&[r.armor])?;
         self.writer.write_all(&[r.weapon])?;
         self.writer.write_all(&[r.encode_class()])?;
