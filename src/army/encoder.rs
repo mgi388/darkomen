@@ -91,6 +91,7 @@ impl<W: Write> Encoder<W> {
     fn write_regiment(&mut self, r: &Regiment) -> Result<(), EncodeError> {
         let alignment: u8 = r.alignment.into();
         let mount: u8 = r.mount.into();
+        let magic_book: u16 = r.magic_book.into();
 
         self.writer.write_all(&r.status)?;
         self.writer.write_all(&r.unknown1)?;
@@ -155,7 +156,7 @@ impl<W: Write> Encoder<W> {
         self.writer.write_all(&r.experience.to_le_bytes())?;
         self.writer.write_all(&[r.duplicate_id])?;
         self.writer.write_all(&[r.min_armor])?;
-        self.writer.write_all(&r.magic_book.to_le_bytes())?;
+        self.writer.write_all(&magic_book.to_le_bytes())?;
         self.writer.write_all(&r.magic_items[0].to_le_bytes())?;
         self.writer.write_all(&r.magic_items[1].to_le_bytes())?;
         self.writer.write_all(&r.magic_items[2].to_le_bytes())?;
