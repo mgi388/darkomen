@@ -52,12 +52,14 @@ impl<W: Write> Encoder<W> {
     fn write_header(&mut self, army: &Army) -> Result<(), EncodeError> {
         // TODO: Ignoring save file header.
 
+        let race: u8 = army.race.into();
+
         self.writer.write_all(&FORMAT.to_le_bytes())?;
         self.writer
             .write_all(&(army.regiments.len() as u32).to_le_bytes())?;
         self.writer
             .write_all(&(REGIMENT_BLOCK_SIZE as u32).to_le_bytes())?;
-        self.writer.write_all(&[army.race])?;
+        self.writer.write_all(&[race])?;
         self.writer.write_all(&army.unknown1)?;
         self.writer.write_all(&army.unknown2)?;
         self.write_string(&army.small_banner_path)?;
