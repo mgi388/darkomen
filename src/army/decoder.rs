@@ -14,6 +14,7 @@ pub enum DecodeError {
     InvalidString,
     InvalidArmyRace(u8),
     InvalidRegimentAlignment(u8),
+    InvalidRegimentMount(u8),
     InvalidRegimentClass(u8),
 }
 
@@ -34,6 +35,9 @@ impl fmt::Display for DecodeError {
             DecodeError::InvalidArmyRace(v) => write!(f, "invalid army race: {}", v),
             DecodeError::InvalidRegimentAlignment(v) => {
                 write!(f, "invalid regiment alignment: {}", v)
+            }
+            DecodeError::InvalidRegimentMount(v) => {
+                write!(f, "invalid regiment mount: {}", v)
             }
             DecodeError::InvalidRegimentClass(v) => write!(f, "invalid regiment class: {}", v),
         }
@@ -194,7 +198,8 @@ impl<R: Read + Seek> Decoder<R> {
 
         let alignment = RegimentAlignment::try_from(buf[56])
             .map_err(|_| DecodeError::InvalidRegimentAlignment(buf[56]))?;
-
+        let mount = RegimentMount::try_from(buf[73])
+            .map_err(|_| DecodeError::InvalidRegimentMount(buf[73]))?;
         let (typ, race) = Regiment::decode_class(buf[76])
             .map_err(|_| -> DecodeError { DecodeError::InvalidRegimentClass(buf[76]) })?;
 
@@ -228,7 +233,7 @@ impl<R: Read + Seek> Decoder<R> {
                 attacks: buf[71],
                 leadership: buf[72],
             },
-            mount: buf[73],
+            mount,
             armor: buf[74],
             weapon: buf[75],
             typ,

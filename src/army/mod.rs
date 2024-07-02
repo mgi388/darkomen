@@ -78,7 +78,7 @@ pub struct Regiment {
     pub ranks: u8,
     pub regiment_attributes: [u8; 4],
     pub troop_attributes: TroopAttributes,
-    pub mount: u8,
+    pub mount: RegimentMount,
     pub armor: u8,
     pub weapon: u8,
     pub point_value: u8,
@@ -170,6 +170,14 @@ pub enum RegimentRace {
     Undead,
     Townsfolk,
     Ogre, // TODO: The Imperial Steam Tank sits under this so maybe a different name.
+}
+
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive)]
+pub enum RegimentMount {
+    None,
+    Horse,
+    Boar,
 }
 
 impl Regiment {
@@ -328,8 +336,8 @@ mod tests {
         assert_eq!(a.regiments[0].name, "Grudgebringer Cavalry");
         assert_eq!(a.regiments[0].typ, RegimentType::Cavalry);
         assert_eq!(a.regiments[0].race, RegimentRace::Human);
+        assert_eq!(a.regiments[0].mount, RegimentMount::Horse);
         assert_eq!(a.regiments[0].leader.name, "Morgan Bernhardt");
-        assert_eq!(a.regiments[0].mount, 1);
         assert_eq!(a.regiments[1].name, "Grudgebringer Infantry");
         assert_eq!(a.regiments[1].typ, RegimentType::Infantry);
         assert_eq!(a.regiments[1].race, RegimentRace::Human);
