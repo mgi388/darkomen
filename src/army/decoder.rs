@@ -16,6 +16,7 @@ pub enum DecodeError {
     InvalidRegimentAlignment(u8),
     InvalidRegimentMount(u8),
     InvalidRegimentClass(u8),
+    InvalidRegimentMagicBook(u16),
 }
 
 impl std::error::Error for DecodeError {}
@@ -40,6 +41,9 @@ impl fmt::Display for DecodeError {
                 write!(f, "invalid regiment mount: {}", v)
             }
             DecodeError::InvalidRegimentClass(v) => write!(f, "invalid regiment class: {}", v),
+            DecodeError::InvalidRegimentMagicBook(v) => {
+                write!(f, "invalid regiment magic book: {}", v)
+            }
         }
     }
 }
@@ -202,6 +206,9 @@ impl<R: Read + Seek> Decoder<R> {
             .map_err(|_| DecodeError::InvalidRegimentMount(buf[73]))?;
         let (typ, race) = Regiment::decode_class(buf[76])
             .map_err(|_| -> DecodeError { DecodeError::InvalidRegimentClass(buf[76]) })?;
+        let magic_book_u16 = u16::from_le_bytes(buf[160..162].try_into().unwrap());
+        let magic_book = RegimentMagicBook::try_from(magic_book_u16)
+            .map_err(|_| DecodeError::InvalidRegimentMagicBook(magic_book_u16))?;
 
         Ok(Regiment {
             status: buf[0..2].try_into().unwrap(),
@@ -271,7 +278,7 @@ impl<R: Read + Seek> Decoder<R> {
             experience: u16::from_le_bytes(buf[156..158].try_into().unwrap()),
             duplicate_id: buf[158],
             min_armor: buf[159],
-            magic_book: u16::from_le_bytes(buf[160..162].try_into().unwrap()),
+            magic_book,
             magic_items: [
                 u16::from_le_bytes(buf[162..164].try_into().unwrap()),
                 u16::from_le_bytes(buf[164..166].try_into().unwrap()),

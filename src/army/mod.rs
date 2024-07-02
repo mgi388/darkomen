@@ -109,7 +109,7 @@ pub struct Regiment {
     /// A value of 22 means the Bright Book is equipped. A value of 23 means the
     /// Ice Book is equipped. A value of 65535 means the regiment does not have
     /// a magic book slot—only magic users can equip magic books.
-    pub magic_book: u16,
+    pub magic_book: RegimentMagicBook,
     /// A list of magic items that are equipped to the regiment.
     ///
     /// Each magic item is an index into the list of magic items. A value of 1
@@ -178,6 +178,16 @@ pub enum RegimentMount {
     None,
     Horse,
     Boar,
+}
+
+#[repr(u16)]
+#[derive(Debug, Clone, Copy, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive)]
+pub enum RegimentMagicBook {
+    None = 65535,
+    BrightBook = 22,
+    IceBook = 23,
+    WaaaghBook = 24,
+    DarkBook = 25,
 }
 
 impl Regiment {
@@ -347,6 +357,30 @@ mod tests {
         assert_eq!(a.regiments[3].name, "Grudgebringer Cannon");
         assert_eq!(a.regiments[3].typ, RegimentType::Artillery);
         assert_eq!(a.regiments[3].race, RegimentRace::Human);
+
+        roundtrip_test(&original_bytes, &a);
+    }
+
+    #[test]
+    fn test_decode_b103mrc() {
+        let d: PathBuf = [
+            std::env::var("DARKOMEN_PATH").unwrap().as_str(),
+            "DARKOMEN",
+            "GAMEDATA",
+            "1PBAT",
+            "B1_03",
+            "B103MRC.ARM",
+        ]
+        .iter()
+        .collect();
+
+        let original_bytes = std::fs::read(d.clone()).unwrap();
+
+        let file = File::open(d).unwrap();
+        let a = Decoder::new(file).decode().unwrap();
+
+        assert_eq!(a.regiments[4].name, "Bright Wizard");
+        assert_eq!(a.regiments[4].magic_book, RegimentMagicBook::BrightBook);
 
         roundtrip_test(&original_bytes, &a);
     }
