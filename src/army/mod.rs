@@ -10,7 +10,7 @@ pub use encoder::{EncodeError, Encoder};
 
 #[derive(Debug, Clone, Serialize)]
 pub struct Army {
-    pub race: u8,
+    pub race: ArmyRace,
     unknown1: Vec<u8>,
     unknown2: Vec<u8>,
     pub regiments: Vec<Regiment>,
@@ -30,6 +30,17 @@ pub struct Army {
     pub gold_in_coffers: u16,
     pub magic_items: Vec<u8>,
     unknown3: Vec<u8>,
+}
+
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive)]
+pub enum ArmyRace {
+    Empire = 0,
+    EmpireMultiplayer = 1,
+    Greenskin = 2,
+    GreenskinMultiplayer = 3,
+    Undead = 4,
+    UndeadMultiplayer = 5,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -309,6 +320,7 @@ mod tests {
         let file = File::open(d).unwrap();
         let a = Decoder::new(file).decode().unwrap();
 
+        assert_eq!(a.race, ArmyRace::Empire);
         assert_eq!(a.small_banner_path, "[BOOKS]\\hshield.spr");
         assert_eq!(a.small_banner_disabled_path, "[BOOKS]\\hgban.spr");
         assert_eq!(a.large_banner_path, "[BOOKS]\\hlban.spr");

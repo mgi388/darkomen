@@ -12,6 +12,7 @@ pub enum DecodeError {
     IoError(IoError),
     InvalidFormat(u32),
     InvalidString,
+    InvalidArmyRace(u8),
     InvalidRegimentAlignment(u8),
     InvalidRegimentClass(u8),
 }
@@ -30,6 +31,7 @@ impl fmt::Display for DecodeError {
             DecodeError::IoError(e) => write!(f, "IO error: {}", e),
             DecodeError::InvalidFormat(format) => write!(f, "invalid format: {}", format),
             DecodeError::InvalidString => write!(f, "invalid string"),
+            DecodeError::InvalidArmyRace(v) => write!(f, "invalid army race: {}", v),
             DecodeError::InvalidRegimentAlignment(v) => {
                 write!(f, "invalid regiment alignment: {}", v)
             }
@@ -88,10 +90,13 @@ impl<R: Read + Seek> Decoder<R> {
 
         let header = self.read_header(start_pos)?;
 
+        let race = ArmyRace::try_from(header.race)
+            .map_err(|_| DecodeError::InvalidArmyRace(header.race))?;
+
         let regiments = self.read_regiments(&header)?;
 
         Ok(Army {
-            race: header.race,
+            race,
             unknown1: header.unknown1.to_vec(),
             unknown2: header.unknown2.to_vec(),
             regiments,
