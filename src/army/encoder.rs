@@ -44,14 +44,14 @@ impl<W: Write> Encoder<W> {
     }
 
     pub fn encode(&mut self, army: &Army) -> Result<(), EncodeError> {
+        self.writer.write_all(&army.save_file_header)?;
         self.write_header(army)?;
         self.write_regiments(army)?;
+        self.writer.write_all(&army.save_file_footer)?;
         Ok(())
     }
 
     fn write_header(&mut self, army: &Army) -> Result<(), EncodeError> {
-        // TODO: Ignoring save file header.
-
         let race: u8 = army.race.into();
 
         self.writer.write_all(&FORMAT.to_le_bytes())?;
@@ -89,83 +89,83 @@ impl<W: Write> Encoder<W> {
     }
 
     fn write_regiment(&mut self, r: &Regiment) -> Result<(), EncodeError> {
-        let alignment: u8 = r.alignment.into();
-        let mount: u8 = r.mount.into();
+        let mage_class: u8 = r.mage_class.into();
         let magic_book: u16 = r.magic_book.into();
 
-        self.writer.write_all(&r.status)?;
+        self.writer
+            .write_all(&Into::<u16>::into(r.status).to_le_bytes())?;
         self.writer.write_all(&r.unknown1)?;
         self.writer.write_all(&r.id.to_le_bytes())?;
         self.writer.write_all(&r.unknown2)?;
-        self.writer.write_all(&[r.wizard_type])?;
+        self.writer.write_all(&[mage_class])?;
         self.writer.write_all(&[r.max_armor])?;
         self.writer.write_all(&r.cost.to_le_bytes())?;
         self.writer.write_all(&r.banner_index.to_le_bytes())?;
         self.writer.write_all(&r.unknown3)?;
-        self.writer.write_all(&r.regiment_attributes)?;
-        self.writer.write_all(&r.sprite_index.to_le_bytes())?;
-        self.write_string_with_limit(&r.name, 32)?;
-        self.writer.write_all(&r.name_id.to_le_bytes())?;
-        self.writer.write_all(&[alignment])?;
-        self.writer.write_all(&[r.max_troops])?;
-        self.writer.write_all(&[r.alive_troops])?;
-        self.writer.write_all(&[r.ranks])?;
-        self.writer.write_all(&r.unknown4)?;
-        self.writer.write_all(&[r.troop_attributes.movement])?;
-        self.writer.write_all(&[r.troop_attributes.weapon_skill])?;
-        self.writer
-            .write_all(&[r.troop_attributes.ballistic_skill])?;
-        self.writer.write_all(&[r.troop_attributes.strength])?;
-        self.writer.write_all(&[r.troop_attributes.toughness])?;
-        self.writer.write_all(&[r.troop_attributes.wounds])?;
-        self.writer.write_all(&[r.troop_attributes.initiative])?;
-        self.writer.write_all(&[r.troop_attributes.attacks])?;
-        self.writer.write_all(&[r.troop_attributes.leadership])?;
-        self.writer.write_all(&[mount])?;
-        self.writer.write_all(&[r.armor])?;
-        self.writer.write_all(&[r.weapon])?;
-        self.writer.write_all(&[r.encode_class()])?;
-        self.writer.write_all(&[r.point_value])?;
-        self.writer.write_all(&[r.missile_weapon])?;
-        self.writer.write_all(&[r.unknown5])?;
+        self.writer.write_all(&r.attributes.bits().to_le_bytes())?;
+        self.write_unit_profile(&r.unit_profile)?;
+        self.writer.write_all(&[r.unknown4])?;
+        self.writer.write_all(&r.unknown5)?;
+        self.write_unit_profile(&r.leader_profile)?;
         self.writer.write_all(&r.unknown6)?;
-        self.writer
-            .write_all(&r.leader.sprite_index.to_le_bytes())?;
-        self.write_string_with_limit(&r.leader.name, 32)?;
-        self.writer.write_all(&r.leader.name_remainder)?;
-        self.writer.write_all(&[r.leader.attributes.movement])?;
-        self.writer.write_all(&[r.leader.attributes.weapon_skill])?;
-        self.writer
-            .write_all(&[r.leader.attributes.ballistic_skill])?;
-        self.writer.write_all(&[r.leader.attributes.strength])?;
-        self.writer.write_all(&[r.leader.attributes.toughness])?;
-        self.writer.write_all(&[r.leader.attributes.wounds])?;
-        self.writer.write_all(&[r.leader.attributes.initiative])?;
-        self.writer.write_all(&[r.leader.attributes.attacks])?;
-        self.writer.write_all(&[r.leader.attributes.leadership])?;
-        self.writer.write_all(&[r.leader.mount])?;
-        self.writer.write_all(&[r.leader.armor])?;
-        self.writer.write_all(&[r.leader.weapon])?;
-        self.writer.write_all(&[r.leader.unit_type])?;
-        self.writer.write_all(&[r.leader.point_value])?;
-        self.writer.write_all(&[r.leader.missile_weapon])?;
-        self.writer.write_all(&r.leader.unknown1)?;
-        self.writer.write_all(&r.leader.head_id.to_le_bytes())?;
-        self.writer.write_all(&r.leader.x)?;
-        self.writer.write_all(&r.leader.y)?;
-        self.writer.write_all(&r.experience.to_le_bytes())?;
+        self.writer.write_all(&r.leader_head_id.to_le_bytes())?;
+        self.write_last_battle_stats(&r.last_battle_stats)?;
+        self.writer.write_all(&r.total_experience.to_le_bytes())?;
         self.writer.write_all(&[r.duplicate_id])?;
         self.writer.write_all(&[r.min_armor])?;
         self.writer.write_all(&magic_book.to_le_bytes())?;
         self.writer.write_all(&r.magic_items[0].to_le_bytes())?;
         self.writer.write_all(&r.magic_items[1].to_le_bytes())?;
         self.writer.write_all(&r.magic_items[2].to_le_bytes())?;
-        self.writer.write_all(&r.unknown7)?;
+        self.writer.write_all(&r.unknown8)?;
         self.writer.write_all(&[r.purchased_armor])?;
         self.writer.write_all(&[r.max_purchasable_armor])?;
-        self.writer.write_all(&[r.repurchased_troops])?;
-        self.writer.write_all(&[r.max_purchasable_troops])?;
+        self.writer.write_all(&[r.repurchased_troop_count])?;
+        self.writer.write_all(&[r.max_purchasable_troop_count])?;
         self.writer.write_all(&r.book_profile)?;
+
+        Ok(())
+    }
+
+    fn write_unit_profile(&mut self, u: &UnitProfile) -> Result<(), EncodeError> {
+        let alignment: u8 = u.alignment.into();
+        let mount: u8 = u.mount.into();
+        let weapon: u8 = u.weapon.into();
+        let class: u8 = u.class.into();
+        let projectile: u8 = u.projectile.into();
+
+        self.writer.write_all(&u.sprite_index.to_le_bytes())?;
+        self.write_string_with_limit(&u.name, 32)?;
+        self.writer.write_all(&u.name_id.to_le_bytes())?;
+        self.writer.write_all(&[alignment])?;
+        self.writer.write_all(&[u.max_troop_count])?;
+        self.writer.write_all(&[u.alive_troop_count])?;
+        self.writer.write_all(&[u.rank_count])?;
+        self.writer.write_all(&u.unknown1)?;
+        self.writer.write_all(&[u.stats.movement])?;
+        self.writer.write_all(&[u.stats.weapon_skill])?;
+        self.writer.write_all(&[u.stats.ballistic_skill])?;
+        self.writer.write_all(&[u.stats.strength])?;
+        self.writer.write_all(&[u.stats.toughness])?;
+        self.writer.write_all(&[u.stats.wounds])?;
+        self.writer.write_all(&[u.stats.initiative])?;
+        self.writer.write_all(&[u.stats.attacks])?;
+        self.writer.write_all(&[u.stats.leadership])?;
+        self.writer.write_all(&[mount])?;
+        self.writer.write_all(&[u.armor])?;
+        self.writer.write_all(&[weapon])?;
+        self.writer.write_all(&[class])?;
+        self.writer.write_all(&[u.point_value])?;
+        self.writer.write_all(&[projectile])?;
+
+        Ok(())
+    }
+
+    fn write_last_battle_stats(&mut self, s: &LastBattleStats) -> Result<(), EncodeError> {
+        self.writer.write_all(&s.unit_killed_count.to_le_bytes())?;
+        self.writer.write_all(&s.unknown1)?;
+        self.writer.write_all(&s.kill_count.to_le_bytes())?;
+        self.writer.write_all(&s.experience.to_le_bytes())?;
 
         Ok(())
     }

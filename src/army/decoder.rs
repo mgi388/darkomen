@@ -13,10 +13,15 @@ pub enum DecodeError {
     InvalidFormat(u32),
     InvalidString,
     InvalidArmyRace(u8),
+    InvalidRegimentStatus(u16),
+    InvalidMageClass(u8),
+    InvalidRegimentAttributes(u32),
     InvalidRegimentAlignment(u8),
     InvalidRegimentMount(u8),
+    InvalidWeapon(u8),
+    InvalidProjectile(u8),
     InvalidRegimentClass(u8),
-    InvalidRegimentMagicBook(u16),
+    InvalidMagicBook(u16),
 }
 
 impl std::error::Error for DecodeError {}
@@ -34,15 +39,22 @@ impl fmt::Display for DecodeError {
             DecodeError::InvalidFormat(format) => write!(f, "invalid format: {}", format),
             DecodeError::InvalidString => write!(f, "invalid string"),
             DecodeError::InvalidArmyRace(v) => write!(f, "invalid army race: {}", v),
+            DecodeError::InvalidRegimentStatus(v) => write!(f, "invalid regiment status: {}", v),
+            DecodeError::InvalidMageClass(v) => write!(f, "invalid mage class: {}", v),
+            DecodeError::InvalidRegimentAttributes(v) => {
+                write!(f, "invalid regiment attributes: {}", v)
+            }
             DecodeError::InvalidRegimentAlignment(v) => {
                 write!(f, "invalid regiment alignment: {}", v)
             }
+            DecodeError::InvalidWeapon(v) => write!(f, "invalid weapon: {}", v),
+            DecodeError::InvalidProjectile(v) => write!(f, "invalid projectile: {}", v),
             DecodeError::InvalidRegimentMount(v) => {
                 write!(f, "invalid regiment mount: {}", v)
             }
             DecodeError::InvalidRegimentClass(v) => write!(f, "invalid regiment class: {}", v),
-            DecodeError::InvalidRegimentMagicBook(v) => {
-                write!(f, "invalid regiment magic book: {}", v)
+            DecodeError::InvalidMagicBook(v) => {
+                write!(f, "invalid magic book: {}", v)
             }
         }
     }
@@ -94,7 +106,7 @@ impl<R: Read + Seek> Decoder<R> {
     }
 
     pub fn decode(&mut self) -> Result<Army, DecodeError> {
-        let start_pos = self.maybe_read_save_file()?;
+        let (start_pos, save_file_header) = self.maybe_read_save_file_header()?;
 
         let header = self.read_header(start_pos)?;
 
@@ -103,7 +115,11 @@ impl<R: Read + Seek> Decoder<R> {
 
         let regiments = self.read_regiments(&header)?;
 
+        let mut save_file_footer = Vec::new();
+        self.reader.read_to_end(&mut save_file_footer)?;
+
         Ok(Army {
+            save_file_header,
             race,
             unknown1: header.unknown1.to_vec(),
             unknown2: header.unknown2.to_vec(),
@@ -118,21 +134,26 @@ impl<R: Read + Seek> Decoder<R> {
             gold_in_coffers: header.gold_in_coffers,
             magic_items: header.magic_items.to_vec(),
             unknown3: header.unknown3.to_vec(),
+            save_file_footer,
         })
     }
 
-    fn maybe_read_save_file(&mut self) -> Result<u64, DecodeError> {
+    fn maybe_read_save_file_header(&mut self) -> Result<(u64, Vec<u8>), DecodeError> {
         let mut buf = [0; size_of::<u32>()];
         self.reader.read_exact(&mut buf)?;
 
-        let mut start_pos = 0;
-
         let format = u32::from_le_bytes(buf[0..size_of::<u32>()].try_into().unwrap());
+
         if format != FORMAT {
-            // TODO: Skipped over reading save header.
-            start_pos = SAVE_HEADER_SIZE as u64;
+            self.reader.seek(SeekFrom::Start(0))?;
+
+            let mut save_file_header = vec![0; SAVE_HEADER_SIZE];
+            self.reader.read_exact(&mut save_file_header)?;
+
+            return Ok((SAVE_HEADER_SIZE as u64, save_file_header));
         }
-        Ok(start_pos)
+
+        Ok((0, vec![]))
     }
 
     fn read_header(&mut self, start_pos: u64) -> Result<Header, DecodeError> {
@@ -200,82 +221,89 @@ impl<R: Read + Seek> Decoder<R> {
         let mut buf = vec![0; REGIMENT_BLOCK_SIZE];
         self.reader.read_exact(&mut buf)?;
 
-        let alignment = RegimentAlignment::try_from(buf[56])
+        let status_u16 = u16::from_le_bytes(buf[0..2].try_into().unwrap());
+        let status = RegimentStatus::try_from(status_u16)
+            .map_err(|_| DecodeError::InvalidRegimentStatus(status_u16))?;
+        let attributes_u32 = u32::from_le_bytes(buf[16..20].try_into().unwrap());
+        let attributes = RegimentAttributes::from_bits(attributes_u32)
+            .ok_or(DecodeError::InvalidRegimentAttributes(attributes_u32))?;
+        let mage_class =
+            MageClass::try_from(buf[8]).map_err(|_| DecodeError::InvalidMageClass(buf[8]))?;
+        let troop_alignment = RegimentAlignment::try_from(buf[56])
             .map_err(|_| DecodeError::InvalidRegimentAlignment(buf[56]))?;
-        let mount = RegimentMount::try_from(buf[73])
+        let troop_mount = RegimentMount::try_from(buf[73])
             .map_err(|_| DecodeError::InvalidRegimentMount(buf[73]))?;
-        let (typ, race) = Regiment::decode_class(buf[76])
-            .map_err(|_| -> DecodeError { DecodeError::InvalidRegimentClass(buf[76]) })?;
+        let troop_weapon =
+            Weapon::try_from(buf[75]).map_err(|_| DecodeError::InvalidWeapon(buf[75]))?;
+        let troop_class = RegimentClass::try_from(buf[76])
+            .map_err(|_| DecodeError::InvalidRegimentClass(buf[76]))?;
+        let troop_projectile =
+            Projectile::try_from(buf[78]).map_err(|_| DecodeError::InvalidProjectile(buf[78]))?;
+        let leader_alignment = RegimentAlignment::try_from(buf[120])
+            .map_err(|_| DecodeError::InvalidRegimentAlignment(buf[120]))?;
+        let leader_mount = RegimentMount::try_from(buf[136])
+            .map_err(|_| DecodeError::InvalidRegimentMount(buf[136]))?;
+        let leader_weapon =
+            Weapon::try_from(buf[138]).map_err(|_| DecodeError::InvalidWeapon(buf[138]))?;
+        let leader_class = RegimentClass::try_from(buf[139])
+            .map_err(|_| DecodeError::InvalidRegimentClass(buf[139]))?;
+        let leader_projectile =
+            Projectile::try_from(buf[141]).map_err(|_| DecodeError::InvalidProjectile(buf[141]))?;
         let magic_book_u16 = u16::from_le_bytes(buf[160..162].try_into().unwrap());
-        let magic_book = RegimentMagicBook::try_from(magic_book_u16)
-            .map_err(|_| DecodeError::InvalidRegimentMagicBook(magic_book_u16))?;
+        let magic_book = MagicBook::try_from(magic_book_u16)
+            .map_err(|_| DecodeError::InvalidMagicBook(magic_book_u16))?;
 
         Ok(Regiment {
-            status: buf[0..2].try_into().unwrap(),
+            status,
             unknown1: buf[2..4].try_into().unwrap(),
             id: u16::from_le_bytes(buf[4..6].try_into().unwrap()),
             unknown2: buf[6..8].try_into().unwrap(),
-            wizard_type: buf[8],
+            mage_class,
             max_armor: buf[9],
             cost: u16::from_le_bytes(buf[10..12].try_into().unwrap()),
             banner_index: u16::from_le_bytes(buf[12..14].try_into().unwrap()),
             unknown3: buf[14..16].try_into().unwrap(),
-            regiment_attributes: buf[16..20].try_into().unwrap(),
-            sprite_index: u16::from_le_bytes(buf[20..22].try_into().unwrap()),
-            name: self.read_string(&buf[22..54])?,
-            name_id: u16::from_le_bytes(buf[54..56].try_into().unwrap()),
-            alignment,
-            max_troops: buf[57],
-            alive_troops: buf[58],
-            ranks: buf[59],
-            unknown4: buf[60..64].try_into().unwrap(),
-            troop_attributes: TroopAttributes {
-                movement: buf[64],
-                weapon_skill: buf[65],
-                ballistic_skill: buf[66],
-                strength: buf[67],
-                toughness: buf[68],
-                wounds: buf[69],
-                initiative: buf[70],
-                attacks: buf[71],
-                leadership: buf[72],
+            attributes,
+            unit_profile: UnitProfile {
+                sprite_index: u16::from_le_bytes(buf[20..22].try_into().unwrap()),
+                name: self.read_string(&buf[22..54])?,
+                name_id: u16::from_le_bytes(buf[54..56].try_into().unwrap()),
+                alignment: troop_alignment,
+                max_troop_count: buf[57],
+                alive_troop_count: buf[58],
+                rank_count: buf[59],
+                unknown1: buf[60..64].into(),
+                stats: self.read_unit_stats(&buf[64..73]),
+                mount: troop_mount,
+                armor: buf[74],
+                weapon: troop_weapon,
+                class: troop_class,
+                point_value: buf[77],
+                projectile: troop_projectile,
             },
-            mount,
-            armor: buf[74],
-            weapon: buf[75],
-            typ,
-            race,
-            point_value: buf[77],
-            missile_weapon: buf[78],
-            unknown5: buf[79],
-            unknown6: buf[80..84].try_into().unwrap(),
-            leader: Leader {
+            unknown4: buf[79],
+            unknown5: buf[80..84].try_into().unwrap(),
+            leader_profile: UnitProfile {
                 sprite_index: u16::from_le_bytes(buf[84..86].try_into().unwrap()),
                 name: self.read_string(&buf[86..118])?,
-                name_remainder: buf[118..127].to_vec(),
-                attributes: TroopAttributes {
-                    movement: buf[127],
-                    weapon_skill: buf[128],
-                    ballistic_skill: buf[129],
-                    strength: buf[130],
-                    toughness: buf[131],
-                    wounds: buf[132],
-                    initiative: buf[133],
-                    attacks: buf[134],
-                    leadership: buf[135],
-                },
-                mount: buf[136],
+                name_id: u16::from_le_bytes(buf[118..120].try_into().unwrap()),
+                alignment: leader_alignment,
+                max_troop_count: buf[121],
+                alive_troop_count: buf[122],
+                rank_count: buf[123],
+                unknown1: buf[124..127].into(),
+                stats: self.read_unit_stats(&buf[127..136]),
+                mount: leader_mount,
                 armor: buf[137],
-                weapon: buf[138],
-                unit_type: buf[139],
+                weapon: leader_weapon,
+                class: leader_class,
                 point_value: buf[140],
-                missile_weapon: buf[141],
-                unknown1: buf[142..146].try_into().unwrap(),
-                head_id: u16::from_le_bytes(buf[146..148].try_into().unwrap()),
-                x: buf[148..152].try_into().unwrap(),
-                y: buf[152..156].try_into().unwrap(),
+                projectile: leader_projectile,
             },
-            experience: u16::from_le_bytes(buf[156..158].try_into().unwrap()),
+            unknown6: buf[142..146].try_into().unwrap(),
+            leader_head_id: u16::from_le_bytes(buf[146..148].try_into().unwrap()),
+            last_battle_stats: self.read_last_battle_stats(&buf[148..156])?,
+            total_experience: u16::from_le_bytes(buf[156..158].try_into().unwrap()),
             duplicate_id: buf[158],
             min_armor: buf[159],
             magic_book,
@@ -284,12 +312,35 @@ impl<R: Read + Seek> Decoder<R> {
                 u16::from_le_bytes(buf[164..166].try_into().unwrap()),
                 u16::from_le_bytes(buf[166..168].try_into().unwrap()),
             ],
-            unknown7: buf[168..180].try_into().unwrap(),
+            unknown8: buf[168..180].try_into().unwrap(),
             purchased_armor: buf[180],
             max_purchasable_armor: buf[181],
-            repurchased_troops: buf[182],
-            max_purchasable_troops: buf[183],
+            repurchased_troop_count: buf[182],
+            max_purchasable_troop_count: buf[183],
             book_profile: buf[184..188].try_into().unwrap(),
+        })
+    }
+
+    fn read_unit_stats(&mut self, buf: &[u8]) -> UnitStats {
+        UnitStats {
+            movement: buf[0],
+            weapon_skill: buf[1],
+            ballistic_skill: buf[2],
+            strength: buf[3],
+            toughness: buf[4],
+            wounds: buf[5],
+            initiative: buf[6],
+            attacks: buf[7],
+            leadership: buf[8],
+        }
+    }
+
+    fn read_last_battle_stats(&mut self, buf: &[u8]) -> Result<LastBattleStats, DecodeError> {
+        Ok(LastBattleStats {
+            unit_killed_count: u16::from_le_bytes(buf[0..2].try_into().unwrap()),
+            unknown1: buf[2..4].try_into().unwrap(),
+            kill_count: u16::from_le_bytes(buf[4..6].try_into().unwrap()),
+            experience: u16::from_le_bytes(buf[6..8].try_into().unwrap()),
         })
     }
 
