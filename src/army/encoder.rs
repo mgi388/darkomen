@@ -61,7 +61,10 @@ impl<W: Write> Encoder<W> {
             .write_all(&(REGIMENT_BLOCK_SIZE as u32).to_le_bytes())?;
         self.writer.write_all(&[race])?;
         self.writer.write_all(&army.unknown1)?;
-        self.writer.write_all(&army.unknown2)?;
+        self.writer
+            .write_all(&army.default_name_index.to_le_bytes())?;
+        self.write_string(&army.name)?;
+        self.writer.write_all(&army.name_remainder)?;
         self.write_string(&army.small_banner_path)?;
         self.writer.write_all(&army.small_banner_path_remainder)?;
         self.write_string(&army.small_banner_disabled_path)?;
@@ -70,7 +73,7 @@ impl<W: Write> Encoder<W> {
         self.write_string(&army.large_banner_path)?;
         self.writer.write_all(&army.large_banner_path_remainder)?;
         self.writer
-            .write_all(&army.gold_from_treasures.to_le_bytes())?;
+            .write_all(&army.last_battle_gold.to_le_bytes())?;
         self.writer.write_all(&army.gold_in_coffers.to_le_bytes())?;
         self.writer.write_all(&army.magic_items)?;
         self.writer.write_all(&army.unknown3)?;

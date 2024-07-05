@@ -12,9 +12,21 @@ pub use encoder::{EncodeError, Encoder};
 #[derive(Debug, Clone, Serialize)]
 pub struct Army {
     save_file_header: Vec<u8>,
+    /// The army's race.
+    ///
+    /// This is used in multiplayer mode to group armies by race.
     pub race: ArmyRace,
-    unknown1: Vec<u8>,
-    unknown2: Vec<u8>,
+    unknown1: [u8; 3], // always seems to be 0, could be padding
+    /// The index of the name to use when army name is empty.
+    ///
+    /// This is used to display the army name in multiplayer mode when no army
+    /// name is set.
+    pub default_name_index: u16,
+    /// The name of the army. Displayed in multiplayer mode.
+    pub name: String,
+    /// There are some bytes after the null-terminated string. Not sure what
+    /// they are for.
+    name_remainder: Vec<u8>,
     pub regiments: Vec<Regiment>,
     pub small_banner_path: String,
     /// There are some bytes after the null-terminated string. Not sure what
@@ -28,7 +40,11 @@ pub struct Army {
     /// There are some bytes after the null-terminated string. Not sure what
     /// they are for.
     large_banner_path_remainder: Vec<u8>,
-    pub gold_from_treasures: u16,
+    /// The amount of gold captured from treasures and earned in the last
+    /// battle.
+    pub last_battle_gold: u16,
+    /// The amount of gold available to the army for buying new units and
+    /// reinforcements.
     pub gold_in_coffers: u16,
     pub magic_items: Vec<u8>,
     unknown3: Vec<u8>,

@@ -73,8 +73,12 @@ pub(crate) struct Header {
     /// This is always 188 despite being encoded in the header.
     _regiment_block_size: u32,
     race: u8,
-    unknown1: [u8; 3],  // purpose of bytes at index 13, 14, 15 is unknown
-    unknown2: [u8; 34], // purpose of bytes at index 16-50 is unknown
+    unknown1: [u8; 3], // always seems to be 0, could be padding
+    default_name_index: u16,
+    name: String,
+    /// There are some bytes after the null-terminated string. Not sure what
+    /// they are for.
+    name_remainder: Vec<u8>,
     small_banner_path: String,
     /// There are some bytes after the null-terminated string. Not sure what
     /// they are for.
@@ -87,7 +91,7 @@ pub(crate) struct Header {
     /// There are some bytes after the null-terminated string. Not sure what
     /// they are for.
     large_banner_path_remainder: Vec<u8>,
-    gold_from_treasures: u16,
+    last_battle_gold: u16,
     gold_in_coffers: u16,
     magic_items: [u8; 40],
     unknown3: [u8; 2], // purpose of bytes at index 190 and 191 is unknown
@@ -121,8 +125,10 @@ impl<R: Read + Seek> Decoder<R> {
         Ok(Army {
             save_file_header,
             race,
-            unknown1: header.unknown1.to_vec(),
-            unknown2: header.unknown2.to_vec(),
+            unknown1: header.unknown1,
+            default_name_index: header.default_name_index,
+            name: header.name,
+            name_remainder: header.name_remainder,
             regiments,
             small_banner_path: header.small_banner_path,
             small_banner_path_remainder: header.small_banner_path_remainder,
@@ -130,7 +136,7 @@ impl<R: Read + Seek> Decoder<R> {
             small_banner_disabled_path_remainder: header.small_banner_disabled_path_remainder,
             large_banner_path: header.large_banner_path,
             large_banner_path_remainder: header.large_banner_path_remainder,
-            gold_from_treasures: header.gold_from_treasures,
+            last_battle_gold: header.last_battle_gold,
             gold_in_coffers: header.gold_in_coffers,
             magic_items: header.magic_items.to_vec(),
             unknown3: header.unknown3.to_vec(),
@@ -161,6 +167,14 @@ impl<R: Read + Seek> Decoder<R> {
 
         let mut buf = [0; HEADER_SIZE];
         self.reader.read_exact(&mut buf)?;
+
+        let army_name_buf = &buf[18..50];
+        let (army_name_buf, army_name_remainder) = army_name_buf
+            .iter()
+            .enumerate()
+            .find(|(_, &b)| b == 0)
+            .map(|(i, _)| army_name_buf.split_at(i + 1))
+            .unwrap_or((army_name_buf, &[]));
 
         let small_banner_path_buf = &buf[50..82];
         let (small_banner_path_buf, small_banner_path_remainder) = small_banner_path_buf
@@ -193,14 +207,16 @@ impl<R: Read + Seek> Decoder<R> {
             _regiment_block_size: u32::from_le_bytes(buf[8..12].try_into().unwrap()),
             race: buf[12],
             unknown1: buf[13..16].try_into().unwrap(),
-            unknown2: buf[16..50].try_into().unwrap(),
+            default_name_index: u16::from_le_bytes(buf[16..18].try_into().unwrap()),
+            name: self.read_string(army_name_buf)?,
+            name_remainder: army_name_remainder.to_vec(),
             small_banner_path: self.read_string(small_banner_path_buf)?,
             small_banner_path_remainder: small_banner_path_remainder.to_vec(),
             small_banner_disabled_path: self.read_string(small_banner_disabled_path_buf)?,
             small_banner_disabled_path_remainder: small_banner_disabled_path_remainder.to_vec(),
             large_banner_path: self.read_string(large_banner_path_buf)?,
             large_banner_path_remainder: large_banner_path_remainder.to_vec(),
-            gold_from_treasures: u16::from_le_bytes(buf[146..148].try_into().unwrap()),
+            last_battle_gold: u16::from_le_bytes(buf[146..148].try_into().unwrap()),
             gold_in_coffers: u16::from_le_bytes(buf[148..150].try_into().unwrap()),
             magic_items: buf[150..190].try_into().unwrap(),
             unknown3: buf[190..192].try_into().unwrap(),
