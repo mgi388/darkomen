@@ -27,7 +27,6 @@ pub struct Army {
     /// There are some bytes after the null-terminated string. Not sure what
     /// they are for.
     name_remainder: Vec<u8>,
-    pub regiments: Vec<Regiment>,
     pub small_banner_path: String,
     /// There are some bytes after the null-terminated string. Not sure what
     /// they are for.
@@ -48,6 +47,7 @@ pub struct Army {
     pub gold_in_coffers: u16,
     pub magic_items: Vec<u8>,
     unknown3: Vec<u8>,
+    pub regiments: Vec<Regiment>,
     save_file_footer: Vec<u8>,
 }
 

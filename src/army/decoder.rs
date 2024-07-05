@@ -129,7 +129,6 @@ impl<R: Read + Seek> Decoder<R> {
             default_name_index: header.default_name_index,
             name: header.name,
             name_remainder: header.name_remainder,
-            regiments,
             small_banner_path: header.small_banner_path,
             small_banner_path_remainder: header.small_banner_path_remainder,
             small_banner_disabled_path: header.small_banner_disabled_path,
@@ -140,6 +139,7 @@ impl<R: Read + Seek> Decoder<R> {
             gold_in_coffers: header.gold_in_coffers,
             magic_items: header.magic_items.to_vec(),
             unknown3: header.unknown3.to_vec(),
+            regiments,
             save_file_footer,
         })
     }
