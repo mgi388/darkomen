@@ -71,7 +71,7 @@ impl<R: Read + Seek> Decoder<R> {
     pub fn decode(&mut self) -> Result<Blueprint, DecodeError> {
         self.check_btb_file_type();
 
-        let (width, height, player, enemy, ctl) = self.read_battle_header()?;
+        let (width, height, player_army, enemy_army, ctl) = self.read_battle_header()?;
         let objectives = self.read_objectives()?;
         let obstacles = self.read_obstacles()?;
         let regions = self.read_regions()?;
@@ -80,8 +80,8 @@ impl<R: Read + Seek> Decoder<R> {
         Ok(Blueprint {
             width,
             height,
-            player,
-            enemy,
+            player_army,
+            enemy_army,
             ctl,
             objectives,
             obstacles,
@@ -99,14 +99,14 @@ impl<R: Read + Seek> Decoder<R> {
 
         let width = self.read_int_tuple_property::<i32>(1, 1)?[0] as u32;
         let height = self.read_int_tuple_property::<i32>(2, 1)?[0] as u32;
-        let player = self.read_string_property(1001)?;
-        let enemy = self.read_string_property(1002)?;
+        let player_army = self.read_string_property(1001)?;
+        let enemy_army = self.read_string_property(1002)?;
         let ctl = self.read_string_property(1003)?;
         let _ = self.read_string_property(1004)?;
         let _ = self.read_string_property(1005)?;
         let _ = self.read_int_tuple_property::<i32>(9, 2)?;
 
-        Ok((width, height, player, enemy, ctl))
+        Ok((width, height, player_army, enemy_army, ctl))
     }
 
     fn read_objectives(&mut self) -> Result<Vec<Objective>, DecodeError> {
@@ -339,8 +339,8 @@ mod tests {
 
         assert_eq!(b.width, 1440);
         assert_eq!(b.height, 1600);
-        assert_eq!(b.player, "B101mrc");
-        assert_eq!(b.enemy, "B101nme");
+        assert_eq!(b.player_army, "B101mrc");
+        assert_eq!(b.enemy_army, "B101nme");
         assert_eq!(b.ctl, "B101");
     }
 
