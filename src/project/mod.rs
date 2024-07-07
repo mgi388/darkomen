@@ -9,13 +9,32 @@ pub use decoder::{DecodeError, Decoder};
 
 #[derive(Clone, Debug, Serialize)]
 pub struct Project {
+    /// The base model file name, including the extension. E.g. `base.M3D`.
+    ///
+    /// The file name is relative to the directory where the project file is
+    /// located.
     pub base_model_file_name: String,
+    /// The water model file name, including the extension. E.g. `_7water.M3D`.
+    /// If not present, the project has no water model.
+    ///
+    /// The file name is relative to the directory where the project file is
+    /// located.
+    ///
+    /// Note: Some projects overload this field for other non-water models. E.g.
+    /// in B1_07 this field is `_4tower.m3d` to render a tower instead of water.
     pub water_model_file_name: Option<String>,
+    /// A list of furniture model file names, including the extension. This is
+    /// used by instances to look up the model they use.
+    ///
+    /// The file names are relative to the directory where the project file is
+    /// located.
     pub furniture_model_file_names: Vec<String>,
     pub instances: Vec<Instance>,
     pub terrain: Terrain,
     pub attributes: Attributes,
     excl: Vec<u8>,
+    /// The background music script file name, including the extension. E.g.
+    /// `battle1.fsm`.
     pub background_music_script_file_name: String,
     pub tracks: Vec<Track>,
     edit: Vec<u8>,
@@ -66,12 +85,12 @@ pub struct Instance {
 pub struct Terrain {
     pub width: u32,
     pub height: u32,
-    // A list of large blocks for the first heightmap.
+    /// A list of large blocks for the first heightmap.
     pub heightmap1_blocks: Vec<TerrainBlock>,
-    // A list of large blocks for the second heightmap.
+    /// A list of large blocks for the second heightmap.
     pub heightmap2_blocks: Vec<TerrainBlock>,
-    // Offsets is a list of offsets for 8x8 block. Height offset for each block
-    // based on minimum height.
+    /// Offsets is a list of offsets for 8x8 block. Height offset for each block
+    /// based on minimum height.
     pub offsets: Vec<Vec<u8>>,
 }
 
