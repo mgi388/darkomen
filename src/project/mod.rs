@@ -7,7 +7,7 @@ use serde::Serialize;
 
 pub use decoder::{DecodeError, Decoder};
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Default, Serialize)]
 pub struct Project {
     /// The base model file name, including the extension. E.g. `base.M3D`.
     ///
@@ -38,6 +38,19 @@ pub struct Project {
     pub background_music_script_file_name: String,
     pub tracks: Vec<Track>,
     edit: Vec<u8>,
+}
+
+impl Project {
+    /// Get the base model file name, including the extension, but with the
+    /// extension replaced with `.M3X`. E.g. `base.M3D` becomes `base.M3X`.
+    ///
+    /// The M3X version is a chunked version of the M3D model and is the one
+    /// rendered in game.
+    pub fn get_base_m3x_model_file_name(&self) -> String {
+        self.base_model_file_name
+            .replace(".m3d", ".m3x")
+            .replace(".M3D", ".M3X")
+    }
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -81,7 +94,7 @@ pub struct Instance {
     pub unknown3: i32,
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Default, Serialize)]
 pub struct Terrain {
     pub width: u32,
     pub height: u32,
@@ -179,7 +192,7 @@ pub struct TerrainBlock {
     pub offset_index: u32,
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Default, Serialize)]
 pub struct Attributes {
     pub width: u32,
     pub height: u32,
@@ -206,5 +219,20 @@ bitflags! {
         const NONE = 0;
         const UNKNOWN_FLAG_1 = 1 << 0;
         const UNKNOWN_FLAG_2 = 1 << 1;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_get_base_m3x_model_file_name() {
+        let project = Project {
+            base_model_file_name: "base.M3D".to_string(),
+            ..Default::default()
+        };
+
+        assert_eq!(project.get_base_m3x_model_file_name(), "base.M3X");
     }
 }
