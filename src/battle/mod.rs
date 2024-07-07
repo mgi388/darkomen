@@ -15,6 +15,7 @@ pub struct Blueprint {
     /// The name of the enemy's army file, without the extension. E.g.
     /// `b101nme`.
     pub enemy_army: String,
+    /// The name of the CTL file, without the extension. E.g. `B101`.
     pub ctl: String,
     pub objectives: Vec<Objective>,
     pub obstacles: Vec<Obstacle>,
