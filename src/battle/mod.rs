@@ -9,8 +9,12 @@ pub use decoder::{DecodeError, Decoder};
 pub struct Blueprint {
     pub width: u32,
     pub height: u32,
-    pub player: String,
-    pub enemy: String,
+    /// The name of the player's army file, without the extension. E.g.
+    /// `b101mrc`.
+    pub player_army: String,
+    /// The name of the enemy's army file, without the extension. E.g.
+    /// `b101nme`.
+    pub enemy_army: String,
     pub ctl: String,
     pub objectives: Vec<Objective>,
     pub obstacles: Vec<Obstacle>,
