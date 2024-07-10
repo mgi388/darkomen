@@ -4,11 +4,32 @@
 [![Docs.rs](https://docs.rs/darkomen/badge.svg)](https://docs.rs/darkomen)
 [![CI](https://github.com/mgi388/darkomen/workflows/CI/badge.svg)](https://github.com/mgi388/darkomen/actions)
 
-> [!NOTE]
-> This library does not ship with any game assets. You must have a copy of the game to get the most from this library.
+A Rust library designed to work with the classic game **Warhammer: Dark Omen**. It provides developers with tools to read, manipulate, and write game data, enabling the creation of mods, custom levels, and analysis tools.
 
-> [!NOTE]
-> This library is not developed by or endorsed by Games Workshop or Electronic Arts.
+## Features
+
+The following table shows the game file support in this library:
+
+| Kind                                       | File extension(s) | Read | Write | Known issues?                 |
+| ------------------------------------------ | ----------------- | ---- | ----- | ----------------------------- |
+| [3D models](src/m3d)                       | .M3D              | ✅   | ❌    | ✅ None                       |
+| [Army and save files](src/army)            | .ARM              | ✅   | ✅    | ⚠️ Save files not interpreted |
+| [Battle blueprints](src/battle)            | .BTB              | ✅   | ❌    | ✅ None                       |
+| CTL                                        | .CTL              | ❌   | ❌    |                               |
+| Cursors                                    | .ANI              | ❌   | ❌    |                               |
+| Fonts                                      | .FNT              | ❌   | ❌    |                               |
+| Game flows                                 | .DOT              | ❌   | ❌    |                               |
+| Lights                                     | .LIT              | ✅   | ❌    | ⚠️ Flags are not correct      |
+| Movies                                     | .TGQ              | ❌   | ❌    |                               |
+| Particle effects                           | .PLB,.H           | ❌   | ❌    |                               |
+| Portrait scripts                           | .KEY,.SEQ         | ❌   | ❌    |                               |
+| [Projects](src/project)                    | .PRJ              | ✅   | ❌    | ✅ None                       |
+| Shadows                                    | .SHD              | ❌   | ❌    |                               |
+| [Sound effects](src/sound/sfx)             | .H                | ✅   | ❌    | ✅ None                       |
+| Sound mono audio                           | .MAD              | ❌   | ❌    |                               |
+| [Sound scripts](src/sound/script)          | .FSM              | ✅   | ✅    | ✅ None                       |
+| Sound stereo audio                         | .SAD              | ❌   | ❌    |                               |
+| [Sprite sheets](src/graphics/sprite_sheet) | .SPR              | ✅   | ❌    | ✅ None                       |
 
 ## Installation
 
@@ -16,6 +37,14 @@
 
 - Install the Rust toolchain, which also installs `cargo`, by following the [Install Rust guide](https://www.rust-lang.org/tools/install)
 - Run `cargo add darkomen`
+
+## Important notes
+
+> [!NOTE]
+> This library does not ship with any game assets. You must have a copy of the game to get the most from this library.
+
+> [!NOTE]
+> This library is not developed by or endorsed by Games Workshop or Electronic Arts.
 
 ## License
 
