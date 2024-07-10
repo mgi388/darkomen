@@ -6,7 +6,7 @@ use serde::Serialize;
 
 pub use decoder::{DecodeError, Decoder};
 
-/// Dark Omen's format for three-dimensional models.
+/// Dark Omen's format for 3D models.
 #[derive(Clone, Debug, Serialize)]
 pub struct M3d {
     pub texture_descriptors: Vec<TextureDescriptor>,
