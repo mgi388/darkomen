@@ -1,14 +1,17 @@
 mod decoder;
 mod lexer;
 
+#[cfg(feature = "bevy_reflect")]
+use bevy_reflect::prelude::*;
 use bitflags::bitflags;
 use rand::Rng;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 pub use decoder::{DecodeError, Decoder};
 
 #[derive(Clone, Debug, Default, Serialize)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct Packet {
     /// The name of the packet, e.g. `WaterFallingTears`.
     pub name: String,
@@ -17,6 +20,7 @@ pub struct Packet {
 }
 
 #[derive(Clone, Debug, Default, Serialize)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct Sfx {
     /// The ID of the SFX.
     pub id: SfxId,
@@ -50,8 +54,9 @@ impl Sfx {
 /// SFX IDs are not unique across packets, e.g. SFX ID 0 exists in every packet.
 pub type SfxId = u8;
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize)]
 #[repr(u8)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub enum SfxType {
     #[default]
     One,
@@ -92,7 +97,10 @@ impl TryFrom<u8> for SfxType {
 }
 
 bitflags! {
-    #[derive(Clone, Debug, Default, Serialize)]
+    #[repr(transparent)]
+    #[derive(Clone, Copy, Debug, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
+    #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+    #[cfg_attr(feature = "bevy_reflect", reflect_value(Debug, Deserialize, Hash, PartialEq, Serialize))]
     pub struct SfxFlags: u8 {
         const NONE = 0;
         const UNKNOWN_FLAG_1 = 1 << 0;
@@ -101,6 +109,7 @@ bitflags! {
 }
 
 #[derive(Clone, Debug, Default, Serialize)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct Sound {
     /// The file name of the sound without the path and extension, e.g.
     /// `watfal02`.

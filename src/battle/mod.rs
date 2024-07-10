@@ -1,11 +1,14 @@
 mod decoder;
 
+#[cfg(feature = "bevy_reflect")]
+use bevy_reflect::prelude::*;
 use bitflags::bitflags;
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 pub use decoder::{DecodeError, Decoder};
 
 #[derive(Debug, Clone, Serialize)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct Blueprint {
     pub width: u32,
     pub height: u32,
@@ -23,14 +26,16 @@ pub struct Blueprint {
     pub nodes: Vec<Node>,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Clone, Debug, Serialize)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct Objective {
     pub typ: i32,
     pub val1: i32,
     pub val2: i32,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Clone, Debug, Serialize)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct Obstacle {
     pub flags: ObstacleFlags,
     pub x: i32,
@@ -41,7 +46,10 @@ pub struct Obstacle {
 }
 
 bitflags! {
-    #[derive(Clone, Debug, Serialize)]
+    #[repr(transparent)]
+    #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
+    #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+    #[cfg_attr(feature = "bevy_reflect", reflect_value(Debug, Deserialize, Hash, PartialEq, Serialize))]
     pub struct ObstacleFlags: u32 {
         const NONE = 0;
         const IS_ENABLED = 1 << 0;
@@ -63,7 +71,8 @@ bitflags! {
     }
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Clone, Debug, Serialize)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct LineSegment {
     pub start_x: i32,
     pub start_y: i32,
@@ -71,7 +80,8 @@ pub struct LineSegment {
     pub end_y: i32,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Clone, Debug, Serialize)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct Region {
     pub name: String,
     pub flags: RegionFlags,
@@ -79,7 +89,10 @@ pub struct Region {
 }
 
 bitflags! {
-    #[derive(Clone, Debug, Serialize)]
+    #[repr(transparent)]
+    #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
+    #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+    #[cfg_attr(feature = "bevy_reflect", reflect_value(Debug, Deserialize, Hash, PartialEq, Serialize))]
     pub struct RegionFlags: u32 {
         const NONE = 0;
         const UNKNOWN_FLAG_1 = 1 << 0;
@@ -101,7 +114,8 @@ bitflags! {
     }
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Clone, Debug, Serialize)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct Node {
     pub flags: NodeFlags,
     pub x: i32,
@@ -114,7 +128,10 @@ pub struct Node {
 }
 
 bitflags! {
-    #[derive(Clone, Debug, Serialize)]
+    #[repr(transparent)]
+    #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
+    #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+    #[cfg_attr(feature = "bevy_reflect", reflect_value(Debug, Deserialize, Hash, PartialEq, Serialize))]
     pub struct NodeFlags: u32 {
         const NONE = 0;
         const IS_CENTERED_POINT = 1 << 0;

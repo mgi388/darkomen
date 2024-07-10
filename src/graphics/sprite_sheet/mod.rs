@@ -2,6 +2,8 @@ mod decoder;
 mod packbits;
 mod zeroruns;
 
+#[cfg(feature = "bevy_reflect")]
+use bevy_reflect::prelude::*;
 use image::DynamicImage;
 
 pub use decoder::{DecodeError, Decoder};
@@ -9,7 +11,9 @@ pub(crate) use packbits::PackBitsReader;
 pub(crate) use zeroruns::ZeroRunsReader;
 
 #[derive(Clone, Debug)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct SpriteSheet {
+    #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
     pub texture: DynamicImage,
     pub atlas_layout: AtlasLayout,
     pub frames: Vec<Frame>,
@@ -17,6 +21,7 @@ pub struct SpriteSheet {
 
 /// Provides information about how the sprite sheet is laid out.
 #[derive(Clone, Debug)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct AtlasLayout {
     pub tile_size: (u16, u16),
     pub columns: usize,
@@ -26,6 +31,7 @@ pub struct AtlasLayout {
 }
 
 #[derive(Clone, Debug)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct Frame {
     pub frame_type: FrameType,
     pub x: i16,
@@ -35,8 +41,9 @@ pub struct Frame {
 }
 
 /// Provides information about how to interpret a frame image.
-#[derive(Clone, Debug, PartialEq)]
 #[repr(u8)]
+#[derive(Clone, Debug, PartialEq)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub enum FrameType {
     /// Indicates the frame is a repeat of a previous frame.
     FrameTypeRepeat,
