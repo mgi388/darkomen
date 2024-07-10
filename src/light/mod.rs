@@ -1,11 +1,14 @@
 mod decoder;
 
+#[cfg(feature = "bevy_reflect")]
+use bevy_reflect::prelude::*;
 use glam::Vec3;
 use serde::Serialize;
 
 pub use decoder::{DecodeError, Decoder};
 
 #[derive(Clone, Debug, Serialize)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct Light {
     pub position: Vec3,
     pub flags: u32,

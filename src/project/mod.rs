@@ -1,13 +1,16 @@
 mod decoder;
 
+#[cfg(feature = "bevy_reflect")]
+use bevy_reflect::prelude::*;
 use bitflags::bitflags;
 use glam::Vec3;
 use image::{DynamicImage, GenericImage, Rgba};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 pub use decoder::{DecodeError, Decoder};
 
 #[derive(Clone, Debug, Default, Serialize)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct Project {
     /// The base model file name, including the extension. E.g. `base.M3D`.
     ///
@@ -32,11 +35,13 @@ pub struct Project {
     pub instances: Vec<Instance>,
     pub terrain: Terrain,
     pub attributes: Attributes,
+    #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
     excl: Vec<u8>,
     /// The background music script file name, including the extension. E.g.
     /// `battle1.fsm`.
     pub background_music_script_file_name: String,
     pub tracks: Vec<Track>,
+    #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
     edit: Vec<u8>,
 }
 
@@ -54,6 +59,7 @@ impl Project {
 }
 
 #[derive(Clone, Debug, Serialize)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct Instance {
     prev: i32,
     next: i32,
@@ -95,15 +101,19 @@ pub struct Instance {
 }
 
 #[derive(Clone, Debug, Default, Serialize)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct Terrain {
     pub width: u32,
     pub height: u32,
     /// A list of large blocks for the first heightmap.
+    #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
     pub heightmap1_blocks: Vec<TerrainBlock>,
     /// A list of large blocks for the second heightmap.
+    #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
     pub heightmap2_blocks: Vec<TerrainBlock>,
     /// Offsets is a list of offsets for 8x8 block. Height offset for each block
     /// based on minimum height.
+    #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
     pub offsets: Vec<Vec<u8>>,
 }
 
@@ -187,25 +197,30 @@ impl Terrain {
 }
 
 #[derive(Clone, Debug, Serialize)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct TerrainBlock {
     pub minimum: u32,
     pub offset_index: u32,
 }
 
 #[derive(Clone, Debug, Default, Serialize)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct Attributes {
     pub width: u32,
     pub height: u32,
+    #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
     pub unknown: Vec<u8>,
 }
 
 #[derive(Clone, Debug, Serialize)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct Track {
     pub control_points: Vec<TrackControlPoint>,
     pub points: Vec<Vec3>,
 }
 
 #[derive(Clone, Debug, Serialize)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct TrackControlPoint {
     pub x: f32,
     pub y: f32,
@@ -214,7 +229,10 @@ pub struct TrackControlPoint {
 }
 
 bitflags! {
-    #[derive(Clone, Debug, Serialize)]
+    #[repr(transparent)]
+    #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
+    #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+    #[cfg_attr(feature = "bevy_reflect", reflect_value(Debug, Deserialize, Hash, PartialEq, Serialize))]
     pub struct TrackControlPointFlags: u8 {
         const NONE = 0;
         const UNKNOWN_FLAG_1 = 1 << 0;

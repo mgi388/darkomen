@@ -1,15 +1,18 @@
 mod decoder;
 mod encoder;
 
+#[cfg(feature = "bevy_reflect")]
+use bevy_reflect::prelude::*;
 use bitflags::bitflags;
 use num_enum::{IntoPrimitive, TryFromPrimitive, TryFromPrimitiveError};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use thiserror::Error;
 
 pub use decoder::{DecodeError, Decoder};
 pub use encoder::{EncodeError, Encoder};
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Default, Serialize)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct Army {
     save_file_header: Vec<u8>,
     /// The army's race.
@@ -52,8 +55,10 @@ pub struct Army {
 }
 
 #[repr(u8)]
-#[derive(Debug, Clone, Copy, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive)]
+#[derive(Debug, Clone, Copy, Default, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub enum ArmyRace {
+    #[default]
     Empire = 0,
     EmpireMultiplayer = 1,
     Greenskin = 2,
@@ -63,6 +68,7 @@ pub enum ArmyRace {
 }
 
 #[derive(Debug, Clone, Serialize)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct Regiment {
     pub status: RegimentStatus,
     unknown1: [u8; 2],
@@ -131,6 +137,7 @@ pub struct Regiment {
 
 #[repr(u16)]
 #[derive(Debug, Clone, Copy, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub enum RegimentStatus {
     None = 0,
     Unknown1 = 1,
@@ -152,6 +159,7 @@ pub enum RegimentStatus {
 
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub enum MageClass {
     None = 0,
     BaseMage = 2,
@@ -162,6 +170,7 @@ pub enum MageClass {
 
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub enum RegimentAlignment {
     Good = 0,
     Neutral = 64,
@@ -170,6 +179,7 @@ pub enum RegimentAlignment {
 
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub enum RegimentClass {
     None = 0,
     HumanInfantryman = 8,
@@ -254,6 +264,7 @@ impl RegimentClass {
 
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub enum RegimentType {
     Unknown,
     Infantryman,
@@ -267,6 +278,7 @@ pub enum RegimentType {
 
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub enum RegimentRace {
     Human,
     WoodElf,
@@ -279,6 +291,7 @@ pub enum RegimentRace {
 
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub enum RegimentMount {
     None,
     Horse,
@@ -286,7 +299,10 @@ pub enum RegimentMount {
 }
 
 bitflags! {
-    #[derive(Clone, Debug, Serialize)]
+    #[repr(transparent)]
+    #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
+    #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+    #[cfg_attr(feature = "bevy_reflect", reflect_value(Debug, Deserialize, Hash, PartialEq, Serialize))]
     pub struct RegimentAttributes: u32 {
         const NONE = 0;
         /// The regiment never retreats from a fight and the retreat button is
@@ -355,6 +371,7 @@ bitflags! {
 }
 
 #[derive(Debug, Clone, Serialize)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct LastBattleStats {
     /// The number of units in the regiment that were killed in the last battle.
     pub unit_killed_count: u16,
@@ -367,6 +384,7 @@ pub struct LastBattleStats {
 
 #[repr(u16)]
 #[derive(Debug, Clone, Copy, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub enum MagicBook {
     None = 65535,
     BrightBook = 22,
@@ -377,6 +395,7 @@ pub enum MagicBook {
 
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub enum Weapon {
     None,
     BasicHandWeapon,
@@ -388,6 +407,7 @@ pub enum Weapon {
 
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub enum Projectile {
     None,
     ShortBow = 7,
@@ -412,6 +432,7 @@ pub enum DecodeClassError {
 }
 
 #[derive(Debug, Clone, Serialize)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct UnitProfile {
     /// The index into the list of sprite file names found in ENGREL.EXE for the
     /// regiment's troop sprite.
@@ -442,6 +463,7 @@ pub struct UnitProfile {
 }
 
 #[derive(Debug, Clone, Serialize)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct UnitStats {
     pub movement: u8,
     pub weapon_skill: u8,

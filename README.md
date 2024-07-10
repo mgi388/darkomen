@@ -38,6 +38,16 @@ The following table shows the game file support in this library:
 - Install the Rust toolchain, which also installs `cargo`, by following the [Install Rust guide](https://www.rust-lang.org/tools/install)
 - Run `cargo add darkomen`
 
+#### Cargo features
+
+`darkomen` supports [Bevy Reflection](https://docs.rs/bevy_reflect/latest/bevy_reflect)
+through the `bevy_reflect` feature. To enable it, add the following line to
+your `Cargo.toml`:
+
+```toml
+darkomen = { version = "0.1.4", features = ["bevy_reflect"] }
+```
+
 ## Important notes
 
 > [!NOTE]

@@ -6,6 +6,10 @@ description = "Warhammer: Dark Omen library in Rust"
 repository = "https://github.com/mgi388/darkomen"
 license = "MIT OR Apache-2.0"
 
+[features]
+default = []
+bevy_reflect = ["dep:bevy_reflect"]
+
 [dependencies]
 bitflags = { version = "2.6", features = ["serde"] }
 encoding_rs = "0.8.34"
@@ -18,7 +22,15 @@ rand = "0.8.5"
 serde = { version = "1", features = ["derive"] }
 thiserror = "1.0.61"
 
+[dependencies.bevy_reflect]
+version = "0.14"
+default-features = false
+features = ["glam"]
+optional = true
+
 [dev-dependencies]
+# Enable the bevy_reflect feature when testing.
+darkomen = { path = ".", version = "0.1.4", features = ["bevy_reflect"] }
 pretty_assertions = "1.4.0"
 rand_chacha = "0.3"
 regex = "1.5.4"

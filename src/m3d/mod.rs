@@ -1,19 +1,23 @@
 mod decoder;
 
+#[cfg(feature = "bevy_reflect")]
+use bevy_reflect::prelude::*;
 use bitflags::bitflags;
 use glam::{UVec4, Vec2, Vec3};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 pub use decoder::{DecodeError, Decoder};
 
 /// Dark Omen's format for 3D models.
 #[derive(Clone, Debug, Serialize)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct M3d {
     pub texture_descriptors: Vec<TextureDescriptor>,
     pub objects: Vec<Object>,
 }
 
 #[derive(Clone, Debug, Serialize)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct TextureDescriptor {
     /// Path appears to be a directory on the original Dark Omen developer's
     /// machine. It does not seem to be used for anything useful and might best
@@ -38,7 +42,10 @@ impl TextureDescriptor {
 }
 
 bitflags! {
-    #[derive(Clone, Debug, Serialize)]
+    #[repr(transparent)]
+    #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
+    #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+    #[cfg_attr(feature = "bevy_reflect", reflect_value(Debug, Deserialize, Hash, PartialEq, Serialize))]
     pub struct ObjectFlags: u32 {
         const NONE = 0;
         const UNKNOWN_FLAG_1 = 1 << 0;
@@ -48,6 +55,7 @@ bitflags! {
 }
 
 #[derive(Clone, Debug, Serialize)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct Object {
     pub name: String,
     pub parent_index: i16,
@@ -61,6 +69,7 @@ pub struct Object {
 }
 
 #[derive(Clone, Debug, Serialize)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct Face {
     pub indices: [u16; 3],
     pub texture_index: u16,
@@ -70,6 +79,7 @@ pub struct Face {
 }
 
 #[derive(Clone, Debug, Serialize)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct Vertex {
     pub position: Vec3,
     pub normal: Vec3,
