@@ -219,60 +219,61 @@ impl<R: Read + Seek> Decoder<R> {
         let mut instances = Vec::with_capacity(count);
         for i in 0..count {
             let b = &buf[i * instance_size..(i + 1) * instance_size];
-
-            let instance = Instance {
-                prev: i32::from_le_bytes(b[0..4].try_into().unwrap()),
-                next: i32::from_le_bytes(b[4..8].try_into().unwrap()),
-                selected: i32::from_le_bytes(b[8..12].try_into().unwrap()),
-                exclude_from_terrain: i32::from_le_bytes(b[12..16].try_into().unwrap()),
-                position: Vec3::new(
-                    u32::from_le_bytes(b[16..20].try_into().unwrap()) as f32 / 1024.,
-                    u32::from_le_bytes(b[20..24].try_into().unwrap()) as f32 / 1024.,
-                    u32::from_le_bytes(b[24..28].try_into().unwrap()) as f32 / 1024.,
-                ),
-                rotation: Vec3::new(
-                    u32::from_le_bytes(b[28..32].try_into().unwrap()) as f32 / 4096.,
-                    u32::from_le_bytes(b[32..36].try_into().unwrap()) as f32 / 4096.,
-                    u32::from_le_bytes(b[36..40].try_into().unwrap()) as f32 / 4096.,
-                ),
-                aabb_min: Vec3::new(
-                    i32::from_le_bytes(b[40..44].try_into().unwrap()) as f32 / 1024.,
-                    i32::from_le_bytes(b[44..48].try_into().unwrap()) as f32 / 1024.,
-                    i32::from_le_bytes(b[48..52].try_into().unwrap()) as f32 / 1024.,
-                ),
-                aabb_max: Vec3::new(
-                    i32::from_le_bytes(b[52..56].try_into().unwrap()) as f32 / 1024.,
-                    i32::from_le_bytes(b[56..60].try_into().unwrap()) as f32 / 1024.,
-                    i32::from_le_bytes(b[60..64].try_into().unwrap()) as f32 / 1024.,
-                ),
-                furniture_model_slot: u32::from_le_bytes(b[64..68].try_into().unwrap()),
-                model_id: i32::from_le_bytes(b[68..72].try_into().unwrap()),
-                attackable: i32::from_le_bytes(b[72..76].try_into().unwrap()),
-                toughness: i32::from_le_bytes(b[76..80].try_into().unwrap()),
-                wounds: i32::from_le_bytes(b[80..84].try_into().unwrap()),
-                unknown1: i32::from_le_bytes(b[84..88].try_into().unwrap()),
-                owner_unit_index: i32::from_le_bytes(b[88..92].try_into().unwrap()),
-                burnable: i32::from_le_bytes(b[92..96].try_into().unwrap()),
-                sfx_code: u32::from_le_bytes(b[96..100].try_into().unwrap()),
-                gfx_code: u32::from_le_bytes(b[100..104].try_into().unwrap()),
-                locked: i32::from_le_bytes(b[104..108].try_into().unwrap()),
-                exclude_from_terrain_shadow: i32::from_le_bytes(b[108..112].try_into().unwrap()),
-                exclude_from_walk: i32::from_le_bytes(b[112..116].try_into().unwrap()),
-                magic_item_code: u32::from_le_bytes(b[116..120].try_into().unwrap()),
-                particle_effect_code: u32::from_le_bytes(b[120..124].try_into().unwrap()),
-                furniture_dead_model_slot: u32::from_le_bytes(b[124..128].try_into().unwrap()),
-                dead_model_id: i32::from_le_bytes(b[128..132].try_into().unwrap()),
-                light: i32::from_le_bytes(b[132..136].try_into().unwrap()),
-                light_radius: i32::from_le_bytes(b[136..140].try_into().unwrap()),
-                light_ambient: i32::from_le_bytes(b[140..144].try_into().unwrap()),
-                unknown2: i32::from_le_bytes(b[144..148].try_into().unwrap()),
-                unknown3: i32::from_le_bytes(b[148..152].try_into().unwrap()),
-            };
-
-            instances.push(instance);
+            instances.push(self.read_instance(b)?);
         }
 
         Ok(instances)
+    }
+
+    fn read_instance(&mut self, buf: &[u8]) -> Result<Instance, DecodeError> {
+        Ok(Instance {
+            prev: i32::from_le_bytes(buf[0..4].try_into().unwrap()),
+            next: i32::from_le_bytes(buf[4..8].try_into().unwrap()),
+            selected: i32::from_le_bytes(buf[8..12].try_into().unwrap()),
+            exclude_from_terrain: i32::from_le_bytes(buf[12..16].try_into().unwrap()),
+            position: Vec3::new(
+                u32::from_le_bytes(buf[16..20].try_into().unwrap()) as f32 / 1024.,
+                u32::from_le_bytes(buf[20..24].try_into().unwrap()) as f32 / 1024.,
+                u32::from_le_bytes(buf[24..28].try_into().unwrap()) as f32 / 1024.,
+            ),
+            rotation: Vec3::new(
+                u32::from_le_bytes(buf[28..32].try_into().unwrap()) as f32 / 4096.,
+                u32::from_le_bytes(buf[32..36].try_into().unwrap()) as f32 / 4096.,
+                u32::from_le_bytes(buf[36..40].try_into().unwrap()) as f32 / 4096.,
+            ),
+            aabb_min: Vec3::new(
+                i32::from_le_bytes(buf[40..44].try_into().unwrap()) as f32 / 1024.,
+                i32::from_le_bytes(buf[44..48].try_into().unwrap()) as f32 / 1024.,
+                i32::from_le_bytes(buf[48..52].try_into().unwrap()) as f32 / 1024.,
+            ),
+            aabb_max: Vec3::new(
+                i32::from_le_bytes(buf[52..56].try_into().unwrap()) as f32 / 1024.,
+                i32::from_le_bytes(buf[56..60].try_into().unwrap()) as f32 / 1024.,
+                i32::from_le_bytes(buf[60..64].try_into().unwrap()) as f32 / 1024.,
+            ),
+            furniture_model_slot: u32::from_le_bytes(buf[64..68].try_into().unwrap()),
+            model_id: i32::from_le_bytes(buf[68..72].try_into().unwrap()),
+            attackable: i32::from_le_bytes(buf[72..76].try_into().unwrap()),
+            toughness: i32::from_le_bytes(buf[76..80].try_into().unwrap()),
+            wounds: i32::from_le_bytes(buf[80..84].try_into().unwrap()),
+            unknown1: i32::from_le_bytes(buf[84..88].try_into().unwrap()),
+            owner_unit_index: i32::from_le_bytes(buf[88..92].try_into().unwrap()),
+            burnable: i32::from_le_bytes(buf[92..96].try_into().unwrap()),
+            sfx_code: u32::from_le_bytes(buf[96..100].try_into().unwrap()),
+            gfx_code: u32::from_le_bytes(buf[100..104].try_into().unwrap()),
+            locked: i32::from_le_bytes(buf[104..108].try_into().unwrap()),
+            exclude_from_terrain_shadow: i32::from_le_bytes(buf[108..112].try_into().unwrap()),
+            exclude_from_walk: i32::from_le_bytes(buf[112..116].try_into().unwrap()),
+            magic_item_code: u32::from_le_bytes(buf[116..120].try_into().unwrap()),
+            particle_effect_code: u32::from_le_bytes(buf[120..124].try_into().unwrap()),
+            furniture_dead_model_slot: u32::from_le_bytes(buf[124..128].try_into().unwrap()),
+            dead_model_id: i32::from_le_bytes(buf[128..132].try_into().unwrap()),
+            light: i32::from_le_bytes(buf[132..136].try_into().unwrap()),
+            light_radius: i32::from_le_bytes(buf[136..140].try_into().unwrap()),
+            light_ambient: i32::from_le_bytes(buf[140..144].try_into().unwrap()),
+            unknown2: i32::from_le_bytes(buf[144..148].try_into().unwrap()),
+            unknown3: i32::from_le_bytes(buf[148..152].try_into().unwrap()),
+        })
     }
 
     fn read_terrain(&mut self) -> Result<Terrain, DecodeError> {
@@ -560,193 +561,5 @@ impl<R: Read + Seek> Decoder<R> {
         } else {
             buf
         })
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::{
-        ffi::{OsStr, OsString},
-        fs::File,
-        path::{Path, PathBuf},
-    };
-
-    #[test]
-    fn test_decode_b1_01() {
-        let d: PathBuf = [
-            std::env::var("DARKOMEN_PATH").unwrap().as_str(),
-            "DARKOMEN",
-            "GAMEDATA",
-            "1PBAT",
-            "B1_01",
-            "B1_01.PRJ",
-        ]
-        .iter()
-        .collect();
-
-        let file = File::open(d.clone()).unwrap();
-        let project = Decoder::new(file).decode().unwrap();
-
-        assert_eq!(project.base_model_file_name, "base.M3D");
-        assert_eq!(
-            project.water_model_file_name,
-            Some("_7water.M3D".to_string())
-        );
-        assert_eq!(project.furniture_model_file_names.len(), 10);
-        assert_eq!(project.furniture_model_file_names[0], "_4barrel.m3d");
-        assert_eq!(project.furniture_model_file_names[9], "_khut3_d.m3d");
-        assert_eq!(project.instances.len(), 37);
-        assert_eq!(project.terrain.width, 184);
-        assert_eq!(project.terrain.height, 200);
-        assert_eq!(project.attributes.width, 184);
-        assert_eq!(project.attributes.height, 200);
-        assert_eq!(project.background_music_script_file_name, "battle1.fsm");
-        assert_eq!(project.tracks.len(), 2);
-        assert_eq!(project.tracks[0].control_points.len(), 6);
-        assert_eq!(project.tracks[0].points.len(), 135);
-        assert_eq!(project.tracks[1].control_points.len(), 6);
-        assert_eq!(project.tracks[1].points.len(), 116);
-
-        // TODO: Not sure if the heights here are correct.
-        {
-            // Line segment 1 of 'Sightedge' region from B1_01.BTB.
-            assert_eq!(project.terrain.get_height(1, 8, 1592), 9.); // start pos
-            assert_eq!(project.terrain.get_height(1, 8, 408), 19.); // end pos
-
-            // A point with a negative x.
-            assert_eq!(project.terrain.get_height(1, 1448, 1856), 50.); // start pos
-            assert_eq!(project.terrain.get_height(1, -248, 1856), 48.); // end pos
-        }
-    }
-
-    #[test]
-    fn test_decode_b4_09() {
-        let d: PathBuf = [
-            std::env::var("DARKOMEN_PATH").unwrap().as_str(),
-            "DARKOMEN",
-            "GAMEDATA",
-            "1PBAT",
-            "B4_09",
-            "B4_09.PRJ",
-        ]
-        .iter()
-        .collect();
-
-        let file = File::open(d.clone()).unwrap();
-        let project = Decoder::new(file).decode().unwrap();
-
-        assert_eq!(project.water_model_file_name, None); // doesn't have a water model
-    }
-
-    #[test]
-    fn test_decode_b5_01() {
-        let d: PathBuf = [
-            std::env::var("DARKOMEN_PATH").unwrap().as_str(),
-            "DARKOMEN",
-            "GAMEDATA",
-            "1PBAT",
-            "B5_01",
-            "B5_01.PRJ",
-        ]
-        .iter()
-        .collect();
-
-        let file = File::open(d.clone()).unwrap();
-        let _project = Decoder::new(file).decode().unwrap();
-    }
-
-    #[test]
-    fn test_decode_all() {
-        let d: PathBuf = [
-            std::env::var("DARKOMEN_PATH").unwrap().as_str(),
-            "DARKOMEN",
-            "GAMEDATA",
-            "1PBAT",
-        ]
-        .iter()
-        .collect();
-
-        let root_output_dir: PathBuf = [env!("CARGO_MANIFEST_DIR"), "decoded", "projects"]
-            .iter()
-            .collect();
-
-        std::fs::create_dir_all(&root_output_dir).unwrap();
-
-        fn visit_dirs(dir: &Path, cb: &mut dyn FnMut(&Path)) {
-            println!("Reading dir {:?}", dir.display());
-            for entry in std::fs::read_dir(dir).unwrap() {
-                let entry = entry.unwrap();
-                let path = entry.path();
-                if path.is_dir() {
-                    visit_dirs(&path, cb);
-                } else {
-                    cb(&path);
-                }
-            }
-        }
-
-        visit_dirs(&d, &mut |path| {
-            if let Some(ext) = path.extension() {
-                if ext.to_string_lossy().to_uppercase() == "PRJ" {
-                    println!("Decoding {:?}", path.file_name().unwrap());
-
-                    let file = File::open(path).unwrap();
-                    let project = Decoder::new(file).decode().unwrap();
-
-                    // Each project should have 2 tracks.
-                    assert_eq!(project.tracks.len(), 2);
-
-                    // Each track should have 6 control points.
-                    for track in &project.tracks {
-                        assert_eq!(track.control_points.len(), 6);
-                    }
-
-                    // Each instance with a GFX code should have a furniture
-                    // model slot, i.e. instances with GFX always have an
-                    // associated furniture model.
-                    for instance in &project.instances {
-                        assert!(
-                            instance.gfx_code == 0 || instance.furniture_model_slot != 0,
-                            "instance with GFX code {} has no furniture model slot",
-                            instance.gfx_code
-                        );
-                    }
-
-                    let output_path =
-                        append_ext("ron", root_output_dir.join(path.file_name().unwrap()));
-                    let mut output_file = File::create(output_path).unwrap();
-                    ron::ser::to_writer_pretty(&mut output_file, &project, Default::default())
-                        .unwrap();
-
-                    // Write out both heightmap images.
-                    {
-                        let output_dir = root_output_dir.join("heightmaps");
-                        std::fs::create_dir_all(&output_dir).unwrap();
-
-                        for map_num in 1..=2 {
-                            let img = if map_num == 1 {
-                                project.terrain.get_heightmap1_image()
-                            } else {
-                                project.terrain.get_heightmap2_image()
-                            };
-
-                            let output_path = output_dir
-                                .join(path.file_stem().unwrap())
-                                .with_extension(format!("map{}.png", map_num));
-
-                            img.save(output_path).unwrap();
-                        }
-                    }
-                }
-            }
-        });
-    }
-
-    fn append_ext(ext: impl AsRef<OsStr>, path: PathBuf) -> PathBuf {
-        let mut os_string: OsString = path.into();
-        os_string.push(".");
-        os_string.push(ext.as_ref());
-        os_string.into()
     }
 }

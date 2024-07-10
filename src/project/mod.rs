@@ -243,6 +243,11 @@ bitflags! {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::{
+        ffi::{OsStr, OsString},
+        fs::File,
+        path::{Path, PathBuf},
+    };
 
     #[test]
     fn test_get_base_m3x_model_file_name() {
@@ -252,5 +257,183 @@ mod tests {
         };
 
         assert_eq!(project.get_base_m3x_model_file_name(), "base.M3X");
+    }
+
+    #[test]
+    fn test_decode_b1_01() {
+        let d: PathBuf = [
+            std::env::var("DARKOMEN_PATH").unwrap().as_str(),
+            "DARKOMEN",
+            "GAMEDATA",
+            "1PBAT",
+            "B1_01",
+            "B1_01.PRJ",
+        ]
+        .iter()
+        .collect();
+
+        let file = File::open(d.clone()).unwrap();
+        let project = Decoder::new(file).decode().unwrap();
+
+        assert_eq!(project.base_model_file_name, "base.M3D");
+        assert_eq!(
+            project.water_model_file_name,
+            Some("_7water.M3D".to_string())
+        );
+        assert_eq!(project.furniture_model_file_names.len(), 10);
+        assert_eq!(project.furniture_model_file_names[0], "_4barrel.m3d");
+        assert_eq!(project.furniture_model_file_names[9], "_khut3_d.m3d");
+        assert_eq!(project.instances.len(), 37);
+        assert_eq!(project.terrain.width, 184);
+        assert_eq!(project.terrain.height, 200);
+        assert_eq!(project.attributes.width, 184);
+        assert_eq!(project.attributes.height, 200);
+        assert_eq!(project.background_music_script_file_name, "battle1.fsm");
+        assert_eq!(project.tracks.len(), 2);
+        assert_eq!(project.tracks[0].control_points.len(), 6);
+        assert_eq!(project.tracks[0].points.len(), 135);
+        assert_eq!(project.tracks[1].control_points.len(), 6);
+        assert_eq!(project.tracks[1].points.len(), 116);
+
+        // TODO: Not sure if the heights here are correct.
+        {
+            // Line segment 1 of 'Sightedge' region from B1_01.BTB.
+            assert_eq!(project.terrain.get_height(1, 8, 1592), 9.); // start pos
+            assert_eq!(project.terrain.get_height(1, 8, 408), 19.); // end pos
+
+            // A point with a negative x.
+            assert_eq!(project.terrain.get_height(1, 1448, 1856), 50.); // start pos
+            assert_eq!(project.terrain.get_height(1, -248, 1856), 48.); // end pos
+        }
+    }
+
+    #[test]
+    fn test_decode_b4_09() {
+        let d: PathBuf = [
+            std::env::var("DARKOMEN_PATH").unwrap().as_str(),
+            "DARKOMEN",
+            "GAMEDATA",
+            "1PBAT",
+            "B4_09",
+            "B4_09.PRJ",
+        ]
+        .iter()
+        .collect();
+
+        let file = File::open(d.clone()).unwrap();
+        let project = Decoder::new(file).decode().unwrap();
+
+        assert_eq!(project.water_model_file_name, None); // doesn't have a water model
+    }
+
+    #[test]
+    fn test_decode_b5_01() {
+        let d: PathBuf = [
+            std::env::var("DARKOMEN_PATH").unwrap().as_str(),
+            "DARKOMEN",
+            "GAMEDATA",
+            "1PBAT",
+            "B5_01",
+            "B5_01.PRJ",
+        ]
+        .iter()
+        .collect();
+
+        let file = File::open(d.clone()).unwrap();
+        let _project = Decoder::new(file).decode().unwrap();
+    }
+
+    #[test]
+    fn test_decode_all() {
+        let d: PathBuf = [
+            std::env::var("DARKOMEN_PATH").unwrap().as_str(),
+            "DARKOMEN",
+            "GAMEDATA",
+            "1PBAT",
+        ]
+        .iter()
+        .collect();
+
+        let root_output_dir: PathBuf = [env!("CARGO_MANIFEST_DIR"), "decoded", "projects"]
+            .iter()
+            .collect();
+
+        std::fs::create_dir_all(&root_output_dir).unwrap();
+
+        fn visit_dirs(dir: &Path, cb: &mut dyn FnMut(&Path)) {
+            println!("Reading dir {:?}", dir.display());
+            for entry in std::fs::read_dir(dir).unwrap() {
+                let entry = entry.unwrap();
+                let path = entry.path();
+                if path.is_dir() {
+                    visit_dirs(&path, cb);
+                } else {
+                    cb(&path);
+                }
+            }
+        }
+
+        visit_dirs(&d, &mut |path| {
+            if let Some(ext) = path.extension() {
+                if ext.to_string_lossy().to_uppercase() == "PRJ" {
+                    println!("Decoding {:?}", path.file_name().unwrap());
+
+                    let file = File::open(path).unwrap();
+                    let project = Decoder::new(file).decode().unwrap();
+
+                    // Each project should have 2 tracks.
+                    assert_eq!(project.tracks.len(), 2);
+
+                    // Each track should have 6 control points.
+                    for track in &project.tracks {
+                        assert_eq!(track.control_points.len(), 6);
+                    }
+
+                    // Each instance with a GFX code should have a furniture
+                    // model slot, i.e. instances with GFX always have an
+                    // associated furniture model.
+                    for instance in &project.instances {
+                        assert!(
+                            instance.gfx_code == 0 || instance.furniture_model_slot != 0,
+                            "instance with GFX code {} has no furniture model slot",
+                            instance.gfx_code
+                        );
+                    }
+
+                    let output_path =
+                        append_ext("ron", root_output_dir.join(path.file_name().unwrap()));
+                    let mut output_file = File::create(output_path).unwrap();
+                    ron::ser::to_writer_pretty(&mut output_file, &project, Default::default())
+                        .unwrap();
+
+                    // Write out both heightmap images.
+                    {
+                        let output_dir = root_output_dir.join("heightmaps");
+                        std::fs::create_dir_all(&output_dir).unwrap();
+
+                        for map_num in 1..=2 {
+                            let img = if map_num == 1 {
+                                project.terrain.get_heightmap1_image()
+                            } else {
+                                project.terrain.get_heightmap2_image()
+                            };
+
+                            let output_path = output_dir
+                                .join(path.file_stem().unwrap())
+                                .with_extension(format!("map{}.png", map_num));
+
+                            img.save(output_path).unwrap();
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    fn append_ext(ext: impl AsRef<OsStr>, path: PathBuf) -> PathBuf {
+        let mut os_string: OsString = path.into();
+        os_string.push(".");
+        os_string.push(ext.as_ref());
+        os_string.into()
     }
 }
