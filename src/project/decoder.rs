@@ -9,28 +9,29 @@ use std::{
 /// The format ID used in all .PRJ files.
 ///
 /// Trailing spaces intended.
-const FORMAT: &str = "Dark Omen Battle file 1.10      ";
+pub(crate) const FORMAT: &str = "Dark Omen Battle file 1.10      ";
 
-const BASE_BLOCK_ID: &str = "BASE";
-const WATER_BLOCK_ID: &str = "WATR";
-const FURNITURE_BLOCK_ID: &str = "FURN";
-const INSTANCES_BLOCK_ID: &str = "INST";
-const TERRAIN_BLOCK_ID: &str = "TERR";
-const ATTRIBUTES_BLOCK_ID: &str = "ATTR";
-const EXCL_BLOCK_ID: &str = "EXCL";
-const MUSIC_BLOCK_ID: &str = "MUSC";
-const TRACKS_BLOCK_ID: &str = "TRAC";
-const EDIT_BLOCK_ID: &str = "EDIT";
+pub(crate) const BASE_BLOCK_ID: &str = "BASE";
+pub(crate) const WATER_BLOCK_ID: &str = "WATR";
+pub(crate) const FURNITURE_BLOCK_ID: &str = "FURN";
+pub(crate) const INSTANCES_BLOCK_ID: &str = "INST";
+pub(crate) const TERRAIN_BLOCK_ID: &str = "TERR";
+pub(crate) const ATTRIBUTES_BLOCK_ID: &str = "ATTR";
+pub(crate) const EXCL_BLOCK_ID: &str = "EXCL";
+pub(crate) const MUSIC_BLOCK_ID: &str = "MUSC";
+pub(crate) const TRACKS_BLOCK_ID: &str = "TRAC";
+pub(crate) const EDIT_BLOCK_ID: &str = "EDIT";
 
-const HEADER_SIZE: usize = 32;
-const BLOCK_HEADER_SIZE: usize = 8;
-const FURNITURE_BLOCK_HEADER_SIZE: usize = BLOCK_HEADER_SIZE + 4;
-const INSTANCES_BLOCK_HEADER_SIZE: usize = BLOCK_HEADER_SIZE + 4 + 4;
-const TERRAIN_BLOCK_HEADER_SIZE: usize = BLOCK_HEADER_SIZE + 20;
-const ATTRIBUTES_BLOCK_HEADER_SIZE: usize = BLOCK_HEADER_SIZE;
-const EXCL_BLOCK_HEADER_SIZE: usize = 8;
-const MUSIC_BLOCK_DATA_SIZE: usize = 20;
-const TRACKS_BLOCK_HEADER_SIZE: usize = 8;
+pub(crate) const HEADER_SIZE: usize = 32;
+pub(crate) const BLOCK_HEADER_SIZE: usize = 8;
+pub(crate) const FURNITURE_BLOCK_HEADER_SIZE: usize = BLOCK_HEADER_SIZE + 4;
+pub(crate) const INSTANCES_BLOCK_HEADER_SIZE: usize = BLOCK_HEADER_SIZE + 4 + 4;
+pub(crate) const INSTANCE_SIZE: usize = 152;
+pub(crate) const TERRAIN_BLOCK_HEADER_SIZE: usize = BLOCK_HEADER_SIZE + 20;
+pub(crate) const ATTRIBUTES_BLOCK_HEADER_SIZE: usize = BLOCK_HEADER_SIZE;
+pub(crate) const EXCL_BLOCK_HEADER_SIZE: usize = 8;
+pub(crate) const MUSIC_BLOCK_DATA_SIZE: usize = 20;
+pub(crate) const TRACKS_BLOCK_HEADER_SIZE: usize = 8;
 
 #[derive(Debug)]
 pub enum DecodeError {
@@ -230,26 +231,10 @@ impl<R: Read + Seek> Decoder<R> {
             next: i32::from_le_bytes(buf[4..8].try_into().unwrap()),
             selected: i32::from_le_bytes(buf[8..12].try_into().unwrap()),
             exclude_from_terrain: i32::from_le_bytes(buf[12..16].try_into().unwrap()),
-            position: Vec3::new(
-                u32::from_le_bytes(buf[16..20].try_into().unwrap()) as f32 / 1024.,
-                u32::from_le_bytes(buf[20..24].try_into().unwrap()) as f32 / 1024.,
-                u32::from_le_bytes(buf[24..28].try_into().unwrap()) as f32 / 1024.,
-            ),
-            rotation: Vec3::new(
-                u32::from_le_bytes(buf[28..32].try_into().unwrap()) as f32 / 4096.,
-                u32::from_le_bytes(buf[32..36].try_into().unwrap()) as f32 / 4096.,
-                u32::from_le_bytes(buf[36..40].try_into().unwrap()) as f32 / 4096.,
-            ),
-            aabb_min: Vec3::new(
-                i32::from_le_bytes(buf[40..44].try_into().unwrap()) as f32 / 1024.,
-                i32::from_le_bytes(buf[44..48].try_into().unwrap()) as f32 / 1024.,
-                i32::from_le_bytes(buf[48..52].try_into().unwrap()) as f32 / 1024.,
-            ),
-            aabb_max: Vec3::new(
-                i32::from_le_bytes(buf[52..56].try_into().unwrap()) as f32 / 1024.,
-                i32::from_le_bytes(buf[56..60].try_into().unwrap()) as f32 / 1024.,
-                i32::from_le_bytes(buf[60..64].try_into().unwrap()) as f32 / 1024.,
-            ),
+            position: self.read_dvec3_from_u32s(&buf[16..28], 1024.)?,
+            rotation: self.read_dvec3_from_u32s(&buf[28..40], 4096.)?,
+            aabb_min: self.read_dvec3_from_i32s(&buf[40..52], 1024.)?,
+            aabb_max: self.read_dvec3_from_i32s(&buf[52..64], 1024.)?,
             furniture_model_slot: u32::from_le_bytes(buf[64..68].try_into().unwrap()),
             model_id: i32::from_le_bytes(buf[68..72].try_into().unwrap()),
             attackable: i32::from_le_bytes(buf[72..76].try_into().unwrap()),
@@ -402,7 +387,7 @@ impl<R: Read + Seek> Decoder<R> {
         })
     }
 
-    fn read_excl(&mut self) -> Result<Vec<u8>, DecodeError> {
+    fn read_excl(&mut self) -> Result<Excl, DecodeError> {
         let mut header = vec![0; EXCL_BLOCK_HEADER_SIZE];
         self.reader.read_exact(&mut header)?;
 
@@ -412,17 +397,17 @@ impl<R: Read + Seek> Decoder<R> {
             ));
         }
 
-        let _count = u32::from_le_bytes(
+        let unknown1 = u32::from_le_bytes(
             header[4..4 + size_of::<u32>()]
                 .try_into()
                 .map_err(|_| DecodeError::InvalidData)?,
-        ) as usize;
+        );
 
         // It's not possible to know the size of the EXCL block data, so read
         // until the next block.
-        let buf = self.read_until_block(MUSIC_BLOCK_ID)?;
+        let unknown2 = self.read_until_block(MUSIC_BLOCK_ID)?;
 
-        Ok(buf)
+        Ok(Excl { unknown1, unknown2 })
     }
 
     fn read_music(&mut self) -> Result<String, DecodeError> {
@@ -560,5 +545,21 @@ impl<R: Read + Seek> Decoder<R> {
         } else {
             buf
         })
+    }
+
+    fn read_dvec3_from_u32s(&mut self, buf: &[u8], multiplier: f64) -> Result<DVec3, DecodeError> {
+        let x = u32::from_le_bytes(buf[0..4].try_into().unwrap()) as f64 / multiplier;
+        let y = u32::from_le_bytes(buf[4..8].try_into().unwrap()) as f64 / multiplier;
+        let z = u32::from_le_bytes(buf[8..12].try_into().unwrap()) as f64 / multiplier;
+
+        Ok(DVec3::new(x, y, z))
+    }
+
+    fn read_dvec3_from_i32s(&mut self, buf: &[u8], multiplier: f64) -> Result<DVec3, DecodeError> {
+        let x = i32::from_le_bytes(buf[0..4].try_into().unwrap()) as f64 / multiplier;
+        let y = i32::from_le_bytes(buf[4..8].try_into().unwrap()) as f64 / multiplier;
+        let z = i32::from_le_bytes(buf[8..12].try_into().unwrap()) as f64 / multiplier;
+
+        Ok(DVec3::new(x, y, z))
     }
 }
