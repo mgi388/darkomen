@@ -228,12 +228,13 @@ pub struct TrackControlPoint {
     pub flags: TrackControlPointFlags,
 }
 
+#[repr(transparent)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+pub struct TrackControlPointFlags(u32);
+
 bitflags! {
-    #[repr(transparent)]
-    #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
-    #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
-    #[cfg_attr(feature = "bevy_reflect", reflect_value(Debug, Deserialize, Hash, PartialEq, Serialize))]
-    pub struct TrackControlPointFlags: u8 {
+    impl TrackControlPointFlags: u32 {
         const NONE = 0;
         const UNKNOWN_FLAG_1 = 1 << 0;
         const UNKNOWN_FLAG_2 = 1 << 1;

@@ -298,12 +298,13 @@ pub enum RegimentMount {
     Boar,
 }
 
+#[repr(transparent)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+pub struct RegimentAttributes(u32);
+
 bitflags! {
-    #[repr(transparent)]
-    #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
-    #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
-    #[cfg_attr(feature = "bevy_reflect", reflect_value(Debug, Deserialize, Hash, PartialEq, Serialize))]
-    pub struct RegimentAttributes: u32 {
+    impl RegimentAttributes: u32 {
         const NONE = 0;
         /// The regiment never retreats from a fight and the retreat button is
         /// disabled.

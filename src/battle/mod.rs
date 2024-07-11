@@ -45,12 +45,13 @@ pub struct Obstacle {
     pub dir: i32,
 }
 
+#[repr(transparent)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+pub struct ObstacleFlags(u32);
+
 bitflags! {
-    #[repr(transparent)]
-    #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
-    #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
-    #[cfg_attr(feature = "bevy_reflect", reflect_value(Debug, Deserialize, Hash, PartialEq, Serialize))]
-    pub struct ObstacleFlags: u32 {
+    impl ObstacleFlags: u32 {
         const NONE = 0;
         const IS_ENABLED = 1 << 0;
         const BLOCKS_MOVEMENT = 1 << 1;
@@ -88,12 +89,13 @@ pub struct Region {
     pub line_segments: Vec<LineSegment>,
 }
 
+#[repr(transparent)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+pub struct RegionFlags(u32);
+
 bitflags! {
-    #[repr(transparent)]
-    #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
-    #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
-    #[cfg_attr(feature = "bevy_reflect", reflect_value(Debug, Deserialize, Hash, PartialEq, Serialize))]
-    pub struct RegionFlags: u32 {
+    impl RegionFlags: u32 {
         const NONE = 0;
         const UNKNOWN_FLAG_1 = 1 << 0;
         const IS_CLOSED = 1 << 1;
@@ -127,12 +129,13 @@ pub struct Node {
     pub script_id: u32,
 }
 
+#[repr(transparent)]
+#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+pub struct NodeFlags(u32);
+
 bitflags! {
-    #[repr(transparent)]
-    #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
-    #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
-    #[cfg_attr(feature = "bevy_reflect", reflect_value(Debug, Deserialize, Hash, PartialEq, Serialize))]
-    pub struct NodeFlags: u32 {
+    impl NodeFlags: u32 {
         const NONE = 0;
         const IS_CENTERED_POINT = 1 << 0;
         const IS_UNIT = 1 << 1;
