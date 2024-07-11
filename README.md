@@ -23,7 +23,7 @@ The following table shows the game file support in this library:
 | Movies                                     | .TGQ              | ❌   | ❌    |                               |
 | Particle effects                           | .PLB,.H           | ❌   | ❌    |                               |
 | Portrait scripts                           | .KEY,.SEQ         | ❌   | ❌    |                               |
-| [Projects](src/project)                    | .PRJ              | ✅   | ❌    | ✅ None                       |
+| [Projects](src/project)                    | .PRJ              | ✅   | ✅    | ✅ None                       |
 | Shadows                                    | .SHD              | ❌   | ❌    |                               |
 | [Sound effects](src/sound/sfx)             | .H                | ✅   | ❌    | ✅ None                       |
 | Sound mono audio                           | .MAD              | ❌   | ❌    |                               |

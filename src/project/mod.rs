@@ -1,13 +1,15 @@
 mod decoder;
+mod encoder;
 
 #[cfg(feature = "bevy_reflect")]
 use bevy_reflect::prelude::*;
 use bitflags::bitflags;
-use glam::Vec3;
+use glam::{DVec3, Vec3};
 use image::{DynamicImage, GenericImage, Rgba};
 use serde::{Deserialize, Serialize};
 
 pub use decoder::{DecodeError, Decoder};
+pub use encoder::{EncodeError, Encoder};
 
 #[derive(Clone, Debug, Default, Serialize)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
@@ -36,7 +38,7 @@ pub struct Project {
     pub terrain: Terrain,
     pub attributes: Attributes,
     #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
-    excl: Vec<u8>,
+    excl: Excl,
     /// The background music script file name, including the extension. E.g.
     /// `battle1.fsm`.
     pub background_music_script_file_name: String,
@@ -65,10 +67,10 @@ pub struct Instance {
     next: i32,
     selected: i32,
     pub exclude_from_terrain: i32,
-    pub position: Vec3,
-    pub rotation: Vec3,
-    pub aabb_min: Vec3,
-    pub aabb_max: Vec3,
+    pub position: DVec3,
+    pub rotation: DVec3,
+    pub aabb_min: DVec3,
+    pub aabb_max: DVec3,
     /// Slot is 1-based, not 0-based. A slot of 1 refers to the first furniture
     /// model and a slot of 0 means the instance is not used.
     pub furniture_model_slot: u32,
@@ -98,6 +100,40 @@ pub struct Instance {
     light_ambient: i32,
     pub unknown2: i32,
     pub unknown3: i32,
+}
+
+impl Instance {
+    pub fn position_lossy(&self) -> Vec3 {
+        Vec3::new(
+            self.position.x as f32,
+            self.position.y as f32,
+            self.position.z as f32,
+        )
+    }
+
+    pub fn rotation_lossy(&self) -> Vec3 {
+        Vec3::new(
+            self.rotation.x as f32,
+            self.rotation.y as f32,
+            self.rotation.z as f32,
+        )
+    }
+
+    pub fn aabb_min_lossy(&self) -> Vec3 {
+        Vec3::new(
+            self.aabb_min.x as f32,
+            self.aabb_min.y as f32,
+            self.aabb_min.z as f32,
+        )
+    }
+
+    pub fn aabb_max_lossy(&self) -> Vec3 {
+        Vec3::new(
+            self.aabb_max.x as f32,
+            self.aabb_max.y as f32,
+            self.aabb_max.z as f32,
+        )
+    }
 }
 
 #[derive(Clone, Debug, Default, Serialize)]
@@ -212,6 +248,14 @@ pub struct Attributes {
     pub unknown: Vec<u8>,
 }
 
+#[derive(Clone, Debug, Default, Serialize)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+pub struct Excl {
+    pub unknown1: u32, // seems like a count, but unknown
+    #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
+    pub unknown2: Vec<u8>,
+}
+
 #[derive(Clone, Debug, Serialize)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct Track {
@@ -244,6 +288,7 @@ bitflags! {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use pretty_assertions::assert_eq;
     use std::{
         ffi::{OsStr, OsString},
         fs::File,
@@ -260,6 +305,37 @@ mod tests {
         assert_eq!(project.get_base_m3x_model_file_name(), "base.M3X");
     }
 
+    fn roundtrip_test(original_bytes: &[u8], p: &Project) {
+        let mut encoded_bytes = Vec::new();
+        Encoder::new(&mut encoded_bytes).encode(p).unwrap();
+
+        let original_bytes = original_bytes
+            .chunks(16)
+            .map(|chunk| {
+                chunk
+                    .iter()
+                    .map(|b| format!("{:02X}", b))
+                    .collect::<Vec<_>>()
+                    .join(" ")
+            })
+            .collect::<Vec<_>>()
+            .join("\n");
+
+        let encoded_bytes = encoded_bytes
+            .chunks(16)
+            .map(|chunk| {
+                chunk
+                    .iter()
+                    .map(|b| format!("{:02X}", b))
+                    .collect::<Vec<_>>()
+                    .join(" ")
+            })
+            .collect::<Vec<_>>()
+            .join("\n");
+
+        assert_eq!(original_bytes, encoded_bytes);
+    }
+
     #[test]
     fn test_decode_b1_01() {
         let d: PathBuf = [
@@ -272,6 +348,8 @@ mod tests {
         ]
         .iter()
         .collect();
+
+        let original_bytes = std::fs::read(d.clone()).unwrap();
 
         let file = File::open(d.clone()).unwrap();
         let project = Decoder::new(file).decode().unwrap();
@@ -306,6 +384,29 @@ mod tests {
             assert_eq!(project.terrain.get_height(1, 1448, 1856), 50.); // start pos
             assert_eq!(project.terrain.get_height(1, -248, 1856), 48.); // end pos
         }
+
+        roundtrip_test(&original_bytes, &project);
+    }
+
+    #[test]
+    fn test_decode_mb4_01() {
+        let d: PathBuf = [
+            std::env::var("DARKOMEN_PATH").unwrap().as_str(),
+            "DARKOMEN",
+            "GAMEDATA",
+            "1PBAT",
+            "B4_01",
+            "MB4_01.PRJ",
+        ]
+        .iter()
+        .collect();
+
+        let original_bytes = std::fs::read(d.clone()).unwrap();
+
+        let file = File::open(d.clone()).unwrap();
+        let project = Decoder::new(file).decode().unwrap();
+
+        roundtrip_test(&original_bytes, &project);
     }
 
     #[test]
@@ -321,10 +422,14 @@ mod tests {
         .iter()
         .collect();
 
+        let original_bytes = std::fs::read(d.clone()).unwrap();
+
         let file = File::open(d.clone()).unwrap();
         let project = Decoder::new(file).decode().unwrap();
 
         assert_eq!(project.water_model_file_name, None); // doesn't have a water model
+
+        roundtrip_test(&original_bytes, &project);
     }
 
     #[test]
@@ -340,8 +445,12 @@ mod tests {
         .iter()
         .collect();
 
+        let original_bytes = std::fs::read(d.clone()).unwrap();
+
         let file = File::open(d.clone()).unwrap();
-        let _project = Decoder::new(file).decode().unwrap();
+        let project = Decoder::new(file).decode().unwrap();
+
+        roundtrip_test(&original_bytes, &project);
     }
 
     #[test]
@@ -379,8 +488,12 @@ mod tests {
                 if ext.to_string_lossy().to_uppercase() == "PRJ" {
                     println!("Decoding {:?}", path.file_name().unwrap());
 
+                    let original_bytes = std::fs::read(path).unwrap();
+
                     let file = File::open(path).unwrap();
                     let project = Decoder::new(file).decode().unwrap();
+
+                    roundtrip_test(&original_bytes, &project);
 
                     // Each project should have 2 tracks.
                     assert_eq!(project.tracks.len(), 2);
