@@ -1,11 +1,10 @@
+use super::*;
 use std::{
     ffi::CStr,
     fmt,
     io::{Error as IoError, Read, Seek},
     mem::size_of,
 };
-
-use super::*;
 
 /// The format ID used in all .PRJ files.
 ///
@@ -492,7 +491,7 @@ impl<R: Read + Seek> Decoder<R> {
                     x,
                     y,
                     z,
-                    flags: TrackControlPointFlags::from_bits(flags as u8)
+                    flags: TrackControlPointFlags::from_bits(flags as u32)
                         .expect("track control point flags should be valid"),
                 });
             }

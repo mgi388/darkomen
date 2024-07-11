@@ -96,12 +96,13 @@ impl TryFrom<u8> for SfxType {
     }
 }
 
+#[repr(transparent)]
+#[derive(Clone, Copy, Debug, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+pub struct SfxFlags(u8);
+
 bitflags! {
-    #[repr(transparent)]
-    #[derive(Clone, Copy, Debug, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
-    #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
-    #[cfg_attr(feature = "bevy_reflect", reflect_value(Debug, Deserialize, Hash, PartialEq, Serialize))]
-    pub struct SfxFlags: u8 {
+    impl SfxFlags: u8 {
         const NONE = 0;
         const UNKNOWN_FLAG_1 = 1 << 0;
         const UNKNOWN_FLAG_2 = 1 << 1;
