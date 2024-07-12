@@ -148,7 +148,8 @@ pub struct Terrain {
     #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
     pub heightmap2_blocks: Vec<TerrainBlock>,
     /// A list of offsets for 8x8 block. Height offset for each block based on
-    /// minimum height.
+    /// minimum height. Each item is a list which must have exactly 64 (8x8)
+    /// u8s.
     #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
     pub offsets: Vec<Vec<u8>>,
 }
@@ -162,7 +163,6 @@ impl Terrain {
         self.heightmap_image(&self.heightmap2_blocks)
     }
 
-    /// TODO: Not really working perfectly.
     fn heightmap_image(&self, blocks: &Vec<TerrainBlock>) -> DynamicImage {
         let mut img = DynamicImage::new_rgba8(self.width, self.height);
 
@@ -172,7 +172,6 @@ impl Terrain {
         for block in blocks {
             let offsets = &self.offsets[block.offset_index as usize];
 
-            col += 1;
             if col * 8 >= self.width {
                 col = 0;
                 row += 1;
@@ -202,9 +201,11 @@ impl Terrain {
                     img.put_pixel(target_x, target_y, Rgba([color, color, color, 255]));
                 }
             }
+
+            col += 1;
         }
 
-        img
+        img.fliph() // needs to be flipped horizontally for some reason
     }
 
     /// TODO: Not really working perfectly.
