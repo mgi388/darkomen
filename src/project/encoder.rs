@@ -210,8 +210,8 @@ impl<W: Write> Encoder<W> {
             .write_all(&(heightmaps_block_size as u32).to_le_bytes())?;
 
         // Write the terrain data.
-        self.write_terrain_blocks(&t.heightmap1_blocks)?;
-        self.write_terrain_blocks(&t.heightmap2_blocks)?;
+        self.write_heightmap_blocks(&t.heightmap1_blocks)?;
+        self.write_heightmap_blocks(&t.heightmap2_blocks)?;
 
         // Write the offsets.
         let offsets_block_size = t.offsets.len() * 64;
@@ -224,7 +224,7 @@ impl<W: Write> Encoder<W> {
         Ok(())
     }
 
-    fn write_terrain_blocks(&mut self, blocks: &Vec<TerrainBlock>) -> Result<(), EncodeError> {
+    fn write_heightmap_blocks(&mut self, blocks: &Vec<TerrainBlock>) -> Result<(), EncodeError> {
         for block in blocks {
             let offset_index = block.offset_index * 64;
             self.writer.write_all(&block.minimum.to_le_bytes())?;

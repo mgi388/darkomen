@@ -43,7 +43,7 @@ pub enum DecodeError {
     InvalidData,
     InvalidTerrainBlockCount(usize),
     InvalidTrackControlPointFlags(i32),
-    InvalidOffsetIndex(u32, u32),
+    InvalidOffsetIndex(u32),
     InvalidOffsetsBlockSize(usize, usize),
 }
 
@@ -70,12 +70,8 @@ impl fmt::Display for DecodeError {
             DecodeError::InvalidTrackControlPointFlags(flags) => {
                 write!(f, "invalid track control point flags: {}", flags)
             }
-            DecodeError::InvalidOffsetIndex(heightmap, index) => {
-                write!(
-                    f,
-                    "heightmap {}: offset index {} is not a multiple of 64",
-                    heightmap, index
-                )
+            DecodeError::InvalidOffsetIndex(index) => {
+                write!(f, "offset index {} is not a multiple of 64", index)
             }
             DecodeError::InvalidOffsetsBlockSize(offset_count, offsets_block_size) => {
                 write!(
@@ -304,40 +300,12 @@ impl<R: Read + Seek> Decoder<R> {
         }
 
         // First heightmap.
-        let mut buf = vec![0; heightmap_block_size];
-        self.reader.read_exact(&mut buf)?;
-
-        let mut heightmap1_blocks = Vec::with_capacity(uncompressed_block_count);
-        for i in 0..uncompressed_block_count {
-            let minimum = u32::from_le_bytes(buf[i * 8..i * 8 + 4].try_into().unwrap());
-            let offset_index = u32::from_le_bytes(buf[i * 8 + 4..i * 8 + 8].try_into().unwrap());
-            if offset_index % 64 != 0 {
-                return Err(DecodeError::InvalidOffsetIndex(1, offset_index));
-            }
-            let offset_index = offset_index / 64;
-            heightmap1_blocks.push(TerrainBlock {
-                minimum,
-                offset_index,
-            });
-        }
+        let heightmap1_blocks =
+            self.read_heightmap_blocks(uncompressed_block_count, heightmap_block_size)?;
 
         // Second heightmap.
-        let mut buf = vec![0; heightmap_block_size];
-        self.reader.read_exact(&mut buf)?;
-
-        let mut heightmap2_blocks = Vec::with_capacity(uncompressed_block_count);
-        for i in 0..uncompressed_block_count {
-            let minimum = u32::from_le_bytes(buf[i * 8..i * 8 + 4].try_into().unwrap());
-            let offset_index = u32::from_le_bytes(buf[i * 8 + 4..i * 8 + 8].try_into().unwrap());
-            if offset_index % 64 != 0 {
-                return Err(DecodeError::InvalidOffsetIndex(2, offset_index));
-            }
-            let offset_index = offset_index / 64;
-            heightmap2_blocks.push(TerrainBlock {
-                minimum,
-                offset_index,
-            });
-        }
+        let heightmap2_blocks =
+            self.read_heightmap_blocks(uncompressed_block_count, heightmap_block_size)?;
 
         // Read offsets.
         let mut buf = vec![0; size_of::<u32>()];
@@ -366,6 +334,31 @@ impl<R: Read + Seek> Decoder<R> {
             heightmap2_blocks,
             offsets,
         })
+    }
+
+    fn read_heightmap_blocks(
+        &mut self,
+        count: usize,
+        size: usize,
+    ) -> Result<Vec<TerrainBlock>, DecodeError> {
+        let mut buf = vec![0; size];
+        self.reader.read_exact(&mut buf)?;
+
+        let mut blocks = Vec::with_capacity(count);
+        for i in 0..count {
+            let minimum = u32::from_le_bytes(buf[i * 8..i * 8 + 4].try_into().unwrap());
+            let offset_index = u32::from_le_bytes(buf[i * 8 + 4..i * 8 + 8].try_into().unwrap());
+            if offset_index % 64 != 0 {
+                return Err(DecodeError::InvalidOffsetIndex(offset_index));
+            }
+            let offset_index = offset_index / 64;
+            blocks.push(TerrainBlock {
+                minimum,
+                offset_index,
+            });
+        }
+
+        Ok(blocks)
     }
 
     fn read_attributes(&mut self) -> Result<Attributes, DecodeError> {
