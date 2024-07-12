@@ -43,6 +43,8 @@ pub enum DecodeError {
     InvalidData,
     InvalidTerrainBlockCount(usize),
     InvalidTrackControlPointFlags(i32),
+    InvalidOffsetIndex(u32, u32),
+    InvalidOffsetsBlockSize(usize, usize),
 }
 
 impl std::error::Error for DecodeError {}
@@ -67,6 +69,20 @@ impl fmt::Display for DecodeError {
             }
             DecodeError::InvalidTrackControlPointFlags(flags) => {
                 write!(f, "invalid track control point flags: {}", flags)
+            }
+            DecodeError::InvalidOffsetIndex(heightmap, index) => {
+                write!(
+                    f,
+                    "heightmap {}: offset index {} is not a multiple of 64",
+                    heightmap, index
+                )
+            }
+            DecodeError::InvalidOffsetsBlockSize(offset_count, offsets_block_size) => {
+                write!(
+                    f,
+                    "invalid offsets block size {}, should be offset count ({}) x 64",
+                    offsets_block_size, offset_count
+                )
             }
         }
     }
@@ -273,22 +289,22 @@ impl<R: Read + Seek> Decoder<R> {
         let _size = u32::from_le_bytes(header[4..8].try_into().unwrap()) as usize; // size, not used
         let width = u32::from_le_bytes(header[8..12].try_into().unwrap());
         let height = u32::from_le_bytes(header[12..16].try_into().unwrap());
-        let compressed_block_count =
-            u32::from_le_bytes(header[16..20].try_into().unwrap()) as usize;
+        let offset_count = u32::from_le_bytes(header[16..20].try_into().unwrap()) as usize;
         let uncompressed_block_count =
             u32::from_le_bytes(header[20..24].try_into().unwrap()) as usize;
-        let heightmaps_size = u32::from_le_bytes(header[24..28].try_into().unwrap()) as usize; // size in bytes of chunk that contains both heightmaps
+        let heightmaps_block_size = u32::from_le_bytes(header[24..28].try_into().unwrap()) as usize; // size in bytes of chunk that contains both heightmaps
+        let heightmap_block_size = heightmaps_block_size / 2; // size in bytes of one heightmap's block
 
-        // This check just helps prove that the size of the heightmaps chunk
+        // This check just helps prove that the size of the heightmap chunk
         // also lets us get the uncompressed block count.
-        if heightmaps_size / 2 / size_of::<TerrainBlock>() != uncompressed_block_count {
+        if heightmap_block_size / size_of::<TerrainBlock>() != uncompressed_block_count {
             return Err(DecodeError::Invalid(
-                "uncompressed block count and map block size mismatch".to_string(),
+                "uncompressed block count and heightmap block size mismatch".to_string(),
             ));
         }
 
         // First heightmap.
-        let mut buf = vec![0; heightmaps_size / 2]; // size of one heightmap's blocks chunk
+        let mut buf = vec![0; heightmap_block_size];
         self.reader.read_exact(&mut buf)?;
 
         let mut heightmap1_blocks = Vec::with_capacity(uncompressed_block_count);
@@ -296,11 +312,7 @@ impl<R: Read + Seek> Decoder<R> {
             let minimum = u32::from_le_bytes(buf[i * 8..i * 8 + 4].try_into().unwrap());
             let offset_index = u32::from_le_bytes(buf[i * 8 + 4..i * 8 + 8].try_into().unwrap());
             if offset_index % 64 != 0 {
-                // TODO: Wrong error type.
-                return Err(DecodeError::InvalidBlockFormat(format!(
-                    "heightmap 1: offset index is not a multiple of 64, got {}",
-                    offset_index
-                )));
+                return Err(DecodeError::InvalidOffsetIndex(1, offset_index));
             }
             let offset_index = offset_index / 64;
             heightmap1_blocks.push(TerrainBlock {
@@ -310,7 +322,7 @@ impl<R: Read + Seek> Decoder<R> {
         }
 
         // Second heightmap.
-        let mut buf = vec![0; heightmaps_size / 2]; // size of one heightmap's blocks chunk
+        let mut buf = vec![0; heightmap_block_size];
         self.reader.read_exact(&mut buf)?;
 
         let mut heightmap2_blocks = Vec::with_capacity(uncompressed_block_count);
@@ -318,11 +330,7 @@ impl<R: Read + Seek> Decoder<R> {
             let minimum = u32::from_le_bytes(buf[i * 8..i * 8 + 4].try_into().unwrap());
             let offset_index = u32::from_le_bytes(buf[i * 8 + 4..i * 8 + 8].try_into().unwrap());
             if offset_index % 64 != 0 {
-                // TODO: Wrong error type.
-                return Err(DecodeError::InvalidBlockFormat(format!(
-                    "heightmap 2: offset index is not a multiple of 64, got {}",
-                    offset_index
-                )));
+                return Err(DecodeError::InvalidOffsetIndex(2, offset_index));
             }
             let offset_index = offset_index / 64;
             heightmap2_blocks.push(TerrainBlock {
@@ -332,23 +340,22 @@ impl<R: Read + Seek> Decoder<R> {
         }
 
         // Read offsets.
-        let mut buf = vec![0; 4];
+        let mut buf = vec![0; size_of::<u32>()];
         self.reader.read_exact(&mut buf)?;
         let offsets_size = u32::from_le_bytes(buf.try_into().unwrap()) as usize;
 
-        if compressed_block_count * 64 != offsets_size {
-            // TODO: Wrong error type.
-            return Err(DecodeError::InvalidBlockFormat(format!(
-                "compressed block count and offsets size mismatch: got {}, {}",
-                compressed_block_count, offsets_size
-            )));
+        if offset_count * 64 != offsets_size {
+            return Err(DecodeError::InvalidOffsetsBlockSize(
+                offset_count,
+                offsets_size,
+            ));
         }
 
         let mut buf = vec![0; offsets_size];
         self.reader.read_exact(&mut buf)?;
 
-        let mut offsets = Vec::with_capacity(compressed_block_count);
-        for i in 0..compressed_block_count {
+        let mut offsets = Vec::with_capacity(offset_count);
+        for i in 0..offset_count {
             offsets.push(buf[i * 64..(i + 1) * 64].to_vec());
         }
 

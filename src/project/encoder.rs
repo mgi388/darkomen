@@ -192,14 +192,13 @@ impl<W: Write> Encoder<W> {
         }
 
         // Write the header.
-        let heightmaps_size = 2 * t.heightmap1_blocks.len() * size_of::<TerrainBlock>();
-
-        let single_terrain_block_size = t.heightmap1_blocks.len() * size_of::<TerrainBlock>();
+        let heightmap_block_size = t.heightmap1_blocks.len() * size_of::<TerrainBlock>();
+        let heightmaps_block_size = 2 * heightmap_block_size;
         let offsets_block_size = size_of::<u32>() + (t.offsets.len() * 64);
-        let data_size = TERRAIN_BLOCK_HEADER_SIZE - BLOCK_HEADER_SIZE
-            + single_terrain_block_size // only includes one of the heightmaps for some reason
+        let block_size = TERRAIN_BLOCK_HEADER_SIZE - BLOCK_HEADER_SIZE
+            + heightmap_block_size // only includes one of the heightmaps for some reason
             + offsets_block_size;
-        self.write_block_header(TERRAIN_BLOCK_ID, data_size as u32)?;
+        self.write_block_header(TERRAIN_BLOCK_ID, block_size as u32)?;
 
         self.writer.write_all(&t.width.to_le_bytes())?;
         self.writer.write_all(&t.height.to_le_bytes())?;
@@ -208,15 +207,16 @@ impl<W: Write> Encoder<W> {
         self.writer
             .write_all(&(t.heightmap1_blocks.len() as u32).to_le_bytes())?;
         self.writer
-            .write_all(&(heightmaps_size as u32).to_le_bytes())?;
+            .write_all(&(heightmaps_block_size as u32).to_le_bytes())?;
 
         // Write the terrain data.
         self.write_terrain_blocks(&t.heightmap1_blocks)?;
         self.write_terrain_blocks(&t.heightmap2_blocks)?;
 
         // Write the offsets.
-        let offsets_size = t.offsets.len() as u32 * 64;
-        self.writer.write_all(&offsets_size.to_le_bytes())?;
+        let offsets_block_size = t.offsets.len() * 64;
+        self.writer
+            .write_all(&(offsets_block_size as u32).to_le_bytes())?;
         for offset in &t.offsets {
             self.writer.write_all(offset)?;
         }

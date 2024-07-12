@@ -147,8 +147,8 @@ pub struct Terrain {
     /// A list of large blocks for the second heightmap.
     #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
     pub heightmap2_blocks: Vec<TerrainBlock>,
-    /// Offsets is a list of offsets for 8x8 block. Height offset for each block
-    /// based on minimum height.
+    /// A list of offsets for 8x8 block. Height offset for each block based on
+    /// minimum height.
     #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
     pub offsets: Vec<Vec<u8>>,
 }
