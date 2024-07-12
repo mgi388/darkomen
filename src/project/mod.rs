@@ -154,16 +154,16 @@ pub struct Terrain {
 }
 
 impl Terrain {
-    pub fn get_heightmap1_image(&self) -> DynamicImage {
-        self.get_heightmap_image(&self.heightmap1_blocks)
+    pub fn heightmap1_image(&self) -> DynamicImage {
+        self.heightmap_image(&self.heightmap1_blocks)
     }
 
-    pub fn get_heightmap2_image(&self) -> DynamicImage {
-        self.get_heightmap_image(&self.heightmap2_blocks)
+    pub fn heightmap2_image(&self) -> DynamicImage {
+        self.heightmap_image(&self.heightmap2_blocks)
     }
 
     /// TODO: Not really working perfectly.
-    fn get_heightmap_image(&self, blocks: &Vec<TerrainBlock>) -> DynamicImage {
+    fn heightmap_image(&self, blocks: &Vec<TerrainBlock>) -> DynamicImage {
         let mut img = DynamicImage::new_rgba8(self.width, self.height);
 
         let mut row = 0;
@@ -235,7 +235,13 @@ impl Terrain {
 #[derive(Clone, Debug, Serialize)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct TerrainBlock {
+    /// The minimum height of all 64 (8x8) values in the block. This is the base
+    /// height for the block.
     pub minimum: u32,
+    /// An index into the offsets list. Used to get the 64 (8x8) values that
+    /// make up the block. The values are height offsets based on the minimum
+    /// height. To get the height at a specific point, you need to combine the
+    /// minimum height with the offset at that point.
     pub offset_index: u32,
 }
 
@@ -514,6 +520,24 @@ mod tests {
                         );
                     }
 
+                    let has_invalid_offset_index_in_heightmap1 =
+                        project.terrain.heightmap1_blocks.iter().any(|block| {
+                            block.offset_index as usize >= project.terrain.offsets.len()
+                        });
+                    assert!(
+                        !has_invalid_offset_index_in_heightmap1,
+                        "found a block with an invalid offset index in heightmap1"
+                    );
+
+                    let has_invalid_offset_index_in_heightmap2 =
+                        project.terrain.heightmap2_blocks.iter().any(|block| {
+                            block.offset_index as usize >= project.terrain.offsets.len()
+                        });
+                    assert!(
+                        !has_invalid_offset_index_in_heightmap2,
+                        "found a block with an invalid offset index in heightmap2"
+                    );
+
                     let output_path =
                         append_ext("ron", root_output_dir.join(path.file_name().unwrap()));
                     let mut output_file = File::create(output_path).unwrap();
@@ -527,9 +551,9 @@ mod tests {
 
                         for map_num in 1..=2 {
                             let img = if map_num == 1 {
-                                project.terrain.get_heightmap1_image()
+                                project.terrain.heightmap1_image()
                             } else {
-                                project.terrain.get_heightmap2_image()
+                                project.terrain.heightmap2_image()
                             };
 
                             let output_path = output_dir
