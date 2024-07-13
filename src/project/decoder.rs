@@ -300,12 +300,10 @@ impl<R: Read + Seek> Decoder<R> {
         }
 
         // First heightmap.
-        let heightmap1_blocks =
-            self.read_heightmap_blocks(uncompressed_block_count, heightmap_block_size)?;
+        let heightmap1_blocks = self.read_heightmap_blocks(uncompressed_block_count)?;
 
         // Second heightmap.
-        let heightmap2_blocks =
-            self.read_heightmap_blocks(uncompressed_block_count, heightmap_block_size)?;
+        let heightmap2_blocks = self.read_heightmap_blocks(uncompressed_block_count)?;
 
         // Read offsets.
         let mut buf = vec![0; size_of::<u32>()];
@@ -336,29 +334,29 @@ impl<R: Read + Seek> Decoder<R> {
         })
     }
 
-    fn read_heightmap_blocks(
-        &mut self,
-        count: usize,
-        size: usize,
-    ) -> Result<Vec<TerrainBlock>, DecodeError> {
-        let mut buf = vec![0; size];
+    fn read_heightmap_blocks(&mut self, count: usize) -> Result<Vec<TerrainBlock>, DecodeError> {
+        let mut blocks = Vec::with_capacity(count);
+        for _ in 0..count {
+            blocks.push(self.read_terrain_block()?);
+        }
+        Ok(blocks)
+    }
+
+    fn read_terrain_block(&mut self) -> Result<TerrainBlock, DecodeError> {
+        let mut buf = vec![0; size_of::<TerrainBlock>()];
         self.reader.read_exact(&mut buf)?;
 
-        let mut blocks = Vec::with_capacity(count);
-        for i in 0..count {
-            let minimum = u32::from_le_bytes(buf[i * 8..i * 8 + 4].try_into().unwrap());
-            let offset_index = u32::from_le_bytes(buf[i * 8 + 4..i * 8 + 8].try_into().unwrap());
-            if offset_index % 64 != 0 {
-                return Err(DecodeError::InvalidOffsetIndex(offset_index));
-            }
-            let offset_index = offset_index / 64;
-            blocks.push(TerrainBlock {
-                minimum,
-                offset_index,
-            });
+        let minimum = u32::from_le_bytes(buf[0..4].try_into().unwrap());
+        let offset_index = u32::from_le_bytes(buf[4..8].try_into().unwrap());
+        if offset_index % 64 != 0 {
+            return Err(DecodeError::InvalidOffsetIndex(offset_index));
         }
+        let offset_index = offset_index / 64;
 
-        Ok(blocks)
+        Ok(TerrainBlock {
+            minimum,
+            offset_index,
+        })
     }
 
     fn read_attributes(&mut self) -> Result<Attributes, DecodeError> {
