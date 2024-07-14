@@ -19,7 +19,7 @@ The following table shows the game file support in this library:
 | Cursors                                    | .ANI              | ❌   | ❌    |                               |
 | Fonts                                      | .FNT              | ❌   | ❌    |                               |
 | Game flows                                 | .DOT              | ❌   | ❌    |                               |
-| Lights                                     | .LIT              | ✅   | ❌    | ⚠️ Flags are not correct      |
+| [Lights](src/light)                        | .LIT              | ✅   | ❌    | ⚠️ Flags are not correct      |
 | Movies                                     | .TGQ              | ❌   | ❌    |                               |
 | Particle effects                           | .PLB,.H           | ❌   | ❌    |                               |
 | Portrait scripts                           | .KEY,.SEQ         | ❌   | ❌    |                               |
