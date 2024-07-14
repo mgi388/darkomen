@@ -58,6 +58,18 @@ impl Project {
             .replace(".m3d", ".m3x")
             .replace(".M3D", ".M3X")
     }
+
+    /// Get the water model file name, including the extension, but with the
+    /// extension replaced with `.M3X`. E.g. `_7water.M3D` becomes
+    /// `_7water.M3X`.
+    ///
+    /// The M3X version is a chunked version of the M3D model and is the one
+    /// rendered in game.
+    pub fn get_water_m3x_model_file_name(&self) -> Option<String> {
+        self.water_model_file_name
+            .as_ref()
+            .map(|s| s.replace(".m3d", ".m3x").replace(".M3D", ".M3X"))
+    }
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -310,6 +322,19 @@ mod tests {
         };
 
         assert_eq!(project.get_base_m3x_model_file_name(), "base.M3X");
+    }
+
+    #[test]
+    fn test_get_water_m3x_model_file_name() {
+        let project = Project {
+            water_model_file_name: Some("_7water.M3D".to_string()),
+            ..Default::default()
+        };
+
+        assert_eq!(
+            project.get_water_m3x_model_file_name(),
+            Some("_7water.M3X".to_string())
+        );
     }
 
     fn roundtrip_test(original_bytes: &[u8], p: &Project) {
