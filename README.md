@@ -24,7 +24,7 @@ The following table shows the game file support in this library:
 | Particle effects                           | .PLB,.H           | ❌   | ❌    |                               |
 | Portrait scripts                           | .KEY,.SEQ         | ❌   | ❌    |                               |
 | [Projects](src/project)                    | .PRJ              | ✅   | ✅    | ✅ None                       |
-| Shadows                                    | .SHD              | ✅   | ✅    | ✅ None                       |
+| [Shadows](src/shadow)                      | .SHD              | ✅   | ✅    | ✅ None                       |
 | [Sound effects](src/sound/sfx)             | .H                | ✅   | ❌    | ✅ None                       |
 | Sound mono audio                           | .MAD              | ❌   | ❌    |                               |
 | [Sound scripts](src/sound/script)          | .FSM              | ✅   | ✅    | ✅ None                       |
