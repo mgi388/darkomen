@@ -1,8 +1,6 @@
 use super::*;
-use decoder::{BLOCK_HEADER_SIZE, FORMAT, HEADER_SIZE};
-use encoding_rs::WINDOWS_1252;
+use decoder::{FORMAT, HEADER_SIZE_BYTES};
 use std::{
-    ffi::CString,
     io::{BufWriter, Write},
     mem::size_of,
 };
@@ -11,7 +9,6 @@ use std::{
 pub enum EncodeError {
     IoError(std::io::Error),
     InvalidString,
-    HeightmapBlockCountMismatch,
 }
 
 impl std::error::Error for EncodeError {}
@@ -27,7 +24,6 @@ impl std::fmt::Display for EncodeError {
         match self {
             EncodeError::IoError(e) => write!(f, "IO error: {}", e),
             EncodeError::InvalidString => write!(f, "invalid string"),
-            EncodeError::HeightmapBlockCountMismatch => write!(f, "heightmap block count mismatch"),
         }
     }
 }
@@ -44,64 +40,51 @@ impl<W: Write> Encoder<W> {
         }
     }
 
-    pub fn encode(&mut self, s: &Shadow) -> Result<(), EncodeError> {
-        self.write_terrain(&s.terrain)?;
+    pub fn encode(&mut self, l: &Lightmap) -> Result<(), EncodeError> {
+        self.write_lightmap(l)?;
         Ok(())
     }
 
-    fn write_terrain(&mut self, t: &Terrain) -> Result<(), EncodeError> {
+    fn write_lightmap(&mut self, l: &Lightmap) -> Result<(), EncodeError> {
         // Write the header.
-        let heightmap_block_size = t.heightmap_blocks.len() * size_of::<TerrainBlock>();
-        let offsets_block_size = size_of::<u32>() + (t.offsets.len() * 64);
-        let block_size =
-            HEADER_SIZE - BLOCK_HEADER_SIZE + heightmap_block_size + offsets_block_size;
-        self.write_string(FORMAT)?;
-        self.writer.write_all(&(block_size as u32).to_le_bytes())?;
-        self.writer.write_all(&t.width.to_le_bytes())?;
-        self.writer.write_all(&t.height.to_le_bytes())?;
+        let blocks_size_bytes = l.blocks.len() * size_of::<LightmapBlock>();
+        let height_offsets_size_bytes = size_of::<u32>() + (l.height_offsets.len() * 64);
+        let total_size_bytes = HEADER_SIZE_BYTES - (2 * size_of::<u32>())
+            + blocks_size_bytes
+            + height_offsets_size_bytes;
+        self.writer.write_all(FORMAT.as_bytes())?;
         self.writer
-            .write_all(&(t.offsets.len() as u32).to_le_bytes())?;
+            .write_all(&(total_size_bytes as u32).to_le_bytes())?;
+        self.writer.write_all(&l.width.to_le_bytes())?;
+        self.writer.write_all(&l.height.to_le_bytes())?;
         self.writer
-            .write_all(&(t.heightmap_blocks.len() as u32).to_le_bytes())?;
+            .write_all(&(l.height_offsets.len() as u32).to_le_bytes())?;
         self.writer
-            .write_all(&(heightmap_block_size as u32).to_le_bytes())?;
+            .write_all(&(l.blocks.len() as u32).to_le_bytes())?;
+        self.writer
+            .write_all(&(blocks_size_bytes as u32).to_le_bytes())?;
 
-        // Write the terrain data.
-        self.write_heightmap_blocks(&t.heightmap_blocks)?;
+        // Write blocks.
+        self.write_blocks(&l.blocks)?;
 
-        // Write the offsets.
-        let offsets_block_size = t.offsets.len() * 64;
+        // Write height offsets.
+        let height_offsets_size_bytes = l.height_offsets.len() * 64;
         self.writer
-            .write_all(&(offsets_block_size as u32).to_le_bytes())?;
-        for offset in &t.offsets {
-            self.writer.write_all(offset)?;
+            .write_all(&(height_offsets_size_bytes as u32).to_le_bytes())?;
+        for offsets in &l.height_offsets {
+            self.writer.write_all(offsets)?;
         }
 
         Ok(())
     }
 
-    fn write_heightmap_blocks(&mut self, blocks: &Vec<TerrainBlock>) -> Result<(), EncodeError> {
+    fn write_blocks(&mut self, blocks: &Vec<LightmapBlock>) -> Result<(), EncodeError> {
         for block in blocks {
-            let offset_index = block.offset_index * 64;
-            self.writer.write_all(&block.min_height.to_le_bytes())?;
-            self.writer.write_all(&offset_index.to_le_bytes())?;
+            let height_offsets_index = block.height_offsets_index * 64;
+            self.writer.write_all(&block.base_height.to_le_bytes())?;
+            self.writer.write_all(&height_offsets_index.to_le_bytes())?;
         }
 
         Ok(())
-    }
-
-    fn write_string(&mut self, s: &str) -> Result<(), EncodeError> {
-        let c_string = self.make_c_string(s)?;
-        let bytes = c_string.as_bytes();
-
-        self.writer.write_all(bytes)?;
-
-        Ok(())
-    }
-
-    fn make_c_string(&mut self, s: &str) -> Result<CString, EncodeError> {
-        let (windows_1252_bytes, _, _) = WINDOWS_1252.encode(s);
-        let c_string = CString::new(windows_1252_bytes).map_err(|_| EncodeError::InvalidString)?;
-        Ok(c_string)
     }
 }

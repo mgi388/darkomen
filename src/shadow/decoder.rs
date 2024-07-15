@@ -8,16 +8,15 @@ use std::{
 /// The format ID used in all .SHD files.
 pub(crate) const FORMAT: &str = "SHAD";
 
-pub(crate) const HEADER_SIZE: usize = 28;
-pub(crate) const BLOCK_HEADER_SIZE: usize = 8;
+pub(crate) const HEADER_SIZE_BYTES: usize = 28;
 
 #[derive(Debug)]
 pub enum DecodeError {
     IoError(IoError),
     Invalid(String),
     InvalidFormat(String),
-    InvalidOffsetIndex(u32),
-    InvalidOffsetsBlockSize(usize, usize),
+    InvalidHeightOffsetsIndex(u32),
+    InvalidHeightOffsetsSize(usize, usize),
 }
 
 impl std::error::Error for DecodeError {}
@@ -34,14 +33,14 @@ impl fmt::Display for DecodeError {
             DecodeError::IoError(e) => write!(f, "IO error: {}", e),
             DecodeError::Invalid(s) => write!(f, "invalid: {}", s),
             DecodeError::InvalidFormat(s) => write!(f, "invalid format: {}", s),
-            DecodeError::InvalidOffsetIndex(index) => {
-                write!(f, "offset index {} is not a multiple of 64", index)
+            DecodeError::InvalidHeightOffsetsIndex(index) => {
+                write!(f, "height offsets index {} is not a multiple of 64", index)
             }
-            DecodeError::InvalidOffsetsBlockSize(offset_count, offsets_block_size) => {
+            DecodeError::InvalidHeightOffsetsSize(offset_count, height_offsets_size_bytes) => {
                 write!(
                     f,
-                    "invalid offsets block size {}, should be offset count ({}) x 64",
-                    offsets_block_size, offset_count
+                    "invalid height offsets size {}, should be offset count ({}) x 64",
+                    height_offsets_size_bytes, offset_count
                 )
             }
         }
@@ -60,14 +59,14 @@ impl<R: Read + Seek> Decoder<R> {
         Decoder { reader }
     }
 
-    pub fn decode(&mut self) -> Result<Shadow, DecodeError> {
-        let terrain = self.read_terrain()?;
+    pub fn decode(&mut self) -> Result<Lightmap, DecodeError> {
+        let lightmap = self.read_lightmap()?;
 
-        Ok(Shadow { terrain })
+        Ok(lightmap)
     }
 
-    fn read_terrain(&mut self) -> Result<Terrain, DecodeError> {
-        let mut header = vec![0; HEADER_SIZE];
+    fn read_lightmap(&mut self) -> Result<Lightmap, DecodeError> {
+        let mut header = vec![0; HEADER_SIZE_BYTES];
         self.reader.read_exact(&mut header)?;
 
         if &header[0..4] != FORMAT.as_bytes() {
@@ -76,75 +75,74 @@ impl<R: Read + Seek> Decoder<R> {
             ));
         }
 
-        let _size = u32::from_le_bytes(header[4..8].try_into().unwrap()) as usize; // size, not used
+        let _total_size_bytes = u32::from_le_bytes(header[4..8].try_into().unwrap()) as usize; // total block size in bytes, not used
         let width = u32::from_le_bytes(header[8..12].try_into().unwrap());
         let height = u32::from_le_bytes(header[12..16].try_into().unwrap());
         let offset_count = u32::from_le_bytes(header[16..20].try_into().unwrap()) as usize;
-        let uncompressed_block_count =
-            u32::from_le_bytes(header[20..24].try_into().unwrap()) as usize;
-        let heightmap_block_size = u32::from_le_bytes(header[24..28].try_into().unwrap()) as usize; // size in bytes of heightmap block
+        let block_count = u32::from_le_bytes(header[20..24].try_into().unwrap()) as usize;
+        let blocks_size_bytes = u32::from_le_bytes(header[24..28].try_into().unwrap()) as usize; // size in bytes of blocks
 
-        // This check just helps prove that the size of the heightmap chunk
-        // also lets us get the uncompressed block count.
-        if heightmap_block_size / size_of::<TerrainBlock>() != uncompressed_block_count {
+        // This check just helps prove that the size of the blocks chunk also
+        // lets us get the block count.
+        if blocks_size_bytes / size_of::<LightmapBlock>() != block_count {
             return Err(DecodeError::Invalid(
-                "uncompressed block count and heightmap block size mismatch".to_string(),
+                "block count and blocks size mismatch".to_string(),
             ));
         }
 
-        // Heightmap.
-        let heightmap_blocks = self.read_heightmap_blocks(uncompressed_block_count)?;
+        // Read blocks.
+        let blocks = self.read_blocks(block_count)?;
 
-        // Read offsets.
+        // Read height offsets.
         let mut buf = vec![0; size_of::<u32>()];
         self.reader.read_exact(&mut buf)?;
-        let offsets_size = u32::from_le_bytes(buf.try_into().unwrap()) as usize;
+        let height_offsets_size_bytes = u32::from_le_bytes(buf.try_into().unwrap()) as usize;
 
-        if offset_count * 64 != offsets_size {
-            return Err(DecodeError::InvalidOffsetsBlockSize(
+        if offset_count * 64 != height_offsets_size_bytes {
+            return Err(DecodeError::InvalidHeightOffsetsSize(
                 offset_count,
-                offsets_size,
+                height_offsets_size_bytes,
             ));
         }
 
-        let mut buf = vec![0; offsets_size];
+        let mut buf = vec![0; height_offsets_size_bytes];
         self.reader.read_exact(&mut buf)?;
 
-        let mut offsets = Vec::with_capacity(offset_count);
+        let mut height_offsets = Vec::with_capacity(offset_count);
         for i in 0..offset_count {
-            offsets.push(buf[i * 64..(i + 1) * 64].to_vec());
+            height_offsets.push(buf[i * 64..(i + 1) * 64].to_vec());
         }
 
-        Ok(Terrain {
+        Ok(Lightmap {
             width,
             height,
-            heightmap_blocks,
-            offsets,
+            blocks,
+            height_offsets,
         })
     }
 
-    fn read_heightmap_blocks(&mut self, count: usize) -> Result<Vec<TerrainBlock>, DecodeError> {
+    fn read_blocks(&mut self, count: usize) -> Result<Vec<LightmapBlock>, DecodeError> {
         let mut blocks = Vec::with_capacity(count);
         for _ in 0..count {
-            blocks.push(self.read_terrain_block()?);
+            blocks.push(self.read_block()?);
         }
         Ok(blocks)
     }
 
-    fn read_terrain_block(&mut self) -> Result<TerrainBlock, DecodeError> {
-        let mut buf = vec![0; size_of::<TerrainBlock>()];
+    fn read_block(&mut self) -> Result<LightmapBlock, DecodeError> {
+        let mut buf = vec![0; size_of::<LightmapBlock>()];
         self.reader.read_exact(&mut buf)?;
 
-        let min_height = i32::from_le_bytes(buf[0..4].try_into().unwrap());
-        let offset_index = u32::from_le_bytes(buf[4..8].try_into().unwrap());
-        if offset_index % 64 != 0 {
-            return Err(DecodeError::InvalidOffsetIndex(offset_index));
+        let base_height = i32::from_le_bytes(buf[0..4].try_into().unwrap());
+        let height_offsets_index = u32::from_le_bytes(buf[4..8].try_into().unwrap());
+        if height_offsets_index % 64 != 0 {
+            return Err(DecodeError::InvalidHeightOffsetsIndex(height_offsets_index));
         }
-        let offset_index = offset_index / 64;
+        let height_offsets_index = height_offsets_index / 64;
 
-        Ok(TerrainBlock {
-            min_height,
-            offset_index,
+        Ok(LightmapBlock {
+            base_height,
+            height_offsets_index,
         })
     }
 }
