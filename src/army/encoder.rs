@@ -186,8 +186,8 @@ impl<W: Write> Encoder<W> {
 
         self.writer.write_all(bytes)?;
 
-        let padding_size = limit - bytes.len();
-        let padding = vec![0; padding_size];
+        let padding_size_bytes = limit - bytes.len();
+        let padding = vec![0; padding_size_bytes];
         self.writer.write_all(&padding)?;
 
         Ok(())

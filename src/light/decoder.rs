@@ -7,8 +7,8 @@ use std::{
 
 const FORMAT: u32 = 1;
 
-const HEADER_SIZE: usize = 8;
-const LIGHT_SIZE: usize = 32;
+const HEADER_SIZE_BYTES: usize = 8;
+const LIGHT_SIZE_BYTES: usize = 32;
 
 #[derive(Debug)]
 pub enum DecodeError {
@@ -54,7 +54,7 @@ impl<R: Read + Seek> Decoder<R> {
     }
 
     fn decode_header(&mut self) -> Result<usize, DecodeError> {
-        let mut buf = [0; HEADER_SIZE];
+        let mut buf = [0; HEADER_SIZE_BYTES];
         self.reader.read_exact(&mut buf)?;
 
         if u32::from_le_bytes(buf[0..4].try_into().unwrap()) != FORMAT {
@@ -69,14 +69,14 @@ impl<R: Read + Seek> Decoder<R> {
     }
 
     fn read_lights(&mut self, light_count: usize) -> Result<Vec<Light>, DecodeError> {
-        let mut buf = vec![0; light_count * LIGHT_SIZE];
+        let mut buf = vec![0; light_count * LIGHT_SIZE_BYTES];
         self.reader.read_exact(&mut buf)?;
 
         let mut lights = Vec::with_capacity(light_count);
         for i in 0..light_count {
-            let b = &buf[i * LIGHT_SIZE..(i + 1) * LIGHT_SIZE];
+            let b = &buf[i * LIGHT_SIZE_BYTES..(i + 1) * LIGHT_SIZE_BYTES];
 
-            let instance = Light {
+            let light = Light {
                 position: Vec3::new(
                     i32::from_le_bytes(b[0..4].try_into().unwrap()) as f32 / 1024.,
                     i32::from_le_bytes(b[4..8].try_into().unwrap()) as f32 / 1024.,
@@ -91,7 +91,7 @@ impl<R: Read + Seek> Decoder<R> {
                 ),
             };
 
-            lights.push(instance);
+            lights.push(light);
         }
 
         Ok(lights)

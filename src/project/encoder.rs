@@ -1,8 +1,9 @@
 use super::*;
 use decoder::{
-    ATTRIBUTES_BLOCK_ID, BASE_BLOCK_ID, BLOCK_HEADER_SIZE, EDIT_BLOCK_ID, EXCL_BLOCK_ID, FORMAT,
-    FURNITURE_BLOCK_ID, INSTANCES_BLOCK_ID, INSTANCE_SIZE, MUSIC_BLOCK_DATA_SIZE, MUSIC_BLOCK_ID,
-    TERRAIN_BLOCK_HEADER_SIZE, TERRAIN_BLOCK_ID, TRACKS_BLOCK_ID, WATER_BLOCK_ID,
+    ATTRIBUTES_BLOCK_ID, BASE_BLOCK_ID, BLOCK_HEADER_SIZE_BYTES, EDIT_BLOCK_ID, EXCL_BLOCK_ID,
+    FORMAT, FURNITURE_BLOCK_ID, INSTANCES_BLOCK_ID, INSTANCE_SIZE_BYTES,
+    MUSIC_BLOCK_DATA_SIZE_BYTES, MUSIC_BLOCK_ID, TERRAIN_BLOCK_HEADER_SIZE_BYTES, TERRAIN_BLOCK_ID,
+    TRACKS_BLOCK_ID, WATER_BLOCK_ID,
 };
 use encoding_rs::WINDOWS_1252;
 use std::{
@@ -109,15 +110,18 @@ impl<W: Write> Encoder<W> {
 
         let file_names = file_names?;
 
-        let mut data_size = 0;
+        let mut data_size_bytes = 0;
         for file_name in &file_names {
             // A u32 for the length of the filename.
-            data_size += size_of::<u32>() + file_name.len();
+            data_size_bytes += size_of::<u32>() + file_name.len();
         }
 
         let count = file_names.len();
 
-        self.write_block_header(FURNITURE_BLOCK_ID, (data_size - (4 * count) + 4) as u32)?;
+        self.write_block_header(
+            FURNITURE_BLOCK_ID,
+            (data_size_bytes - (4 * count) + 4) as u32,
+        )?;
         self.writer.write_all(&(count as u32).to_le_bytes())?;
 
         for file_name in &file_names {
@@ -131,12 +135,12 @@ impl<W: Write> Encoder<W> {
 
     fn write_instances(&mut self, instances: &Vec<Instance>) -> Result<(), EncodeError> {
         let count = instances.len() as u32;
-        let instance_size = INSTANCE_SIZE as u32;
-        let data_size = instance_size * count;
+        let instance_size_bytes = INSTANCE_SIZE_BYTES as u32;
+        let data_size_bytes = instance_size_bytes * count;
 
-        self.write_block_header(INSTANCES_BLOCK_ID, data_size)?;
+        self.write_block_header(INSTANCES_BLOCK_ID, data_size_bytes)?;
         self.writer.write_all(&count.to_le_bytes())?;
-        self.writer.write_all(&instance_size.to_le_bytes())?;
+        self.writer.write_all(&instance_size_bytes.to_le_bytes())?;
 
         for instance in instances {
             self.write_instance(instance)?;
@@ -192,13 +196,13 @@ impl<W: Write> Encoder<W> {
         }
 
         // Write the header.
-        let heightmap_block_size = t.heightmap1_blocks.len() * size_of::<TerrainBlock>();
-        let heightmaps_block_size = 2 * heightmap_block_size;
-        let offsets_block_size = size_of::<u32>() + (t.offsets.len() * 64);
-        let block_size = TERRAIN_BLOCK_HEADER_SIZE - BLOCK_HEADER_SIZE
-            + heightmap_block_size // only includes one of the heightmaps for some reason
-            + offsets_block_size;
-        self.write_block_header(TERRAIN_BLOCK_ID, block_size as u32)?;
+        let heightmap_block_size_bytes = t.heightmap1_blocks.len() * size_of::<TerrainBlock>();
+        let heightmaps_block_size_bytes = 2 * heightmap_block_size_bytes;
+        let offsets_block_size_bytes = size_of::<u32>() + (t.offsets.len() * 64);
+        let block_size_bytes = TERRAIN_BLOCK_HEADER_SIZE_BYTES - BLOCK_HEADER_SIZE_BYTES
+            + heightmap_block_size_bytes // only includes one of the heightmaps for some reason
+            + offsets_block_size_bytes;
+        self.write_block_header(TERRAIN_BLOCK_ID, block_size_bytes as u32)?;
 
         self.writer.write_all(&t.width.to_le_bytes())?;
         self.writer.write_all(&t.height.to_le_bytes())?;
@@ -207,16 +211,16 @@ impl<W: Write> Encoder<W> {
         self.writer
             .write_all(&(t.heightmap1_blocks.len() as u32).to_le_bytes())?;
         self.writer
-            .write_all(&(heightmaps_block_size as u32).to_le_bytes())?;
+            .write_all(&(heightmaps_block_size_bytes as u32).to_le_bytes())?;
 
         // Write the terrain data.
         self.write_heightmap_blocks(&t.heightmap1_blocks)?;
         self.write_heightmap_blocks(&t.heightmap2_blocks)?;
 
         // Write the offsets.
-        let offsets_block_size = t.offsets.len() * 64;
+        let offsets_block_size_bytes = t.offsets.len() * 64;
         self.writer
-            .write_all(&(offsets_block_size as u32).to_le_bytes())?;
+            .write_all(&(offsets_block_size_bytes as u32).to_le_bytes())?;
         for offset in &t.offsets {
             self.writer.write_all(offset)?;
         }
@@ -227,7 +231,7 @@ impl<W: Write> Encoder<W> {
     fn write_heightmap_blocks(&mut self, blocks: &Vec<TerrainBlock>) -> Result<(), EncodeError> {
         for block in blocks {
             let offset_index = block.offset_index * 64;
-            self.writer.write_all(&block.minimum.to_le_bytes())?;
+            self.writer.write_all(&block.min_height.to_le_bytes())?;
             self.writer.write_all(&offset_index.to_le_bytes())?;
         }
 
@@ -238,8 +242,8 @@ impl<W: Write> Encoder<W> {
         // 2 u32s for width and height, and the rest is unknown.
         //
         // Stored size is short by 64 bytes for some reason.
-        let data_size = (2 * size_of::<u32>() + a.unknown.len()) as u32 - 64;
-        self.write_block_header(ATTRIBUTES_BLOCK_ID, data_size)?;
+        let data_size_bytes = (2 * size_of::<u32>() + a.unknown.len()) as u32 - 64;
+        self.write_block_header(ATTRIBUTES_BLOCK_ID, data_size_bytes)?;
 
         self.writer.write_all(&a.width.to_le_bytes())?;
         self.writer.write_all(&a.height.to_le_bytes())?;
@@ -259,7 +263,7 @@ impl<W: Write> Encoder<W> {
         self.write_string(MUSIC_BLOCK_ID)?;
 
         let c_string = self.make_c_string(&p.background_music_script_file_name)?;
-        self.write_c_string_with_limit(&c_string, MUSIC_BLOCK_DATA_SIZE)?;
+        self.write_c_string_with_limit(&c_string, MUSIC_BLOCK_DATA_SIZE_BYTES)?;
 
         Ok(())
     }
@@ -360,8 +364,8 @@ impl<W: Write> Encoder<W> {
 
         self.writer.write_all(bytes)?;
 
-        let padding_size = limit - bytes.len();
-        let padding = vec![0; padding_size];
+        let padding_size_bytes = limit - bytes.len();
+        let padding = vec![0; padding_size_bytes];
         self.writer.write_all(&padding)?;
 
         Ok(())
