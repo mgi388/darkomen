@@ -287,10 +287,10 @@ impl<R: Read + Seek> Decoder<R> {
     }
 
     fn read_string_property(&mut self, expected_id: u32) -> Result<String, DecodeError> {
-        const MAX_STRING_SIZE: usize = 32;
-        self.read_property_header(expected_id, MAX_STRING_SIZE)?;
+        const MAX_STRING_SIZE_BYTES: usize = 32;
+        self.read_property_header(expected_id, MAX_STRING_SIZE_BYTES)?;
 
-        let mut buf = vec![0; MAX_STRING_SIZE];
+        let mut buf = vec![0; MAX_STRING_SIZE_BYTES];
         self.reader.read_exact(&mut buf)?;
 
         Ok(

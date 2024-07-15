@@ -29,15 +29,16 @@ impl fmt::Display for DecodeError {
 }
 
 /// The sprite format ID used in all .SPR files.
+///
 /// "WHDO" is an initialism for "Warhammer: Dark Omen".
 const FORMAT: &str = "WHDO";
 
-const HEADER_SIZE: usize = 32;
-const FRAME_HEADER_SIZE: usize = 32;
+const HEADER_SIZE_BYTES: usize = 32;
+const FRAME_HEADER_SIZE_BYTES: usize = 32;
 
 #[derive(Clone, Debug)]
 struct Header {
-    _file_size: u16,
+    _file_size_bytes: u16,
     _frame_header_offset: u16,
     frame_data_offset: u16,
     _color_table_offset: u16,
@@ -75,8 +76,8 @@ struct FrameHeader {
     width: u16,
     height: u16,
     data_offset: u32,
-    compressed_size: u32,
-    uncompressed_size: u32,
+    compressed_size_bytes: u32,
+    uncompressed_size_bytes: u32,
     color_table_offset: u32,
     _padding: u32, // last 4 bytes are not used
 }
@@ -148,7 +149,7 @@ impl<R: Read + Seek> Decoder<R> {
                 (header.frame_data_offset as u32) + fh.data_offset,
             )))?;
 
-            let mut buf = vec![0; fh.uncompressed_size as usize];
+            let mut buf = vec![0; fh.uncompressed_size_bytes as usize];
 
             match fh.compression_type {
                 CompressionType::None => {
@@ -156,12 +157,12 @@ impl<R: Read + Seek> Decoder<R> {
                 }
                 CompressionType::Packbits => {
                     let mut reader =
-                        PackBitsReader::new(&mut self.reader, fh.compressed_size as u64);
+                        PackBitsReader::new(&mut self.reader, fh.compressed_size_bytes as u64);
                     reader.read_exact(&mut buf)?;
                 }
                 CompressionType::ZeroRuns => {
                     let mut reader =
-                        ZeroRunsReader::new(&mut self.reader, fh.compressed_size as u64);
+                        ZeroRunsReader::new(&mut self.reader, fh.compressed_size_bytes as u64);
                     reader.read_exact(&mut buf)?;
                 }
             }
@@ -219,7 +220,7 @@ impl<R: Read + Seek> Decoder<R> {
     }
 
     fn decode_header(&mut self) -> Result<Header, DecodeError> {
-        let mut buf = [0; HEADER_SIZE];
+        let mut buf = [0; HEADER_SIZE_BYTES];
         self.reader.read_exact(&mut buf)?;
 
         let format = String::from_utf8_lossy(&buf[0..4]).to_string();
@@ -228,7 +229,7 @@ impl<R: Read + Seek> Decoder<R> {
         }
 
         Ok(Header {
-            _file_size: u16::from_le_bytes([buf[4], buf[5]]),
+            _file_size_bytes: u16::from_le_bytes([buf[4], buf[5]]),
             _frame_header_offset: u16::from_le_bytes([buf[8], buf[9]]),
             frame_data_offset: u16::from_le_bytes([buf[12], buf[13]]),
             _color_table_offset: u16::from_le_bytes([buf[16], buf[17]]),
@@ -248,7 +249,7 @@ impl<R: Read + Seek> Decoder<R> {
         let mut max_height = 0;
 
         for _ in 0..header.frame_count {
-            let mut buf = [0; FRAME_HEADER_SIZE];
+            let mut buf = [0; FRAME_HEADER_SIZE_BYTES];
             self.reader.read_exact(&mut buf)?;
 
             let frame_type = FrameType::from(buf[0]);
@@ -259,8 +260,8 @@ impl<R: Read + Seek> Decoder<R> {
             let width = u16::from_le_bytes(buf[8..10].try_into().unwrap());
             let height = u16::from_le_bytes(buf[10..12].try_into().unwrap());
             let data_offset = u32::from_le_bytes(buf[12..16].try_into().unwrap());
-            let compressed_size = u32::from_le_bytes(buf[16..20].try_into().unwrap());
-            let uncompressed_size = u32::from_le_bytes(buf[20..24].try_into().unwrap());
+            let compressed_size_bytes = u32::from_le_bytes(buf[16..20].try_into().unwrap());
+            let uncompressed_size_bytes = u32::from_le_bytes(buf[20..24].try_into().unwrap());
             let color_table_offset = u32::from_le_bytes(buf[24..28].try_into().unwrap());
             let _padding = u32::from_le_bytes(buf[28..32].try_into().unwrap());
 
@@ -273,8 +274,8 @@ impl<R: Read + Seek> Decoder<R> {
                 width,
                 height,
                 data_offset,
-                compressed_size,
-                uncompressed_size,
+                compressed_size_bytes,
+                uncompressed_size_bytes,
                 color_table_offset,
                 _padding,
             });

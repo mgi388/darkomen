@@ -204,7 +204,7 @@ impl Terrain {
                     }
 
                     let color_part1 = offsets[(x + y * 8) as usize] as u32;
-                    let color_part2 = block.minimum / 257;
+                    let color_part2 = block.min_height / 257;
 
                     // TODO: Clamped this to avoid panics, but possibly
                     // indicates a bug.
@@ -241,7 +241,7 @@ impl Terrain {
         let macro_block = b.offset_index as usize;
 
         let additional = self.offsets[macro_block][macro_block_address];
-        (additional as f32 / 8.) + (b.minimum as f32 / 1024.)
+        (additional as f32 / 8.) + (b.min_height as f32 / 1024.)
     }
 }
 
@@ -250,7 +250,7 @@ impl Terrain {
 pub struct TerrainBlock {
     /// The minimum height of all 64 (8x8) values in the block. This is the base
     /// height for the block.
-    pub minimum: u32,
+    pub min_height: i32,
     /// An index into the offsets list. Used to get the 64 (8x8) values that
     /// make up the block. The values are height offsets based on the minimum
     /// height. To get the height at a specific point, you need to combine the

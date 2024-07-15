@@ -10,12 +10,12 @@ use std::{
 /// model".
 const FORMAT: &str = "PD3M";
 
-const HEADER_SIZE: usize = 24;
-const TEXTURE_DESCRIPTOR_SIZE: usize = 96;
-const VECTOR_SIZE: usize = 12;
-const OBJECT_HEADER_SIZE: usize = 52 + VECTOR_SIZE;
-const OBJECT_FACE_SIZE: usize = 16 + VECTOR_SIZE;
-const OBJECT_VERTEX_SIZE: usize = (2 * VECTOR_SIZE) + 20;
+const HEADER_SIZE_BYTES: usize = 24;
+const TEXTURE_DESCRIPTOR_SIZE_BYTES: usize = 96;
+const VECTOR_SIZE_BYTES: usize = 12;
+const OBJECT_HEADER_SIZE_BYTES: usize = 52 + VECTOR_SIZE_BYTES;
+const OBJECT_FACE_SIZE_BYTES: usize = 16 + VECTOR_SIZE_BYTES;
+const OBJECT_VERTEX_SIZE_BYTES: usize = (2 * VECTOR_SIZE_BYTES) + 20;
 
 struct Header {
     _magic: u32,
@@ -77,7 +77,7 @@ impl<R: Read + Seek> Decoder<R> {
     }
 
     fn decode_header(&mut self) -> Result<Header, DecodeError> {
-        let mut buf = [0; HEADER_SIZE];
+        let mut buf = [0; HEADER_SIZE_BYTES];
         self.reader.read_exact(&mut buf)?;
 
         if &buf[0..4] != FORMAT.as_bytes() {
@@ -110,7 +110,7 @@ impl<R: Read + Seek> Decoder<R> {
     }
 
     fn read_texture_descriptor(&mut self) -> Result<TextureDescriptor, DecodeError> {
-        let mut buf = [0; TEXTURE_DESCRIPTOR_SIZE];
+        let mut buf = [0; TEXTURE_DESCRIPTOR_SIZE_BYTES];
         self.reader.read_exact(&mut buf)?;
 
         let path = self.read_string(&buf[0..64])?;
@@ -130,7 +130,7 @@ impl<R: Read + Seek> Decoder<R> {
     }
 
     fn read_object(&mut self) -> Result<Object, DecodeError> {
-        let mut buf = [0; OBJECT_HEADER_SIZE];
+        let mut buf = [0; OBJECT_HEADER_SIZE_BYTES];
         self.reader.read_exact(&mut buf)?;
 
         let vertex_count = u16::from_le_bytes(buf[48..50].try_into().unwrap());
@@ -161,7 +161,7 @@ impl<R: Read + Seek> Decoder<R> {
     }
 
     fn read_face(&mut self) -> Result<Face, DecodeError> {
-        let mut buf = [0; OBJECT_FACE_SIZE];
+        let mut buf = [0; OBJECT_FACE_SIZE_BYTES];
         self.reader.read_exact(&mut buf)?;
 
         Ok(Face {
@@ -178,7 +178,7 @@ impl<R: Read + Seek> Decoder<R> {
     }
 
     fn read_vertex(&mut self) -> Result<Vertex, DecodeError> {
-        let mut buf = [0; OBJECT_VERTEX_SIZE];
+        let mut buf = [0; OBJECT_VERTEX_SIZE_BYTES];
         self.reader.read_exact(&mut buf)?;
 
         Ok(Vertex {

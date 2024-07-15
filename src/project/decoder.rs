@@ -22,16 +22,16 @@ pub(crate) const MUSIC_BLOCK_ID: &str = "MUSC";
 pub(crate) const TRACKS_BLOCK_ID: &str = "TRAC";
 pub(crate) const EDIT_BLOCK_ID: &str = "EDIT";
 
-pub(crate) const HEADER_SIZE: usize = 32;
-pub(crate) const BLOCK_HEADER_SIZE: usize = 8;
-pub(crate) const FURNITURE_BLOCK_HEADER_SIZE: usize = BLOCK_HEADER_SIZE + 4;
-pub(crate) const INSTANCES_BLOCK_HEADER_SIZE: usize = BLOCK_HEADER_SIZE + 4 + 4;
-pub(crate) const INSTANCE_SIZE: usize = 152;
-pub(crate) const TERRAIN_BLOCK_HEADER_SIZE: usize = BLOCK_HEADER_SIZE + 20;
-pub(crate) const ATTRIBUTES_BLOCK_HEADER_SIZE: usize = BLOCK_HEADER_SIZE;
-pub(crate) const EXCL_BLOCK_HEADER_SIZE: usize = 8;
-pub(crate) const MUSIC_BLOCK_DATA_SIZE: usize = 20;
-pub(crate) const TRACKS_BLOCK_HEADER_SIZE: usize = 8;
+pub(crate) const HEADER_SIZE_BYTES: usize = 32;
+pub(crate) const BLOCK_HEADER_SIZE_BYTES: usize = 8;
+pub(crate) const FURNITURE_BLOCK_HEADER_SIZE_BYTES: usize = BLOCK_HEADER_SIZE_BYTES + 4;
+pub(crate) const INSTANCES_BLOCK_HEADER_SIZE_BYTES: usize = BLOCK_HEADER_SIZE_BYTES + 4 + 4;
+pub(crate) const INSTANCE_SIZE_BYTES: usize = 152;
+pub(crate) const TERRAIN_BLOCK_HEADER_SIZE_BYTES: usize = BLOCK_HEADER_SIZE_BYTES + 20;
+pub(crate) const ATTRIBUTES_BLOCK_HEADER_SIZE_BYTES: usize = BLOCK_HEADER_SIZE_BYTES;
+pub(crate) const EXCL_BLOCK_HEADER_SIZE_BYTES: usize = 8;
+pub(crate) const MUSIC_BLOCK_DATA_SIZE_BYTES: usize = 20;
+pub(crate) const TRACKS_BLOCK_HEADER_SIZE_BYTES: usize = 8;
 
 #[derive(Debug)]
 pub enum DecodeError {
@@ -73,11 +73,11 @@ impl fmt::Display for DecodeError {
             DecodeError::InvalidOffsetIndex(index) => {
                 write!(f, "offset index {} is not a multiple of 64", index)
             }
-            DecodeError::InvalidOffsetsBlockSize(offset_count, offsets_block_size) => {
+            DecodeError::InvalidOffsetsBlockSize(offset_count, offsets_size_bytes) => {
                 write!(
                     f,
                     "invalid offsets block size {}, should be offset count ({}) x 64",
-                    offsets_block_size, offset_count
+                    offsets_size_bytes, offset_count
                 )
             }
         }
@@ -125,12 +125,12 @@ impl<R: Read + Seek> Decoder<R> {
     }
 
     fn decode_header(&mut self) -> Result<(), DecodeError> {
-        let mut buf = [0; HEADER_SIZE];
+        let mut buf = [0; HEADER_SIZE_BYTES];
         self.reader.read_exact(&mut buf)?;
 
-        if &buf[0..HEADER_SIZE] != FORMAT.as_bytes() {
+        if &buf[0..HEADER_SIZE_BYTES] != FORMAT.as_bytes() {
             return Err(DecodeError::InvalidFormat(
-                String::from_utf8_lossy(&buf[0..HEADER_SIZE]).to_string(),
+                String::from_utf8_lossy(&buf[0..HEADER_SIZE_BYTES]).to_string(),
             ));
         }
 
@@ -138,7 +138,7 @@ impl<R: Read + Seek> Decoder<R> {
     }
 
     fn read_block(&mut self, id: &str) -> Result<Vec<u8>, DecodeError> {
-        let mut buf = vec![0; BLOCK_HEADER_SIZE];
+        let mut buf = vec![0; BLOCK_HEADER_SIZE_BYTES];
         self.reader.read_exact(&mut buf)?;
 
         if &buf[0..4] != id.as_bytes() {
@@ -147,8 +147,8 @@ impl<R: Read + Seek> Decoder<R> {
             ));
         }
 
-        let data_size = u32::from_le_bytes([buf[4], buf[5], buf[6], buf[7]]) as usize;
-        let mut data = vec![0; data_size];
+        let data_size_bytes = u32::from_le_bytes([buf[4], buf[5], buf[6], buf[7]]) as usize;
+        let mut data = vec![0; data_size_bytes];
         self.reader.read_exact(&mut data)?;
 
         Ok(data)
@@ -166,20 +166,20 @@ impl<R: Read + Seek> Decoder<R> {
     fn read_water(&mut self) -> Result<Option<String>, DecodeError> {
         let file_name = self.read_block(WATER_BLOCK_ID)?;
 
-        let file_name_str = CStr::from_bytes_with_nul(&file_name)
+        let file_name_string = CStr::from_bytes_with_nul(&file_name)
             .map_err(|_| DecodeError::InvalidString)?
             .to_string_lossy()
             .into_owned();
 
-        Ok(if file_name_str.is_empty() {
+        Ok(if file_name_string.is_empty() {
             None
         } else {
-            Some(file_name_str)
+            Some(file_name_string)
         })
     }
 
     fn read_furniture_block(&mut self) -> Result<Vec<String>, DecodeError> {
-        let mut buf = vec![0; FURNITURE_BLOCK_HEADER_SIZE];
+        let mut buf = vec![0; FURNITURE_BLOCK_HEADER_SIZE_BYTES];
         self.reader.read_exact(&mut buf)?;
 
         if &buf[0..4] != FURNITURE_BLOCK_ID.as_bytes() {
@@ -189,30 +189,30 @@ impl<R: Read + Seek> Decoder<R> {
         }
 
         let count = u32::from_le_bytes([buf[8], buf[9], buf[10], buf[11]]) as usize;
-        let data_size =
+        let data_size_bytes =
             u32::from_le_bytes([buf[4], buf[5], buf[6], buf[7]]) as usize + (4 * count) - 4;
 
-        let mut data = vec![0; data_size];
+        let mut data = vec![0; data_size_bytes];
         self.reader.read_exact(&mut data)?;
 
         let mut pos = 0;
         let mut file_names = Vec::with_capacity(count);
         for _ in 0..count {
-            let size = u32::from_le_bytes(data[pos..pos + 4].try_into().unwrap()) as usize;
-            let file_name = CStr::from_bytes_with_nul(&data[pos + 4..pos + 4 + size])
+            let size_bytes = u32::from_le_bytes(data[pos..pos + 4].try_into().unwrap()) as usize;
+            let file_name = CStr::from_bytes_with_nul(&data[pos + 4..pos + 4 + size_bytes])
                 .unwrap()
                 .to_str()
                 .unwrap()
                 .to_owned();
             file_names.push(file_name);
-            pos += 4 + size;
+            pos += 4 + size_bytes;
         }
 
         Ok(file_names)
     }
 
     fn read_instances(&mut self) -> Result<Vec<Instance>, DecodeError> {
-        let mut header = vec![0; INSTANCES_BLOCK_HEADER_SIZE];
+        let mut header = vec![0; INSTANCES_BLOCK_HEADER_SIZE_BYTES];
         self.reader.read_exact(&mut header)?;
 
         if &header[0..4] != INSTANCES_BLOCK_ID.as_bytes() {
@@ -221,16 +221,16 @@ impl<R: Read + Seek> Decoder<R> {
             ));
         }
 
-        let size = u32::from_le_bytes(header[4..8].try_into().unwrap()) as usize;
+        let size_bytes = u32::from_le_bytes(header[4..8].try_into().unwrap()) as usize;
         let count = u32::from_le_bytes(header[8..12].try_into().unwrap()) as usize;
-        let instance_size = u32::from_le_bytes(header[12..16].try_into().unwrap()) as usize;
+        let instance_size_bytes = u32::from_le_bytes(header[12..16].try_into().unwrap()) as usize;
 
-        let mut buf = vec![0; size];
+        let mut buf = vec![0; size_bytes];
         self.reader.read_exact(&mut buf)?;
 
         let mut instances = Vec::with_capacity(count);
         for i in 0..count {
-            let b = &buf[i * instance_size..(i + 1) * instance_size];
+            let b = &buf[i * instance_size_bytes..(i + 1) * instance_size_bytes];
             instances.push(self.read_instance(b)?);
         }
 
@@ -273,7 +273,7 @@ impl<R: Read + Seek> Decoder<R> {
     }
 
     fn read_terrain(&mut self) -> Result<Terrain, DecodeError> {
-        let mut header = vec![0; TERRAIN_BLOCK_HEADER_SIZE];
+        let mut header = vec![0; TERRAIN_BLOCK_HEADER_SIZE_BYTES];
         self.reader.read_exact(&mut header)?;
 
         if &header[0..4] != TERRAIN_BLOCK_ID.as_bytes() {
@@ -282,18 +282,19 @@ impl<R: Read + Seek> Decoder<R> {
             ));
         }
 
-        let _size = u32::from_le_bytes(header[4..8].try_into().unwrap()) as usize; // size, not used
+        let _size_bytes = u32::from_le_bytes(header[4..8].try_into().unwrap()) as usize; // size, not used
         let width = u32::from_le_bytes(header[8..12].try_into().unwrap());
         let height = u32::from_le_bytes(header[12..16].try_into().unwrap());
         let offset_count = u32::from_le_bytes(header[16..20].try_into().unwrap()) as usize;
         let uncompressed_block_count =
             u32::from_le_bytes(header[20..24].try_into().unwrap()) as usize;
-        let heightmaps_block_size = u32::from_le_bytes(header[24..28].try_into().unwrap()) as usize; // size in bytes of chunk that contains both heightmaps
-        let heightmap_block_size = heightmaps_block_size / 2; // size in bytes of one heightmap's block
+        let heightmaps_block_size_bytes =
+            u32::from_le_bytes(header[24..28].try_into().unwrap()) as usize; // size in bytes of chunk that contains both heightmaps
+        let heightmap_block_size_bytes = heightmaps_block_size_bytes / 2; // size in bytes of one heightmap's block
 
         // This check just helps prove that the size of the heightmap chunk
         // also lets us get the uncompressed block count.
-        if heightmap_block_size / size_of::<TerrainBlock>() != uncompressed_block_count {
+        if heightmap_block_size_bytes / size_of::<TerrainBlock>() != uncompressed_block_count {
             return Err(DecodeError::Invalid(
                 "uncompressed block count and heightmap block size mismatch".to_string(),
             ));
@@ -308,16 +309,16 @@ impl<R: Read + Seek> Decoder<R> {
         // Read offsets.
         let mut buf = vec![0; size_of::<u32>()];
         self.reader.read_exact(&mut buf)?;
-        let offsets_size = u32::from_le_bytes(buf.try_into().unwrap()) as usize;
+        let offsets_size_bytes = u32::from_le_bytes(buf.try_into().unwrap()) as usize;
 
-        if offset_count * 64 != offsets_size {
+        if offset_count * 64 != offsets_size_bytes {
             return Err(DecodeError::InvalidOffsetsBlockSize(
                 offset_count,
-                offsets_size,
+                offsets_size_bytes,
             ));
         }
 
-        let mut buf = vec![0; offsets_size];
+        let mut buf = vec![0; offsets_size_bytes];
         self.reader.read_exact(&mut buf)?;
 
         let mut offsets = Vec::with_capacity(offset_count);
@@ -346,7 +347,7 @@ impl<R: Read + Seek> Decoder<R> {
         let mut buf = vec![0; size_of::<TerrainBlock>()];
         self.reader.read_exact(&mut buf)?;
 
-        let minimum = u32::from_le_bytes(buf[0..4].try_into().unwrap());
+        let min_height = i32::from_le_bytes(buf[0..4].try_into().unwrap());
         let offset_index = u32::from_le_bytes(buf[4..8].try_into().unwrap());
         if offset_index % 64 != 0 {
             return Err(DecodeError::InvalidOffsetIndex(offset_index));
@@ -354,13 +355,13 @@ impl<R: Read + Seek> Decoder<R> {
         let offset_index = offset_index / 64;
 
         Ok(TerrainBlock {
-            minimum,
+            min_height,
             offset_index,
         })
     }
 
     fn read_attributes(&mut self) -> Result<Attributes, DecodeError> {
-        let mut header = vec![0; ATTRIBUTES_BLOCK_HEADER_SIZE];
+        let mut header = vec![0; ATTRIBUTES_BLOCK_HEADER_SIZE_BYTES];
         self.reader.read_exact(&mut header)?;
 
         if &header[0..4] != ATTRIBUTES_BLOCK_ID.as_bytes() {
@@ -369,9 +370,9 @@ impl<R: Read + Seek> Decoder<R> {
             ));
         }
 
-        let size = u32::from_le_bytes(header[4..8].try_into().unwrap()) as usize + 64; // stored size is short by 64 bytes for some reason
+        let size_bytes = u32::from_le_bytes(header[4..8].try_into().unwrap()) as usize + 64; // stored size is short by 64 bytes for some reason
 
-        let mut buf = vec![0; size];
+        let mut buf = vec![0; size_bytes];
         self.reader.read_exact(&mut buf)?;
 
         let width = u32::from_le_bytes(buf[0..4].try_into().unwrap());
@@ -386,7 +387,7 @@ impl<R: Read + Seek> Decoder<R> {
     }
 
     fn read_excl(&mut self) -> Result<Excl, DecodeError> {
-        let mut header = vec![0; EXCL_BLOCK_HEADER_SIZE];
+        let mut header = vec![0; EXCL_BLOCK_HEADER_SIZE_BYTES];
         self.reader.read_exact(&mut header)?;
 
         if &header[0..4] != EXCL_BLOCK_ID.as_bytes() {
@@ -411,7 +412,7 @@ impl<R: Read + Seek> Decoder<R> {
     fn read_music(&mut self) -> Result<String, DecodeError> {
         // Note: It's expected that the EXCL block was read before this because
         // it consumes the MUSC header.
-        let mut buf = vec![0; MUSIC_BLOCK_DATA_SIZE];
+        let mut buf = vec![0; MUSIC_BLOCK_DATA_SIZE_BYTES];
         self.reader.read_exact(&mut buf)?;
 
         Ok(
@@ -421,7 +422,7 @@ impl<R: Read + Seek> Decoder<R> {
     }
 
     fn read_tracks(&mut self) -> Result<Vec<Track>, DecodeError> {
-        let mut header = vec![0; TRACKS_BLOCK_HEADER_SIZE];
+        let mut header = vec![0; TRACKS_BLOCK_HEADER_SIZE_BYTES];
         self.reader.read_exact(&mut header)?;
 
         if &header[0..4] != TRACKS_BLOCK_ID.as_bytes() {
