@@ -110,8 +110,9 @@ impl Lightmap {
         // to get the normalized maximum.
         const MAX_NORMALIZED_OFFSET_HEIGHT: f32 = u8::MAX as f32 / 8.;
 
-        let scaled_value =
-            (block.normalized_base_height() + normalized_offset_height) / (MAX_NORMALIZED_HEIGHT);
+        let normalized_height = block.normalized_base_height() + normalized_offset_height;
+
+        let scaled_value = normalized_height / MAX_NORMALIZED_HEIGHT;
 
         let min = min_normalized_base_height / MAX_NORMALIZED_HEIGHT;
         let max =
