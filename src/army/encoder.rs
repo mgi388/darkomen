@@ -1,5 +1,5 @@
 use super::*;
-use decoder::{FORMAT, REGIMENT_BLOCK_SIZE};
+use decoder::{FORMAT, REGIMENT_SIZE_BYTES};
 use encoding_rs::WINDOWS_1252;
 use std::{
     ffi::CString,
@@ -52,14 +52,12 @@ impl<W: Write> Encoder<W> {
     }
 
     fn write_header(&mut self, army: &Army) -> Result<(), EncodeError> {
-        let race: u8 = army.race.into();
-
         self.writer.write_all(&FORMAT.to_le_bytes())?;
         self.writer
             .write_all(&(army.regiments.len() as u32).to_le_bytes())?;
         self.writer
-            .write_all(&(REGIMENT_BLOCK_SIZE as u32).to_le_bytes())?;
-        self.writer.write_all(&[race])?;
+            .write_all(&(REGIMENT_SIZE_BYTES as u32).to_le_bytes())?;
+        self.writer.write_all(&[Into::<u8>::into(army.race)])?;
         self.writer.write_all(&army.unknown1)?;
         self.writer
             .write_all(&army.default_name_index.to_le_bytes())?;
@@ -92,15 +90,12 @@ impl<W: Write> Encoder<W> {
     }
 
     fn write_regiment(&mut self, r: &Regiment) -> Result<(), EncodeError> {
-        let mage_class: u8 = r.mage_class.into();
-        let magic_book: u16 = r.magic_book.into();
-
         self.writer
             .write_all(&Into::<u16>::into(r.status).to_le_bytes())?;
         self.writer.write_all(&r.unknown1)?;
         self.writer.write_all(&r.id.to_le_bytes())?;
         self.writer.write_all(&r.unknown2)?;
-        self.writer.write_all(&[mage_class])?;
+        self.writer.write_all(&[Into::<u8>::into(r.mage_class)])?;
         self.writer.write_all(&[r.max_armor])?;
         self.writer.write_all(&r.cost.to_le_bytes())?;
         self.writer.write_all(&r.banner_index.to_le_bytes())?;
@@ -116,7 +111,8 @@ impl<W: Write> Encoder<W> {
         self.writer.write_all(&r.total_experience.to_le_bytes())?;
         self.writer.write_all(&[r.duplicate_id])?;
         self.writer.write_all(&[r.min_armor])?;
-        self.writer.write_all(&magic_book.to_le_bytes())?;
+        self.writer
+            .write_all(&Into::<u16>::into(r.magic_book).to_le_bytes())?;
         self.writer.write_all(&r.magic_items[0].to_le_bytes())?;
         self.writer.write_all(&r.magic_items[1].to_le_bytes())?;
         self.writer.write_all(&r.magic_items[2].to_le_bytes())?;
@@ -131,16 +127,10 @@ impl<W: Write> Encoder<W> {
     }
 
     fn write_unit_profile(&mut self, u: &UnitProfile) -> Result<(), EncodeError> {
-        let alignment: u8 = u.alignment.into();
-        let mount: u8 = u.mount.into();
-        let weapon: u8 = u.weapon.into();
-        let class: u8 = u.class.into();
-        let projectile: u8 = u.projectile.into();
-
         self.writer.write_all(&u.sprite_index.to_le_bytes())?;
         self.write_string_with_limit(&u.name, 32)?;
         self.writer.write_all(&u.name_id.to_le_bytes())?;
-        self.writer.write_all(&[alignment])?;
+        self.writer.write_all(&[Into::<u8>::into(u.alignment)])?;
         self.writer.write_all(&[u.max_troop_count])?;
         self.writer.write_all(&[u.alive_troop_count])?;
         self.writer.write_all(&[u.rank_count])?;
@@ -154,12 +144,12 @@ impl<W: Write> Encoder<W> {
         self.writer.write_all(&[u.stats.initiative])?;
         self.writer.write_all(&[u.stats.attacks])?;
         self.writer.write_all(&[u.stats.leadership])?;
-        self.writer.write_all(&[mount])?;
+        self.writer.write_all(&[Into::<u8>::into(u.mount)])?;
         self.writer.write_all(&[u.armor])?;
-        self.writer.write_all(&[weapon])?;
-        self.writer.write_all(&[class])?;
+        self.writer.write_all(&[Into::<u8>::into(u.weapon)])?;
+        self.writer.write_all(&[Into::<u8>::into(u.class)])?;
         self.writer.write_all(&[u.point_value])?;
-        self.writer.write_all(&[projectile])?;
+        self.writer.write_all(&[Into::<u8>::into(u.projectile)])?;
 
         Ok(())
     }
