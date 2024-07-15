@@ -203,7 +203,7 @@ impl Terrain {
                         break;
                     }
 
-                    let color_part1 = offsets[(x + y * 8) as usize] as u32;
+                    let color_part1 = offsets[(x + y * 8) as usize] as i32;
                     let color_part2 = block.min_height / 257;
 
                     // TODO: Clamped this to avoid panics, but possibly
