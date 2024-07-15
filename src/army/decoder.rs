@@ -61,9 +61,9 @@ impl fmt::Display for DecodeError {
 }
 
 pub(crate) const FORMAT: u32 = 0x0000029e;
-pub(crate) const HEADER_SIZE: usize = 192;
-const SAVE_HEADER_SIZE: usize = 504;
-pub(crate) const REGIMENT_BLOCK_SIZE: usize = 188;
+pub(crate) const HEADER_SIZE_BYTES: usize = 192;
+const SAVE_HEADER_SIZE_BYTES: usize = 504;
+pub(crate) const REGIMENT_SIZE_BYTES: usize = 188;
 
 pub(crate) struct Header {
     _format: u32,
@@ -71,25 +71,25 @@ pub(crate) struct Header {
     /// The size of each regiment block in bytes.
     ///
     /// This is always 188 despite being encoded in the header.
-    _regiment_block_size: u32,
+    _regiment_size_bytes: u32,
     race: u8,
     unknown1: [u8; 3], // always seems to be 0, could be padding
     default_name_index: u16,
     name: String,
-    /// There are some bytes after the null-terminated string. Not sure what
-    /// they are for.
+    /// There are some bytes after the nul-terminated string. Not sure what they
+    /// are for.
     name_remainder: Vec<u8>,
     small_banner_path: String,
-    /// There are some bytes after the null-terminated string. Not sure what
-    /// they are for.
+    /// There are some bytes after the nul-terminated string. Not sure what they
+    /// are for.
     small_banner_path_remainder: Vec<u8>,
     small_banner_disabled_path: String,
-    /// There are some bytes after the null-terminated string. Not sure what
-    /// they are for.
+    /// There are some bytes after the nul-terminated string. Not sure what they
+    /// are for.
     small_banner_disabled_path_remainder: Vec<u8>,
     large_banner_path: String,
-    /// There are some bytes after the null-terminated string. Not sure what
-    /// they are for.
+    /// There are some bytes after the nul-terminated string. Not sure what they
+    /// are for.
     large_banner_path_remainder: Vec<u8>,
     last_battle_gold: u16,
     gold_in_coffers: u16,
@@ -153,10 +153,10 @@ impl<R: Read + Seek> Decoder<R> {
         if format != FORMAT {
             self.reader.seek(SeekFrom::Start(0))?;
 
-            let mut save_file_header = vec![0; SAVE_HEADER_SIZE];
+            let mut save_file_header = vec![0; SAVE_HEADER_SIZE_BYTES];
             self.reader.read_exact(&mut save_file_header)?;
 
-            return Ok((SAVE_HEADER_SIZE as u64, save_file_header));
+            return Ok((SAVE_HEADER_SIZE_BYTES as u64, save_file_header));
         }
 
         Ok((0, vec![]))
@@ -165,7 +165,7 @@ impl<R: Read + Seek> Decoder<R> {
     fn read_header(&mut self, start_pos: u64) -> Result<Header, DecodeError> {
         self.reader.seek(SeekFrom::Start(start_pos))?;
 
-        let mut buf = [0; HEADER_SIZE];
+        let mut buf = [0; HEADER_SIZE_BYTES];
         self.reader.read_exact(&mut buf)?;
 
         let army_name_buf = &buf[18..50];
@@ -204,7 +204,7 @@ impl<R: Read + Seek> Decoder<R> {
         Ok(Header {
             _format: u32::from_le_bytes(buf[0..4].try_into().unwrap()),
             regiment_count: u32::from_le_bytes(buf[4..8].try_into().unwrap()),
-            _regiment_block_size: u32::from_le_bytes(buf[8..12].try_into().unwrap()),
+            _regiment_size_bytes: u32::from_le_bytes(buf[8..12].try_into().unwrap()),
             race: buf[12],
             unknown1: buf[13..16].try_into().unwrap(),
             default_name_index: u16::from_le_bytes(buf[16..18].try_into().unwrap()),
@@ -234,7 +234,7 @@ impl<R: Read + Seek> Decoder<R> {
     }
 
     fn read_regiment(&mut self) -> Result<Regiment, DecodeError> {
-        let mut buf = vec![0; REGIMENT_BLOCK_SIZE];
+        let mut buf = vec![0; REGIMENT_SIZE_BYTES];
         self.reader.read_exact(&mut buf)?;
 
         let status_u16 = u16::from_le_bytes(buf[0..2].try_into().unwrap());
