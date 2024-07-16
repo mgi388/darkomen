@@ -363,9 +363,16 @@ mod tests {
 
         fn visit_dirs(dir: &Path, cb: &mut dyn FnMut(&Path)) {
             println!("Reading dir {:?}", dir.display());
-            for entry in std::fs::read_dir(dir).unwrap() {
-                let entry = entry.unwrap();
-                let path = entry.path();
+
+            let mut paths = std::fs::read_dir(dir)
+                .unwrap()
+                .map(|res| res.map(|e| e.path()))
+                .collect::<Result<Vec<_>, std::io::Error>>()
+                .unwrap();
+
+            paths.sort();
+
+            for path in paths {
                 if path.is_dir() {
                     visit_dirs(&path, cb);
                 } else {

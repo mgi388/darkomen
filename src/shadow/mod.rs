@@ -165,7 +165,6 @@ mod tests {
     use std::{
         ffi::{OsStr, OsString},
         fs::File,
-        io,
         path::{Path, PathBuf},
     };
 
@@ -363,7 +362,7 @@ mod tests {
             let mut paths = std::fs::read_dir(dir)
                 .unwrap()
                 .map(|res| res.map(|e| e.path()))
-                .collect::<Result<Vec<_>, io::Error>>()
+                .collect::<Result<Vec<_>, std::io::Error>>()
                 .unwrap();
 
             paths.sort();
