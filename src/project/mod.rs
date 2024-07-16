@@ -298,7 +298,7 @@ impl Terrain {
         let macro_block = b.height_offsets_index as usize;
 
         let additional = self.height_offsets[macro_block][macro_block_address];
-        (additional as f32 / 8.) + (b.base_height as f32 / 1024.)
+        b.normalized_base_height() + Terrain::normalized_offset_height(additional)
     }
 }
 
