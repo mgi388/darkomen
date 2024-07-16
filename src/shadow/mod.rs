@@ -378,114 +378,114 @@ mod tests {
         }
 
         visit_dirs(&d, &mut |path| {
-            if let Some(ext) = path.extension() {
-                if ext.to_string_lossy().to_uppercase() == "SHD" {
-                    println!("Decoding {:?}", path.file_name().unwrap());
+            let Some(ext) = path.extension() else {
+                return;
+            };
+            if ext.to_string_lossy().to_uppercase() != "SHD" {
+                return;
+            }
 
-                    let original_bytes = std::fs::read(path).unwrap();
+            println!("Decoding {:?}", path.file_name().unwrap());
 
-                    let file = File::open(path).unwrap();
-                    let lightmap = Decoder::new(file).decode().unwrap();
+            let original_bytes = std::fs::read(path).unwrap();
 
-                    roundtrip_test(&original_bytes, &lightmap);
+            let file = File::open(path).unwrap();
+            let lightmap = Decoder::new(file).decode().unwrap();
 
-                    let has_invalid_height_offsets_index = lightmap.blocks.iter().any(|block| {
-                        block.height_offsets_index as usize >= lightmap.height_offsets.len()
-                    });
-                    assert!(
-                        !has_invalid_height_offsets_index,
-                        "found a block with an invalid height offsets index"
-                    );
+            roundtrip_test(&original_bytes, &lightmap);
 
-                    let img = lightmap.image();
+            let has_invalid_height_offsets_index = lightmap
+                .blocks
+                .iter()
+                .any(|block| block.height_offsets_index as usize >= lightmap.height_offsets.len());
+            assert!(
+                !has_invalid_height_offsets_index,
+                "found a block with an invalid height offsets index"
+            );
 
-                    // Compare against the golden image.
-                    {
-                        let golden_images_path = Path::new(env!("CARGO_MANIFEST_DIR"))
-                            .join("src")
-                            .join("shadow")
-                            .join("testdata")
-                            .join("images");
-                        let golden_img_path = golden_images_path
-                            .join(path.file_name().unwrap())
-                            .with_extension("golden.png");
+            let img = lightmap.image();
 
-                        if !Path::new(&golden_img_path).exists() {
-                            img.save(&golden_img_path).unwrap();
-                        }
+            // Compare against the golden image.
+            {
+                let golden_images_path = Path::new(env!("CARGO_MANIFEST_DIR"))
+                    .join("src")
+                    .join("shadow")
+                    .join("testdata")
+                    .join("images");
+                let golden_img_path = golden_images_path
+                    .join(path.file_name().unwrap())
+                    .with_extension("golden.png");
 
-                        let golden_img = image::open(&golden_img_path).unwrap();
-
-                        assert_eq!(img.dimensions(), golden_img.dimensions());
-
-                        let pixels_equal = img
-                            .pixels()
-                            .zip(golden_img.clone().pixels())
-                            .all(|(p1, p2)| p1 == p2);
-
-                        if !pixels_equal {
-                            // Write out the actual image so it can be visually
-                            // compared against the golden.
-                            img.save(
-                                golden_images_path
-                                    .join(path.file_name().unwrap())
-                                    .with_extension("actual.png"),
-                            )
-                            .unwrap();
-
-                            // Write out an image of the diff between the two.
-                            let diff_bytes = img
-                                .clone()
-                                .into_bytes()
-                                .into_iter()
-                                .zip(golden_img.clone().into_bytes())
-                                .map(|(p1, p2)| {
-                                    if p1 > p2 {
-                                        return p1 - p2;
-                                    }
-                                    p2 - p1
-                                })
-                                .map(|p| 255 - p) // inverting the diff fixes alpha going to 0 in the previous map
-                                .collect::<Vec<_>>();
-                            let diff_img = DynamicImage::ImageRgba8(
-                                RgbaImage::from_raw(
-                                    golden_img.width(),
-                                    golden_img.height(),
-                                    diff_bytes,
-                                )
-                                .unwrap(),
-                            );
-                            diff_img
-                                .save(
-                                    golden_images_path
-                                        .join(path.file_name().unwrap())
-                                        .with_extension("diff.png"),
-                                )
-                                .unwrap();
-                        }
-
-                        assert!(pixels_equal, "pixels do not match");
-                    }
-
-                    // Write out the decoded data for manual inspection.
-                    {
-                        // RON.
-                        let output_path =
-                            append_ext("ron", root_output_dir.join(path.file_name().unwrap()));
-                        let mut output_file = File::create(output_path).unwrap();
-                        ron::ser::to_writer_pretty(&mut output_file, &lightmap, Default::default())
-                            .unwrap();
-
-                        // Image.
-                        let output_dir = root_output_dir.join("lightmaps");
-                        std::fs::create_dir_all(&output_dir).unwrap();
-
-                        let output_path = output_dir
-                            .join(path.file_stem().unwrap())
-                            .with_extension("lightmap.png");
-                        img.save(output_path).unwrap();
-                    }
+                if !Path::new(&golden_img_path).exists() {
+                    img.save(&golden_img_path).unwrap();
                 }
+
+                let golden_img = image::open(&golden_img_path).unwrap();
+
+                assert_eq!(img.dimensions(), golden_img.dimensions());
+
+                let pixels_equal = img
+                    .pixels()
+                    .zip(golden_img.clone().pixels())
+                    .all(|(p1, p2)| p1 == p2);
+
+                if !pixels_equal {
+                    // Write out the actual image so it can be visually compared
+                    // against the golden.
+                    img.save(
+                        golden_images_path
+                            .join(path.file_name().unwrap())
+                            .with_extension("actual.png"),
+                    )
+                    .unwrap();
+
+                    // Write out an image of the diff between the two.
+                    let diff_bytes = img
+                        .clone()
+                        .into_bytes()
+                        .into_iter()
+                        .zip(golden_img.clone().into_bytes())
+                        .map(|(p1, p2)| {
+                            if p1 > p2 {
+                                return p1 - p2;
+                            }
+                            p2 - p1
+                        })
+                        .map(|p| 255 - p) // inverting the diff fixes alpha going to 0 in the previous map
+                        .collect::<Vec<_>>();
+                    let diff_img = DynamicImage::ImageRgba8(
+                        RgbaImage::from_raw(golden_img.width(), golden_img.height(), diff_bytes)
+                            .unwrap(),
+                    );
+                    diff_img
+                        .save(
+                            golden_images_path
+                                .join(path.file_name().unwrap())
+                                .with_extension("diff.png"),
+                        )
+                        .unwrap();
+                }
+
+                assert!(pixels_equal, "pixels do not match");
+            }
+
+            // Write out the decoded data for manual inspection.
+            {
+                // RON.
+                let output_path =
+                    append_ext("ron", root_output_dir.join(path.file_name().unwrap()));
+                let mut output_file = File::create(output_path).unwrap();
+                ron::ser::to_writer_pretty(&mut output_file, &lightmap, Default::default())
+                    .unwrap();
+
+                // Image.
+                let output_dir = root_output_dir.join("lightmaps");
+                std::fs::create_dir_all(&output_dir).unwrap();
+
+                let output_path = output_dir
+                    .join(path.file_stem().unwrap())
+                    .with_extension("lightmap.png");
+                img.save(output_path).unwrap();
             }
         });
     }
