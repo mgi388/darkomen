@@ -43,8 +43,8 @@ pub enum DecodeError {
     InvalidData,
     InvalidTerrainBlockCount(usize),
     InvalidTrackControlPointFlags(i32),
-    InvalidOffsetIndex(u32),
-    InvalidOffsetsBlockSize(usize, usize),
+    InvalidHeightOffsetsIndex(u32),
+    InvalidHeightOffsetsSize(usize, usize),
 }
 
 impl std::error::Error for DecodeError {}
@@ -70,14 +70,14 @@ impl fmt::Display for DecodeError {
             DecodeError::InvalidTrackControlPointFlags(flags) => {
                 write!(f, "invalid track control point flags: {}", flags)
             }
-            DecodeError::InvalidOffsetIndex(index) => {
-                write!(f, "offset index {} is not a multiple of 64", index)
+            DecodeError::InvalidHeightOffsetsIndex(index) => {
+                write!(f, "height offsets index {} is not a multiple of 64", index)
             }
-            DecodeError::InvalidOffsetsBlockSize(offset_count, offsets_size_bytes) => {
+            DecodeError::InvalidHeightOffsetsSize(offset_count, height_offsets_size_bytes) => {
                 write!(
                     f,
-                    "invalid offsets block size {}, should be offset count ({}) x 64",
-                    offsets_size_bytes, offset_count
+                    "invalid height offsets size {}, should be offset count ({}) x 64",
+                    height_offsets_size_bytes, offset_count
                 )
             }
         }
@@ -282,48 +282,47 @@ impl<R: Read + Seek> Decoder<R> {
             ));
         }
 
-        let _size_bytes = u32::from_le_bytes(header[4..8].try_into().unwrap()) as usize; // size, not used
+        let _total_size_bytes = u32::from_le_bytes(header[4..8].try_into().unwrap()) as usize; // total block size in bytes, not used
         let width = u32::from_le_bytes(header[8..12].try_into().unwrap());
         let height = u32::from_le_bytes(header[12..16].try_into().unwrap());
         let offset_count = u32::from_le_bytes(header[16..20].try_into().unwrap()) as usize;
-        let uncompressed_block_count =
-            u32::from_le_bytes(header[20..24].try_into().unwrap()) as usize;
-        let heightmaps_block_size_bytes =
-            u32::from_le_bytes(header[24..28].try_into().unwrap()) as usize; // size in bytes of chunk that contains both heightmaps
-        let heightmap_block_size_bytes = heightmaps_block_size_bytes / 2; // size in bytes of one heightmap's block
+        let heightmap_block_count = u32::from_le_bytes(header[20..24].try_into().unwrap()) as usize;
+        let heightmaps_blocks_size_bytes =
+            u32::from_le_bytes(header[24..28].try_into().unwrap()) as usize; // size in bytes of chunk that contains both heightmaps blocks
+        let heightmap_blocks_size_bytes = heightmaps_blocks_size_bytes / 2; // size in bytes of one heightmap's block
 
-        // This check just helps prove that the size of the heightmap chunk
-        // also lets us get the uncompressed block count.
-        if heightmap_block_size_bytes / size_of::<TerrainBlock>() != uncompressed_block_count {
+        // This check just helps prove that the size of the heightmap blocks
+        // chunk also lets us get the heightmap block count.
+        if heightmap_blocks_size_bytes / size_of::<TerrainBlock>() != heightmap_block_count {
             return Err(DecodeError::Invalid(
-                "uncompressed block count and heightmap block size mismatch".to_string(),
+                "heightmap block count and heightmap blocks size mismatch".to_string(),
             ));
         }
 
-        // First heightmap.
-        let heightmap1_blocks = self.read_heightmap_blocks(uncompressed_block_count)?;
+        // Read first heightmap blocks.
+        let heightmap1_blocks = self.read_heightmap_blocks(heightmap_block_count)?;
 
-        // Second heightmap.
-        let heightmap2_blocks = self.read_heightmap_blocks(uncompressed_block_count)?;
+        // Read second heightmap blocks.
+        let heightmap2_blocks = self.read_heightmap_blocks(heightmap_block_count)?;
 
-        // Read offsets.
+        // Read height offsets.
         let mut buf = vec![0; size_of::<u32>()];
         self.reader.read_exact(&mut buf)?;
-        let offsets_size_bytes = u32::from_le_bytes(buf.try_into().unwrap()) as usize;
+        let height_offsets_size_bytes = u32::from_le_bytes(buf.try_into().unwrap()) as usize;
 
-        if offset_count * 64 != offsets_size_bytes {
-            return Err(DecodeError::InvalidOffsetsBlockSize(
+        if offset_count * 64 != height_offsets_size_bytes {
+            return Err(DecodeError::InvalidHeightOffsetsSize(
                 offset_count,
-                offsets_size_bytes,
+                height_offsets_size_bytes,
             ));
         }
 
-        let mut buf = vec![0; offsets_size_bytes];
+        let mut buf = vec![0; height_offsets_size_bytes];
         self.reader.read_exact(&mut buf)?;
 
-        let mut offsets = Vec::with_capacity(offset_count);
+        let mut height_offsets = Vec::with_capacity(offset_count);
         for i in 0..offset_count {
-            offsets.push(buf[i * 64..(i + 1) * 64].to_vec());
+            height_offsets.push(buf[i * 64..(i + 1) * 64].to_vec());
         }
 
         Ok(Terrain {
@@ -331,7 +330,7 @@ impl<R: Read + Seek> Decoder<R> {
             height,
             heightmap1_blocks,
             heightmap2_blocks,
-            offsets,
+            height_offsets,
         })
     }
 
@@ -347,16 +346,16 @@ impl<R: Read + Seek> Decoder<R> {
         let mut buf = vec![0; size_of::<TerrainBlock>()];
         self.reader.read_exact(&mut buf)?;
 
-        let min_height = i32::from_le_bytes(buf[0..4].try_into().unwrap());
-        let offset_index = u32::from_le_bytes(buf[4..8].try_into().unwrap());
-        if offset_index % 64 != 0 {
-            return Err(DecodeError::InvalidOffsetIndex(offset_index));
+        let base_height = i32::from_le_bytes(buf[0..4].try_into().unwrap());
+        let height_offsets_index = u32::from_le_bytes(buf[4..8].try_into().unwrap());
+        if height_offsets_index % 64 != 0 {
+            return Err(DecodeError::InvalidHeightOffsetsIndex(height_offsets_index));
         }
-        let offset_index = offset_index / 64;
+        let height_offsets_index = height_offsets_index / 64;
 
         Ok(TerrainBlock {
-            min_height,
-            offset_index,
+            base_height,
+            height_offsets_index,
         })
     }
 
