@@ -315,6 +315,7 @@ bitflags! {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use image::{GenericImageView, RgbaImage};
     use pretty_assertions::assert_eq;
     use std::{
         ffi::{OsStr, OsString},
@@ -584,12 +585,19 @@ mod tests {
                 "found a block with an invalid offset index in heightmap2"
             );
 
-            let output_path = append_ext("ron", root_output_dir.join(path.file_name().unwrap()));
-            let mut output_file = File::create(output_path).unwrap();
-            ron::ser::to_writer_pretty(&mut output_file, &project, Default::default()).unwrap();
+            // Compare against the golden image.
+            compare_heightmap_image(path, project.terrain.heightmap1_image(), 1);
+            compare_heightmap_image(path, project.terrain.heightmap2_image(), 2);
 
-            // Write out both heightmap images.
+            // Write out the decoded data for manual inspection.
             {
+                // RON.
+                let output_path =
+                    append_ext("ron", root_output_dir.join(path.file_name().unwrap()));
+                let mut output_file = File::create(output_path).unwrap();
+                ron::ser::to_writer_pretty(&mut output_file, &project, Default::default()).unwrap();
+
+                // First and second heightmap images.
                 let output_dir = root_output_dir.join("heightmaps");
                 std::fs::create_dir_all(&output_dir).unwrap();
 
@@ -602,12 +610,74 @@ mod tests {
 
                     let output_path = output_dir
                         .join(path.file_stem().unwrap())
-                        .with_extension(format!("map{}.png", map_num));
-
+                        .with_extension(format!("heightmap{}.png", map_num));
                     img.save(output_path).unwrap();
                 }
             }
         });
+    }
+
+    fn compare_heightmap_image(path: &Path, img: DynamicImage, heightmap_num: u8) {
+        // Compare against the golden image.
+        let golden_images_path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("src")
+            .join("project")
+            .join("testdata")
+            .join("heightmaps");
+        let golden_img_path = golden_images_path
+            .join(path.file_name().unwrap())
+            .with_extension(format!("{}.golden.png", heightmap_num));
+
+        if !Path::new(&golden_img_path).exists() {
+            img.save(&golden_img_path).unwrap();
+        }
+
+        let golden_img = image::open(&golden_img_path).unwrap();
+
+        assert_eq!(img.dimensions(), golden_img.dimensions());
+
+        let pixels_equal = img
+            .pixels()
+            .zip(golden_img.clone().pixels())
+            .all(|(p1, p2)| p1 == p2);
+
+        if !pixels_equal {
+            // Write out the actual image so it can be visually compared against
+            // the golden.
+            img.save(
+                golden_images_path
+                    .join(path.file_name().unwrap())
+                    .with_extension(format!("{}.actual.png", heightmap_num)),
+            )
+            .unwrap();
+
+            // Write out an image of the diff between the two.
+            let diff_bytes = img
+                .clone()
+                .into_bytes()
+                .into_iter()
+                .zip(golden_img.clone().into_bytes())
+                .map(|(p1, p2)| {
+                    if p1 > p2 {
+                        return p1 - p2;
+                    }
+                    p2 - p1
+                })
+                .map(|p| 255 - p) // inverting the diff fixes alpha going to 0 in the previous map
+                .collect::<Vec<_>>();
+            let diff_img = DynamicImage::ImageRgba8(
+                RgbaImage::from_raw(golden_img.width(), golden_img.height(), diff_bytes).unwrap(),
+            );
+            diff_img
+                .save(
+                    golden_images_path
+                        .join(path.file_name().unwrap())
+                        .with_extension(format!("{}.diff.png", heightmap_num)),
+                )
+                .unwrap();
+        }
+
+        assert!(pixels_equal, "pixels do not match");
     }
 
     fn append_ext(ext: impl AsRef<OsStr>, path: PathBuf) -> PathBuf {
