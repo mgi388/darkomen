@@ -403,26 +403,29 @@ mod tests {
         }
 
         visit_dirs(&d, &mut |path| {
-            if let Some(ext) = path.extension() {
-                if ext.to_string_lossy().to_uppercase() == "SPR" {
-                    println!("Decoding {:?}", path.file_name().unwrap());
-
-                    let file = File::open(path).unwrap();
-                    let sprite = Decoder::new(file).decode().unwrap();
-
-                    let parent_dir = path.components().rev().nth(1).unwrap();
-                    let output_dir = root_output_dir.join(parent_dir);
-                    std::fs::create_dir_all(&output_dir).unwrap();
-
-                    if sprite.texture.width() == 0 || sprite.texture.height() == 0 {
-                        println!("Skipping empty image {:?}", path.file_name().unwrap());
-                        return;
-                    }
-
-                    let output_path = append_ext("png", output_dir.join(path.file_name().unwrap()));
-                    sprite.texture.save(output_path).unwrap();
-                }
+            let Some(ext) = path.extension() else {
+                return;
+            };
+            if ext.to_string_lossy().to_uppercase() != "SPR" {
+                return;
             }
+
+            println!("Decoding {:?}", path.file_name().unwrap());
+
+            let file = File::open(path).unwrap();
+            let sprite = Decoder::new(file).decode().unwrap();
+
+            let parent_dir = path.components().rev().nth(1).unwrap();
+            let output_dir = root_output_dir.join(parent_dir);
+            std::fs::create_dir_all(&output_dir).unwrap();
+
+            if sprite.texture.width() == 0 || sprite.texture.height() == 0 {
+                println!("Skipping empty image {:?}", path.file_name().unwrap());
+                return;
+            }
+
+            let output_path = append_ext("png", output_dir.join(path.file_name().unwrap()));
+            sprite.texture.save(output_path).unwrap();
         });
     }
 

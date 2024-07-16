@@ -382,29 +382,31 @@ mod tests {
         }
 
         visit_dirs(&d, &mut |path| {
-            if let Some(ext) = path.extension() {
-                if ext.to_string_lossy().to_uppercase() == "BTB" {
-                    println!("Decoding {:?}", path.file_name().unwrap());
-
-                    let file = File::open(path).unwrap();
-                    let b = Decoder::new(file).decode().unwrap();
-
-                    for o in &b.obstacles {
-                        // Should either block movement or projectiles.
-                        assert!(
-                            o.flags.contains(ObstacleFlags::BLOCKS_MOVEMENT)
-                                || o.flags.contains(ObstacleFlags::BLOCKS_PROJECTILES)
-                        );
-                        // Should not be any disabled obstacles.
-                        assert!(o.flags.contains(ObstacleFlags::IS_ENABLED));
-                    }
-
-                    let output_path =
-                        append_ext("ron", root_output_dir.join(path.file_name().unwrap()));
-                    let mut output_file = File::create(output_path).unwrap();
-                    ron::ser::to_writer_pretty(&mut output_file, &b, Default::default()).unwrap();
-                }
+            let Some(ext) = path.extension() else {
+                return;
+            };
+            if ext.to_string_lossy().to_uppercase() != "BTB" {
+                return;
             }
+
+            println!("Decoding {:?}", path.file_name().unwrap());
+
+            let file = File::open(path).unwrap();
+            let b = Decoder::new(file).decode().unwrap();
+
+            for o in &b.obstacles {
+                // Should either block movement or projectiles.
+                assert!(
+                    o.flags.contains(ObstacleFlags::BLOCKS_MOVEMENT)
+                        || o.flags.contains(ObstacleFlags::BLOCKS_PROJECTILES)
+                );
+                // Should not be any disabled obstacles.
+                assert!(o.flags.contains(ObstacleFlags::IS_ENABLED));
+            }
+
+            let output_path = append_ext("ron", root_output_dir.join(path.file_name().unwrap()));
+            let mut output_file = File::create(output_path).unwrap();
+            ron::ser::to_writer_pretty(&mut output_file, &b, Default::default()).unwrap();
         });
     }
 

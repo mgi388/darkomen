@@ -164,20 +164,21 @@ mod tests {
         }
 
         visit_dirs(&d, &mut |path| {
-            if let Some(ext) = path.extension() {
-                if ext.to_string_lossy().to_uppercase() == "LIT" {
-                    println!("Decoding {:?}", path.file_name().unwrap());
-
-                    let file = File::open(path).unwrap();
-                    let lights = Decoder::new(file).decode().unwrap();
-
-                    let output_path =
-                        append_ext("ron", root_output_dir.join(path.file_name().unwrap()));
-                    let mut output_file = File::create(output_path).unwrap();
-                    ron::ser::to_writer_pretty(&mut output_file, &lights, Default::default())
-                        .unwrap();
-                }
+            let Some(ext) = path.extension() else {
+                return;
+            };
+            if ext.to_string_lossy().to_uppercase() != "LIT" {
+                return;
             }
+
+            println!("Decoding {:?}", path.file_name().unwrap());
+
+            let file = File::open(path).unwrap();
+            let lights = Decoder::new(file).decode().unwrap();
+
+            let output_path = append_ext("ron", root_output_dir.join(path.file_name().unwrap()));
+            let mut output_file = File::create(output_path).unwrap();
+            ron::ser::to_writer_pretty(&mut output_file, &lights, Default::default()).unwrap();
         });
     }
 
