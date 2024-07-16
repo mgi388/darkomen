@@ -159,11 +159,11 @@ pub struct Terrain {
     /// A list of large blocks for the second heightmap.
     #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
     pub heightmap2_blocks: Vec<TerrainBlock>,
-    /// A list of offsets for 8x8 block. Height offset for each block based on
-    /// minimum height. Each item is a list which must have exactly 64 (8x8)
-    /// u8s.
+    /// A list of height offsets for an 8x8 block. Each item is a list which
+    /// must have exactly 64 (8x8) u8s. A given height offset should be added to
+    /// the base height of the block.
     #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
-    pub offsets: Vec<Vec<u8>>,
+    pub height_offsets: Vec<Vec<u8>>,
 }
 
 impl Terrain {
@@ -182,7 +182,7 @@ impl Terrain {
         let mut col = 0;
 
         for block in blocks {
-            let offsets = &self.offsets[block.offset_index as usize];
+            let height_offsets = &self.height_offsets[block.height_offsets_index as usize];
 
             if col * 8 >= self.width {
                 col = 0;
@@ -203,8 +203,8 @@ impl Terrain {
                         break;
                     }
 
-                    let color_part1 = offsets[(x + y * 8) as usize] as i32;
-                    let color_part2 = block.min_height / 257;
+                    let color_part1 = height_offsets[(x + y * 8) as usize] as i32;
+                    let color_part2 = block.base_height / 257;
 
                     // TODO: Clamped this to avoid panics, but possibly
                     // indicates a bug.
@@ -238,24 +238,32 @@ impl Terrain {
 
         // TODO: This clamps to avoid a panic but can we avoid this?
         let b = &blocks[off_address.min(blocks.len() - 1)];
-        let macro_block = b.offset_index as usize;
+        let macro_block = b.height_offsets_index as usize;
 
-        let additional = self.offsets[macro_block][macro_block_address];
-        (additional as f32 / 8.) + (b.min_height as f32 / 1024.)
+        let additional = self.height_offsets[macro_block][macro_block_address];
+        (additional as f32 / 8.) + (b.base_height as f32 / 1024.)
     }
 }
 
 #[derive(Clone, Debug, Serialize)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct TerrainBlock {
-    /// The minimum height of all 64 (8x8) values in the block. This is the base
-    /// height for the block.
-    pub min_height: i32,
-    /// An index into the offsets list. Used to get the 64 (8x8) values that
-    /// make up the block. The values are height offsets based on the minimum
-    /// height. To get the height at a specific point, you need to combine the
-    /// minimum height with the offset at that point.
-    pub offset_index: u32,
+    /// The base height of all 64 (8x8) values in the block.
+    pub base_height: i32,
+    /// An index into the height offsets list. Used to get the 64 (8x8) values
+    /// that make up the block. The values are height offsets based on the base
+    /// height. To get the height at a specific point, combine the base height
+    /// with the offset at that point.
+    pub height_offsets_index: u32,
+}
+
+impl TerrainBlock {
+    /// Returns the normalized base height of the block by dividing the stored
+    /// integer value by 1024. This conversion reflects the original intention
+    /// for the height to be represented as a float.
+    pub fn normalized_base_height(&self) -> f32 {
+        self.base_height as f32 / 1024.0
+    }
 }
 
 #[derive(Clone, Debug, Default, Serialize)]
@@ -523,79 +531,80 @@ mod tests {
         }
 
         visit_dirs(&d, &mut |path| {
-            if let Some(ext) = path.extension() {
-                if ext.to_string_lossy().to_uppercase() == "PRJ" {
-                    println!("Decoding {:?}", path.file_name().unwrap());
+            let Some(ext) = path.extension() else {
+                return;
+            };
+            if ext.to_string_lossy().to_uppercase() != "PRJ" {
+                return;
+            }
 
-                    let original_bytes = std::fs::read(path).unwrap();
+            println!("Decoding {:?}", path.file_name().unwrap());
 
-                    let file = File::open(path).unwrap();
-                    let project = Decoder::new(file).decode().unwrap();
+            let original_bytes = std::fs::read(path).unwrap();
 
-                    roundtrip_test(&original_bytes, &project);
+            let file = File::open(path).unwrap();
+            let project = Decoder::new(file).decode().unwrap();
 
-                    // Each project should have 2 tracks.
-                    assert_eq!(project.tracks.len(), 2);
+            roundtrip_test(&original_bytes, &project);
 
-                    // Each track should have 6 control points.
-                    for track in &project.tracks {
-                        assert_eq!(track.control_points.len(), 6);
-                    }
+            // Each project should have 2 tracks.
+            assert_eq!(project.tracks.len(), 2);
 
-                    // Each instance with a GFX code should have a furniture
-                    // model slot, i.e. instances with GFX always have an
-                    // associated furniture model.
-                    for instance in &project.instances {
-                        assert!(
-                            instance.gfx_code == 0 || instance.furniture_model_slot != 0,
-                            "instance with GFX code {} has no furniture model slot",
-                            instance.gfx_code
-                        );
-                    }
+            // Each track should have 6 control points.
+            for track in &project.tracks {
+                assert_eq!(track.control_points.len(), 6);
+            }
 
-                    let has_invalid_offset_index_in_heightmap1 =
-                        project.terrain.heightmap1_blocks.iter().any(|block| {
-                            block.offset_index as usize >= project.terrain.offsets.len()
-                        });
-                    assert!(
-                        !has_invalid_offset_index_in_heightmap1,
-                        "found a block with an invalid offset index in heightmap1"
-                    );
+            // Each instance with a GFX code should have a furniture
+            // model slot, i.e. instances with GFX always have an
+            // associated furniture model.
+            for instance in &project.instances {
+                assert!(
+                    instance.gfx_code == 0 || instance.furniture_model_slot != 0,
+                    "instance with GFX code {} has no furniture model slot",
+                    instance.gfx_code
+                );
+            }
 
-                    let has_invalid_offset_index_in_heightmap2 =
-                        project.terrain.heightmap2_blocks.iter().any(|block| {
-                            block.offset_index as usize >= project.terrain.offsets.len()
-                        });
-                    assert!(
-                        !has_invalid_offset_index_in_heightmap2,
-                        "found a block with an invalid offset index in heightmap2"
-                    );
+            let has_invalid_offset_index_in_heightmap1 =
+                project.terrain.heightmap1_blocks.iter().any(|block| {
+                    block.height_offsets_index as usize >= project.terrain.height_offsets.len()
+                });
+            assert!(
+                !has_invalid_offset_index_in_heightmap1,
+                "found a block with an invalid offset index in heightmap1"
+            );
 
-                    let output_path =
-                        append_ext("ron", root_output_dir.join(path.file_name().unwrap()));
-                    let mut output_file = File::create(output_path).unwrap();
-                    ron::ser::to_writer_pretty(&mut output_file, &project, Default::default())
-                        .unwrap();
+            let has_invalid_offset_index_in_heightmap2 =
+                project.terrain.heightmap2_blocks.iter().any(|block| {
+                    block.height_offsets_index as usize >= project.terrain.height_offsets.len()
+                });
+            assert!(
+                !has_invalid_offset_index_in_heightmap2,
+                "found a block with an invalid offset index in heightmap2"
+            );
 
-                    // Write out both heightmap images.
-                    {
-                        let output_dir = root_output_dir.join("heightmaps");
-                        std::fs::create_dir_all(&output_dir).unwrap();
+            let output_path = append_ext("ron", root_output_dir.join(path.file_name().unwrap()));
+            let mut output_file = File::create(output_path).unwrap();
+            ron::ser::to_writer_pretty(&mut output_file, &project, Default::default()).unwrap();
 
-                        for map_num in 1..=2 {
-                            let img = if map_num == 1 {
-                                project.terrain.heightmap1_image()
-                            } else {
-                                project.terrain.heightmap2_image()
-                            };
+            // Write out both heightmap images.
+            {
+                let output_dir = root_output_dir.join("heightmaps");
+                std::fs::create_dir_all(&output_dir).unwrap();
 
-                            let output_path = output_dir
-                                .join(path.file_stem().unwrap())
-                                .with_extension(format!("map{}.png", map_num));
+                for map_num in 1..=2 {
+                    let img = if map_num == 1 {
+                        project.terrain.heightmap1_image()
+                    } else {
+                        project.terrain.heightmap2_image()
+                    };
 
-                            img.save(output_path).unwrap();
-                        }
-                    }
+                    let output_path = output_dir
+                        .join(path.file_stem().unwrap())
+                        .with_extension(format!("map{}.png", map_num));
+
+                    img.save(output_path).unwrap();
                 }
             }
         });
