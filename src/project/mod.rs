@@ -167,6 +167,19 @@ pub struct Terrain {
 }
 
 impl Terrain {
+    fn normalized_offset_height(offset_height: u8) -> f32 {
+        offset_height as f32 / 8.0
+    }
+
+    fn min_and_max_normalized_base_height(blocks: &[TerrainBlock]) -> (f32, f32) {
+        blocks
+            .iter()
+            .map(|block| block.normalized_base_height())
+            .fold((f32::MAX, f32::MIN), |(min, max), val| {
+                (min.min(val), max.max(val))
+            })
+    }
+
     pub fn heightmap1_image(&self) -> DynamicImage {
         self.heightmap_image(&self.heightmap1_blocks)
     }
@@ -177,6 +190,9 @@ impl Terrain {
 
     fn heightmap_image(&self, blocks: &Vec<TerrainBlock>) -> DynamicImage {
         let mut img = DynamicImage::new_rgba8(self.width, self.height);
+
+        let (min_normalized_base_height, max_normalized_base_height) =
+            Terrain::min_and_max_normalized_base_height(blocks);
 
         let mut row = 0;
         let mut col = 0;
@@ -203,12 +219,14 @@ impl Terrain {
                         break;
                     }
 
-                    let color_part1 = height_offsets[(x + y * 8) as usize] as i32;
-                    let color_part2 = block.base_height / 257;
+                    let offset_height = height_offsets[(x + y * 8) as usize];
 
-                    // TODO: Clamped this to avoid panics, but possibly
-                    // indicates a bug.
-                    let color = (color_part1 + color_part2).clamp(0, 255) as u8;
+                    let color = Terrain::calculate_color(
+                        min_normalized_base_height,
+                        max_normalized_base_height,
+                        block,
+                        Terrain::normalized_offset_height(offset_height),
+                    );
 
                     img.put_pixel(target_x, target_y, Rgba([color, color, color, 255]));
                 }
@@ -218,6 +236,45 @@ impl Terrain {
         }
 
         img.fliph() // needs to be flipped horizontally for some reason
+    }
+
+    fn calculate_color(
+        min_normalized_base_height: f32,
+        max_normalized_base_height: f32,
+        block: &TerrainBlock,
+        normalized_offset_height: f32,
+    ) -> u8 {
+        // The largest value that can be stored for a block's height is u16::MAX
+        // because base height is an i32 and u16::MAX is the largest positive
+        // value that can be stored in an i32. u16::MAX is then divided by 1024
+        // to get the normalized maximum.
+        //
+        // Technically, if a block's base height was u16::MAX, and an offset
+        // height was any value other than 0, the combined height would
+        // overflow. But in all the game files, the largest value for a block's
+        // base height is below (u16::MAX - u8::MAX) so this is not a concern.
+        const MAX_NORMALIZED_HEIGHT: f32 = u16::MAX as f32 / 1024.;
+
+        // The largest value that can be stored for a block's offset height is
+        // u8::MAX because offset height is a u8. u8::MAX is then divided by 8
+        // to get the normalized maximum.
+        const MAX_NORMALIZED_OFFSET_HEIGHT: f32 = u8::MAX as f32 / 8.;
+
+        let normalized_height = block.normalized_base_height() + normalized_offset_height;
+
+        let scaled_value = normalized_height / MAX_NORMALIZED_HEIGHT;
+
+        let min = min_normalized_base_height / MAX_NORMALIZED_HEIGHT;
+        let max =
+            (max_normalized_base_height + MAX_NORMALIZED_OFFSET_HEIGHT) / MAX_NORMALIZED_HEIGHT;
+
+        let normalized_value = normalize(scaled_value, min, max);
+
+        // Convert the normalized value (between 0 and 1) to a color (between 0
+        // and 255).
+        let color = normalized_value * 255.;
+
+        color as u8 // truncate any fractional part
     }
 
     /// TODO: Not really working perfectly.
@@ -264,6 +321,10 @@ impl TerrainBlock {
     pub fn normalized_base_height(&self) -> f32 {
         self.base_height as f32 / 1024.0
     }
+}
+
+fn normalize(value: f32, min: f32, max: f32) -> f32 {
+    (value - min) / (max - min)
 }
 
 #[derive(Clone, Debug, Default, Serialize)]
@@ -678,6 +739,51 @@ mod tests {
         }
 
         assert!(pixels_equal, "pixels do not match");
+    }
+
+    macro_rules! test_normalize {
+        ($name:ident, $value:expr, $min:expr, $max:expr, $expected:expr) => {
+            #[test]
+            fn $name() {
+                let value = $value;
+                let min = $min;
+                let max = $max;
+                let expected = $expected;
+
+                let result = normalize(value, min, max);
+                assert_eq!(result, expected);
+            }
+        };
+    }
+
+    test_normalize!(test_normalize_min, 0.0, 0.0, 1.0, 0.0);
+    test_normalize!(test_normalize_max, 1.0, 0.0, 1.0, 1.0);
+    test_normalize!(test_normalize_middle, 0.5, 0.0, 1.0, 0.5);
+    test_normalize!(test_normalize_negative_min, -1.0, -1.0, 1.0, 0.0);
+    test_normalize!(test_normalize_negative_max, 1.0, -1.0, 1.0, 1.0);
+    test_normalize!(test_normalize_negative_middle, 0.0, -1.0, 1.0, 0.5);
+    test_normalize!(test_normalize_large_range_low_end, 0.5, 0.0, 100.0, 0.005);
+    test_normalize!(test_normalize_large_range_middle, 50.0, 0.0, 100.0, 0.5);
+    test_normalize!(test_normalize_large_range_high_end, 99.5, 0.0, 100.0, 0.995);
+
+    #[test]
+    fn test_min_and_max_normalized_base_height() {
+        let (min, max) = Terrain::min_and_max_normalized_base_height(&[
+            TerrainBlock {
+                base_height: -1024,
+                height_offsets_index: 0,
+            },
+            TerrainBlock {
+                base_height: 1024,
+                height_offsets_index: 0,
+            },
+            TerrainBlock {
+                base_height: 2048,
+                height_offsets_index: 0,
+            },
+        ]);
+        assert_eq!(min, -1.0);
+        assert_eq!(max, 2.0);
     }
 
     fn append_ext(ext: impl AsRef<OsStr>, path: PathBuf) -> PathBuf {
