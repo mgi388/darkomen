@@ -405,68 +405,7 @@ mod tests {
             let img = lightmap.image();
 
             // Compare against the golden image.
-            {
-                let golden_images_path = Path::new(env!("CARGO_MANIFEST_DIR"))
-                    .join("src")
-                    .join("shadow")
-                    .join("testdata")
-                    .join("images");
-                let golden_img_path = golden_images_path
-                    .join(path.file_name().unwrap())
-                    .with_extension("golden.png");
-
-                if !Path::new(&golden_img_path).exists() {
-                    img.save(&golden_img_path).unwrap();
-                }
-
-                let golden_img = image::open(&golden_img_path).unwrap();
-
-                assert_eq!(img.dimensions(), golden_img.dimensions());
-
-                let pixels_equal = img
-                    .pixels()
-                    .zip(golden_img.clone().pixels())
-                    .all(|(p1, p2)| p1 == p2);
-
-                if !pixels_equal {
-                    // Write out the actual image so it can be visually compared
-                    // against the golden.
-                    img.save(
-                        golden_images_path
-                            .join(path.file_name().unwrap())
-                            .with_extension("actual.png"),
-                    )
-                    .unwrap();
-
-                    // Write out an image of the diff between the two.
-                    let diff_bytes = img
-                        .clone()
-                        .into_bytes()
-                        .into_iter()
-                        .zip(golden_img.clone().into_bytes())
-                        .map(|(p1, p2)| {
-                            if p1 > p2 {
-                                return p1 - p2;
-                            }
-                            p2 - p1
-                        })
-                        .map(|p| 255 - p) // inverting the diff fixes alpha going to 0 in the previous map
-                        .collect::<Vec<_>>();
-                    let diff_img = DynamicImage::ImageRgba8(
-                        RgbaImage::from_raw(golden_img.width(), golden_img.height(), diff_bytes)
-                            .unwrap(),
-                    );
-                    diff_img
-                        .save(
-                            golden_images_path
-                                .join(path.file_name().unwrap())
-                                .with_extension("diff.png"),
-                        )
-                        .unwrap();
-                }
-
-                assert!(pixels_equal, "pixels do not match");
-            }
+            compare_image(path, img.clone());
 
             // Write out the decoded data for manual inspection.
             {
@@ -487,6 +426,67 @@ mod tests {
                 img.save(output_path).unwrap();
             }
         });
+    }
+
+    fn compare_image(path: &Path, img: DynamicImage) {
+        let golden_images_path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("src")
+            .join("shadow")
+            .join("testdata")
+            .join("images");
+        let golden_img_path = golden_images_path
+            .join(path.file_name().unwrap())
+            .with_extension("golden.png");
+
+        if !Path::new(&golden_img_path).exists() {
+            img.save(&golden_img_path).unwrap();
+        }
+
+        let golden_img = image::open(&golden_img_path).unwrap();
+
+        assert_eq!(img.dimensions(), golden_img.dimensions());
+
+        let pixels_equal = img
+            .pixels()
+            .zip(golden_img.clone().pixels())
+            .all(|(p1, p2)| p1 == p2);
+
+        if !pixels_equal {
+            // Write out the actual image so it can be visually compared against
+            // the golden.
+            img.save(
+                golden_images_path
+                    .join(path.file_name().unwrap())
+                    .with_extension("actual.png"),
+            )
+            .unwrap();
+
+            // Write out an image of the diff between the two.
+            let diff_bytes = img
+                .into_bytes()
+                .into_iter()
+                .zip(golden_img.clone().into_bytes())
+                .map(|(p1, p2)| {
+                    if p1 > p2 {
+                        return p1 - p2;
+                    }
+                    p2 - p1
+                })
+                .map(|p| 255 - p) // inverting the diff fixes alpha going to 0 in the previous map
+                .collect::<Vec<_>>();
+            let diff_img = DynamicImage::ImageRgba8(
+                RgbaImage::from_raw(golden_img.width(), golden_img.height(), diff_bytes).unwrap(),
+            );
+            diff_img
+                .save(
+                    golden_images_path
+                        .join(path.file_name().unwrap())
+                        .with_extension("diff.png"),
+                )
+                .unwrap();
+        }
+
+        assert!(pixels_equal, "pixels do not match");
     }
 
     fn append_ext(ext: impl AsRef<OsStr>, path: PathBuf) -> PathBuf {
