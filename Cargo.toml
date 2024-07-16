@@ -21,7 +21,7 @@ indexmap = { version = "2.2.6", features = ["serde"] }
 num_enum = "0.7.2"
 rand = "0.8.5"
 serde = { version = "1", features = ["derive"] }
-thiserror = "1.0.61"
+thiserror = "1.0.62"
 
 [dependencies.bevy_reflect]
 version = "0.14"
