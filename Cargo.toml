@@ -5,6 +5,7 @@ edition = "2021"
 description = "Warhammer: Dark Omen library in Rust"
 repository = "https://github.com/mgi388/darkomen"
 license = "MIT OR Apache-2.0"
+exclude = ["testdata/"]
 
 [features]
 default = []
