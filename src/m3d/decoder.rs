@@ -277,35 +277,38 @@ mod tests {
         }
 
         visit_dirs(&d, &mut |path| {
-            if let Some(ext) = path.extension() {
-                if ext.to_string_lossy().to_uppercase() == "M3D"
-                    || ext.to_string_lossy().to_uppercase() == "M3X"
-                {
-                    println!("Decoding {:?}", path.file_name().unwrap());
-
-                    let file = File::open(path).unwrap();
-                    let m3d = Decoder::new(file).decode().unwrap();
-
-                    let parent_dir = path
-                        .components()
-                        .collect::<Vec<_>>()
-                        .iter()
-                        .rev()
-                        .skip(1) // skip the file name
-                        .take_while(|c| c.as_os_str() != "DARKOMEN")
-                        .collect::<Vec<_>>()
-                        .iter()
-                        .rev()
-                        .collect::<PathBuf>();
-
-                    let output_dir = root_output_dir.join(parent_dir);
-                    std::fs::create_dir_all(&output_dir).unwrap();
-
-                    let output_path = append_ext("ron", output_dir.join(path.file_name().unwrap()));
-                    let mut output_file = File::create(output_path).unwrap();
-                    ron::ser::to_writer_pretty(&mut output_file, &m3d, Default::default()).unwrap();
-                }
+            let Some(ext) = path.extension() else {
+                return;
+            };
+            if !(ext.to_string_lossy().to_uppercase() == "M3D"
+                || ext.to_string_lossy().to_uppercase() == "M3X")
+            {
+                return;
             }
+
+            println!("Decoding {:?}", path.file_name().unwrap());
+
+            let file = File::open(path).unwrap();
+            let m3d = Decoder::new(file).decode().unwrap();
+
+            let parent_dir = path
+                .components()
+                .collect::<Vec<_>>()
+                .iter()
+                .rev()
+                .skip(1) // skip the file name
+                .take_while(|c| c.as_os_str() != "DARKOMEN")
+                .collect::<Vec<_>>()
+                .iter()
+                .rev()
+                .collect::<PathBuf>();
+
+            let output_dir = root_output_dir.join(parent_dir);
+            std::fs::create_dir_all(&output_dir).unwrap();
+
+            let output_path = append_ext("ron", output_dir.join(path.file_name().unwrap()));
+            let mut output_file = File::create(output_path).unwrap();
+            ron::ser::to_writer_pretty(&mut output_file, &m3d, Default::default()).unwrap();
         });
     }
 
