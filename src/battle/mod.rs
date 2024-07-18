@@ -3,6 +3,7 @@ mod decoder;
 #[cfg(feature = "bevy_reflect")]
 use bevy_reflect::prelude::*;
 use bitflags::bitflags;
+use glam::IVec2;
 use serde::{Deserialize, Serialize};
 
 pub use decoder::{DecodeError, Decoder};
@@ -45,6 +46,14 @@ pub struct Obstacle {
     pub dir: i32,
 }
 
+impl Obstacle {
+    /// Returns the position of the obstacle in the horizontal plane.
+    #[inline]
+    pub fn position(&self) -> IVec2 {
+        IVec2::new(self.x, self.y)
+    }
+}
+
 #[repr(transparent)]
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
@@ -79,6 +88,20 @@ pub struct LineSegment {
     pub start_y: i32,
     pub end_x: i32,
     pub end_y: i32,
+}
+
+impl LineSegment {
+    /// Returns the start position of the line segment in the horizontal plane.
+    #[inline]
+    pub fn start(&self) -> IVec2 {
+        IVec2::new(self.start_x, self.start_y)
+    }
+
+    /// Returns the end position of the line segment in the horizontal plane.
+    #[inline]
+    pub fn end(&self) -> IVec2 {
+        IVec2::new(self.end_x, self.end_y)
+    }
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -127,6 +150,14 @@ pub struct Node {
     pub node_id: u32,
     pub uuid: u32,
     pub script_id: u32,
+}
+
+impl Node {
+    /// Returns the position of the node in the horizontal plane.
+    #[inline]
+    pub fn position(&self) -> IVec2 {
+        IVec2::new(self.x, self.y)
+    }
 }
 
 #[repr(transparent)]
