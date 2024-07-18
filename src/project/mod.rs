@@ -208,11 +208,11 @@ impl Terrain {
             })
     }
 
-    pub fn heightmap1_image(&self) -> DynamicImage {
+    pub fn furniture_heightmap_image(&self) -> DynamicImage {
         self.heightmap_image(&self.heightmap1_blocks)
     }
 
-    pub fn heightmap2_image(&self) -> DynamicImage {
+    pub fn base_heightmap_image(&self) -> DynamicImage {
         self.heightmap_image(&self.heightmap2_blocks)
     }
 
@@ -701,8 +701,8 @@ mod tests {
             );
 
             // Compare against the golden image.
-            compare_heightmap_image(path, project.terrain.heightmap1_image(), 1);
-            compare_heightmap_image(path, project.terrain.heightmap2_image(), 2);
+            compare_heightmap_image(path, project.terrain.furniture_heightmap_image(), 1);
+            compare_heightmap_image(path, project.terrain.base_heightmap_image(), 2);
 
             // Write out the decoded data for manual inspection.
             {
@@ -712,22 +712,27 @@ mod tests {
                 let mut output_file = File::create(output_path).unwrap();
                 ron::ser::to_writer_pretty(&mut output_file, &project, Default::default()).unwrap();
 
-                // First and second heightmap images.
+                // Furniture and base heightmap images.
                 let output_dir = root_output_dir.join("heightmaps");
                 std::fs::create_dir_all(&output_dir).unwrap();
-
-                for map_num in 1..=2 {
-                    let img = if map_num == 1 {
-                        project.terrain.heightmap1_image()
-                    } else {
-                        project.terrain.heightmap2_image()
-                    };
-
-                    let output_path = output_dir
-                        .join(path.file_stem().unwrap())
-                        .with_extension(format!("heightmap{}.png", map_num));
-                    img.save(output_path).unwrap();
-                }
+                project
+                    .terrain
+                    .furniture_heightmap_image()
+                    .save(
+                        output_dir
+                            .join(path.file_stem().unwrap())
+                            .with_extension("furniture_heightmap.png"),
+                    )
+                    .unwrap();
+                project
+                    .terrain
+                    .base_heightmap_image()
+                    .save(
+                        output_dir
+                            .join(path.file_stem().unwrap())
+                            .with_extension("base_heightmap.png"),
+                    )
+                    .unwrap();
             }
         });
     }
