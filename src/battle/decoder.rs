@@ -315,6 +315,7 @@ impl<R: Read + Seek> Decoder<R> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::project;
     use std::{
         ffi::{OsStr, OsString},
         fs::File,
@@ -396,6 +397,18 @@ mod tests {
             // The blueprint width and height should be multiples of 8.
             assert_eq!(b.width % 8, 0);
             assert_eq!(b.height % 8, 0);
+
+            let project_file = File::open(path.with_extension("PRJ"));
+            if project_file.is_ok() {
+                let p = project::Decoder::new(project_file.unwrap())
+                    .decode()
+                    .unwrap();
+
+                // The scaled down blueprint dimensions should always be smaller
+                // than the project dimensions.
+                assert!(b.width / 8 <= p.attributes.width);
+                assert!(b.height / 8 <= p.attributes.height);
+            }
 
             for o in &b.obstacles {
                 // Should either block movement or projectiles.
