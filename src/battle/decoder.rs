@@ -393,6 +393,10 @@ mod tests {
             let file = File::open(path).unwrap();
             let b = Decoder::new(file).decode().unwrap();
 
+            // The blueprint width and height should be multiples of 8.
+            assert_eq!(b.width % 8, 0);
+            assert_eq!(b.height % 8, 0);
+
             for o in &b.obstacles {
                 // Should either block movement or projectiles.
                 assert!(
