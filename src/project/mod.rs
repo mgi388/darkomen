@@ -319,7 +319,6 @@ impl Terrain {
         let block_index = (((y >> 3) * self.width_in_blocks() as i32) + (x >> 3)) as usize;
         let height_offsets_index = ((y % 8) * 8 + (x % 8)) as usize;
 
-        assert!(block_index < blocks.len(), "block index out of bounds");
         assert!(
             height_offsets_index < 64,
             "height offsets index out of bounds"
