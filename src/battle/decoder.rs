@@ -350,7 +350,6 @@ mod tests {
             std::env::var("DARKOMEN_PATH").unwrap().as_str(),
             "DARKOMEN",
             "GAMEDATA",
-            "1PBAT",
         ]
         .iter()
         .collect();
@@ -404,7 +403,21 @@ mod tests {
                 assert!(o.flags.contains(ObstacleFlags::IS_ENABLED));
             }
 
-            let output_path = append_ext("ron", root_output_dir.join(path.file_name().unwrap()));
+            let parent_dir = path
+                .components()
+                .collect::<Vec<_>>()
+                .iter()
+                .rev()
+                .skip(1) // skip the file name
+                .take_while(|c| c.as_os_str() != "DARKOMEN")
+                .collect::<Vec<_>>()
+                .iter()
+                .rev()
+                .collect::<PathBuf>();
+            let output_dir = root_output_dir.join(parent_dir);
+            std::fs::create_dir_all(&output_dir).unwrap();
+
+            let output_path = append_ext("ron", output_dir.join(path.file_name().unwrap()));
             let mut output_file = File::create(output_path).unwrap();
             ron::ser::to_writer_pretty(&mut output_file, &b, Default::default()).unwrap();
         });
