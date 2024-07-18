@@ -3,7 +3,7 @@ mod decoder;
 #[cfg(feature = "bevy_reflect")]
 use bevy_reflect::prelude::*;
 use bitflags::bitflags;
-use glam::{IVec2};
+use glam::IVec2;
 use serde::{Deserialize, Serialize};
 
 pub use decoder::{DecodeError, Decoder};
