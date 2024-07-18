@@ -148,6 +148,15 @@ impl Instance {
     }
 }
 
+#[derive(Clone, Debug, Serialize)]
+pub enum Heightmap {
+    /// The heightmap that includes the base terrain and furniture instances
+    /// like buildings.
+    Furniture = 1,
+    /// The heightmap that only includes the base terrain.
+    Base = 2,
+}
+
 #[derive(Clone, Debug, Default, Serialize)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct Terrain {
@@ -167,6 +176,25 @@ pub struct Terrain {
 }
 
 impl Terrain {
+    /// Returns the width of the terrain in blocks. That is, how many 8x8 blocks
+    /// are needed to cover the width of the terrain.
+    ///
+    /// For example, if the width is 320, there are 40 blocks that cover a
+    /// single row of the terrain.
+    #[inline]
+    fn width_in_blocks(&self) -> u32 {
+        (self.width + 7) / 8 // adding 7 and dividing by 8 is equivalent to ceil division
+    }
+
+    /// Returns the height of the terrain in blocks. That is, how many 8x8
+    /// blocks are needed to cover the height of the terrain.
+    #[inline]
+    #[allow(dead_code)]
+    fn height_in_blocks(&self) -> u32 {
+        (self.height + 7) / 8 // adding 7 and dividing by 8 is equivalent to ceil division
+    }
+
+    #[inline]
     fn normalized_offset_height(offset_height: u8) -> f32 {
         offset_height as f32 / 8.0
     }
@@ -278,27 +306,30 @@ impl Terrain {
     }
 
     /// TODO: Not really working perfectly.
-    pub fn get_height(&self, map_num: u32, x: i32, y: i32) -> f32 {
-        // TODO: Should we clamp max values / 8?
+    pub fn get_height(&self, map: Heightmap, x: i32, y: i32) -> f32 {
+        let blocks = match map {
+            Heightmap::Furniture => &self.heightmap1_blocks,
+            Heightmap::Base => &self.heightmap2_blocks,
+        };
+
+        // TODO: Should we clamp self.width/height by / 8, or use self.width_in_blocks()?
         let x = (x / 8).clamp(0, self.width as i32);
         let y = (y / 8).clamp(0, self.height as i32);
 
-        // TODO: Understand what this is doing and means.
-        let off_address = (((y >> 3) * self.width as i32 / 8) + (x >> 3)) as usize;
-        let macro_block_address = ((y % 8) * 8 + (x % 8)) as usize;
+        let block_index = (((y >> 3) * self.width_in_blocks() as i32) + (x >> 3)) as usize;
+        let height_offsets_index = ((y % 8) * 8 + (x % 8)) as usize;
 
-        let blocks = match map_num {
-            1 => &self.heightmap1_blocks,
-            2 => &self.heightmap2_blocks,
-            _ => panic!("invalid map number"),
-        };
+        assert!(
+            height_offsets_index < 64,
+            "height offsets index out of bounds"
+        );
 
         // TODO: This clamps to avoid a panic but can we avoid this?
-        let b = &blocks[off_address.min(blocks.len() - 1)];
-        let macro_block = b.height_offsets_index as usize;
+        let block = &blocks[block_index.min(blocks.len() - 1)];
+        let height_offsets = &self.height_offsets[block.height_offsets_index as usize];
 
-        let additional = self.height_offsets[macro_block][macro_block_address];
-        b.normalized_base_height() + Terrain::normalized_offset_height(additional)
+        let offset_height = height_offsets[height_offsets_index];
+        block.normalized_base_height() + Terrain::normalized_offset_height(offset_height)
     }
 }
 
@@ -318,11 +349,13 @@ impl TerrainBlock {
     /// Returns the normalized base height of the block by dividing the stored
     /// integer value by 1024. This conversion reflects the original intention
     /// for the height to be represented as a float.
+    #[inline]
     pub fn normalized_base_height(&self) -> f32 {
         self.base_height as f32 / 1024.0
     }
 }
 
+#[inline]
 fn normalize(value: f32, min: f32, max: f32) -> f32 {
     (value - min) / (max - min)
 }
@@ -454,40 +487,36 @@ mod tests {
         let original_bytes = std::fs::read(d.clone()).unwrap();
 
         let file = File::open(d.clone()).unwrap();
-        let project = Decoder::new(file).decode().unwrap();
+        let p = Decoder::new(file).decode().unwrap();
 
-        assert_eq!(project.base_model_file_name, "base.M3D");
-        assert_eq!(
-            project.water_model_file_name,
-            Some("_7water.M3D".to_string())
-        );
-        assert_eq!(project.furniture_model_file_names.len(), 10);
-        assert_eq!(project.furniture_model_file_names[0], "_4barrel.m3d");
-        assert_eq!(project.furniture_model_file_names[9], "_khut3_d.m3d");
-        assert_eq!(project.instances.len(), 37);
-        assert_eq!(project.terrain.width, 184);
-        assert_eq!(project.terrain.height, 200);
-        assert_eq!(project.attributes.width, 184);
-        assert_eq!(project.attributes.height, 200);
-        assert_eq!(project.background_music_script_file_name, "battle1.fsm");
-        assert_eq!(project.tracks.len(), 2);
-        assert_eq!(project.tracks[0].control_points.len(), 6);
-        assert_eq!(project.tracks[0].points.len(), 135);
-        assert_eq!(project.tracks[1].control_points.len(), 6);
-        assert_eq!(project.tracks[1].points.len(), 116);
+        assert_eq!(p.base_model_file_name, "base.M3D");
+        assert_eq!(p.water_model_file_name, Some("_7water.M3D".to_string()));
+        assert_eq!(p.furniture_model_file_names.len(), 10);
+        assert_eq!(p.furniture_model_file_names[0], "_4barrel.m3d");
+        assert_eq!(p.furniture_model_file_names[9], "_khut3_d.m3d");
+        assert_eq!(p.instances.len(), 37);
+        assert_eq!(p.terrain.width, 184);
+        assert_eq!(p.terrain.height, 200);
+        assert_eq!(p.terrain.width_in_blocks(), 23);
+        assert_eq!(p.terrain.height_in_blocks(), 25);
+        assert_eq!(p.attributes.width, 184);
+        assert_eq!(p.attributes.height, 200);
+        assert_eq!(p.background_music_script_file_name, "battle1.fsm");
+        assert_eq!(p.tracks.len(), 2);
+        assert_eq!(p.tracks[0].control_points.len(), 6);
+        assert_eq!(p.tracks[0].points.len(), 135);
+        assert_eq!(p.tracks[1].control_points.len(), 6);
+        assert_eq!(p.tracks[1].points.len(), 116);
 
-        // TODO: Not sure if the heights here are correct.
-        {
-            // Line segment 1 of 'Sightedge' region from B1_01.BTB.
-            assert_eq!(project.terrain.get_height(1, 8, 1592), 9.); // start pos
-            assert_eq!(project.terrain.get_height(1, 8, 408), 19.); // end pos
+        // Line segment 1 of 'Sightedge' region from B1_01.BTB.
+        assert_eq!(p.terrain.get_height(Heightmap::Furniture, 8, 1592), 9.); // start pos
+        assert_eq!(p.terrain.get_height(Heightmap::Furniture, 8, 408), 19.); // end pos
 
-            // A point with a negative x.
-            assert_eq!(project.terrain.get_height(1, 1448, 1856), 50.); // start pos
-            assert_eq!(project.terrain.get_height(1, -248, 1856), 48.); // end pos
-        }
+        // A point with a negative x.
+        assert_eq!(p.terrain.get_height(Heightmap::Furniture, 1448, 1856), 50.); // start pos
+        assert_eq!(p.terrain.get_height(Heightmap::Furniture, -248, 1856), 48.); // end pos
 
-        roundtrip_test(&original_bytes, &project);
+        roundtrip_test(&original_bytes, &p);
     }
 
     #[test]
@@ -507,6 +536,11 @@ mod tests {
 
         let file = File::open(d.clone()).unwrap();
         let project = Decoder::new(file).decode().unwrap();
+
+        assert_eq!(project.terrain.width, 220);
+        assert_eq!(project.terrain.height, 320);
+        assert_eq!(project.terrain.width_in_blocks(), 28);
+        assert_eq!(project.terrain.height_in_blocks(), 40);
 
         roundtrip_test(&original_bytes, &project);
     }
@@ -627,6 +661,20 @@ mod tests {
                     instance.gfx_code
                 );
             }
+
+            // The number of blocks in the heightmap should correspond to the
+            // width and height such that the terrain can be divided into 8x8
+            // blocks.
+            assert_eq!(
+                project.terrain.heightmap1_blocks.len(),
+                project.terrain.width_in_blocks() as usize
+                    * project.terrain.height_in_blocks() as usize
+            );
+            assert_eq!(
+                project.terrain.heightmap2_blocks.len(),
+                project.terrain.width_in_blocks() as usize
+                    * project.terrain.height_in_blocks() as usize
+            );
 
             let has_invalid_offset_index_in_heightmap1 =
                 project.terrain.heightmap1_blocks.iter().any(|block| {
