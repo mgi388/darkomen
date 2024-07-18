@@ -329,6 +329,7 @@ impl Terrain {
         let height_offsets = &self.height_offsets[block.height_offsets_index as usize];
 
         let offset_height = height_offsets[height_offsets_index];
+
         block.normalized_base_height() + Terrain::normalized_offset_height(offset_height)
     }
 }
@@ -642,6 +643,11 @@ mod tests {
             let project = Decoder::new(file).decode().unwrap();
 
             roundtrip_test(&original_bytes, &project);
+
+            // The attributes width and height should match the terrain width
+            // and height.
+            assert_eq!(project.attributes.width, project.terrain.width);
+            assert_eq!(project.attributes.height, project.terrain.height);
 
             // Each project should have 2 tracks.
             assert_eq!(project.tracks.len(), 2);
