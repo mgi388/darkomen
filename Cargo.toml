@@ -15,7 +15,7 @@ bevy_reflect = ["dep:bevy_reflect"]
 bitflags = { version = "2.6", features = ["serde"] }
 encoding_rs = "0.8.34"
 encoding_rs_io = "0.1.7"
-glam = { version = "0.27.0", default-features = false, features = ["serde"] }
+glam = { version = "0.28.0", default-features = false, features = ["serde"] }
 image = "0.25.1"
 indexmap = { version = "2.2.6", features = ["serde"] }
 num_enum = "0.7.2"
