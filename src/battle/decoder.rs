@@ -465,9 +465,13 @@ mod tests {
             *pixel = Rgba([r, g, b, a]);
         }
 
+        // Pin the rectangle to the top right which is the terrain origin.
+        let start_x = img_buffer.width() as i32 - (blueprint.width / 8) as i32;
+        let start_y = 0; // top edge, so y is 0
+
         // Draw a hollow rectangle on the base image to show the blueprint
         // dimensions.
-        let rect = Rect::at(0, 0).of_size(blueprint.width / 8, blueprint.height / 8);
+        let rect = Rect::at(start_x, start_y).of_size(blueprint.width / 8, blueprint.height / 8);
         draw_hollow_rect_mut(&mut img_buffer, rect, Rgba([255, 0, 0, 255]));
 
         DynamicImage::ImageRgba8(img_buffer)
