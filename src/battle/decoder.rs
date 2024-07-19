@@ -315,7 +315,9 @@ impl<R: Read + Seek> Decoder<R> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::project;
+    use crate::project::{self, Project};
+    use image::{DynamicImage, Rgba};
+    use imageproc::{drawing::draw_hollow_rect_mut, rect::Rect};
     use std::{
         ffi::{OsStr, OsString},
         fs::File,
@@ -391,6 +393,20 @@ mod tests {
 
             println!("Decoding {:?}", path.file_name().unwrap());
 
+            let parent_dir = path
+                .components()
+                .collect::<Vec<_>>()
+                .iter()
+                .rev()
+                .skip(1) // skip the file name
+                .take_while(|c| c.as_os_str() != "DARKOMEN")
+                .collect::<Vec<_>>()
+                .iter()
+                .rev()
+                .collect::<PathBuf>();
+            let output_dir = root_output_dir.join(parent_dir);
+            std::fs::create_dir_all(&output_dir).unwrap();
+
             let file = File::open(path).unwrap();
             let b = Decoder::new(file).decode().unwrap();
 
@@ -408,6 +424,15 @@ mod tests {
                 // than the project dimensions.
                 assert!(b.width / 8 <= p.attributes.width);
                 assert!(b.height / 8 <= p.attributes.height);
+
+                // Overlay the blueprint on the heightmap image.
+                let img = overlay_blueprint_on_terrain(&p, &b);
+                img.save(
+                    output_dir
+                        .join(path.file_stem().unwrap())
+                        .with_extension("overlay.png"),
+                )
+                .unwrap();
             }
 
             for o in &b.obstacles {
@@ -420,24 +445,32 @@ mod tests {
                 assert!(o.flags.contains(ObstacleFlags::IS_ENABLED));
             }
 
-            let parent_dir = path
-                .components()
-                .collect::<Vec<_>>()
-                .iter()
-                .rev()
-                .skip(1) // skip the file name
-                .take_while(|c| c.as_os_str() != "DARKOMEN")
-                .collect::<Vec<_>>()
-                .iter()
-                .rev()
-                .collect::<PathBuf>();
-            let output_dir = root_output_dir.join(parent_dir);
-            std::fs::create_dir_all(&output_dir).unwrap();
-
             let output_path = append_ext("ron", output_dir.join(path.file_name().unwrap()));
             let mut output_file = File::create(output_path).unwrap();
             ron::ser::to_writer_pretty(&mut output_file, &b, Default::default()).unwrap();
         });
+    }
+
+    /// Note: We know the blueprint always fits within the project dimensions so
+    /// we don't need to expand the base image.
+    fn overlay_blueprint_on_terrain(project: &Project, blueprint: &Blueprint) -> DynamicImage {
+        // Doesn't matter which heightmap we use, they all have the same
+        // dimensions, but the furniture one has the most detail.
+        let img = project.terrain.furniture_heightmap_image();
+        let mut img_buffer = img.to_rgba8();
+
+        // The image is quite dark, so invert colors just for ease of viewing.
+        for pixel in img_buffer.pixels_mut() {
+            let (r, g, b, a) = (255 - pixel[0], 255 - pixel[1], 255 - pixel[2], pixel[3]); // invert RGB, keep alpha the same
+            *pixel = Rgba([r, g, b, a]);
+        }
+
+        // Draw a hollow rectangle on the base image to show the blueprint
+        // dimensions.
+        let rect = Rect::at(0, 0).of_size(blueprint.width / 8, blueprint.height / 8);
+        draw_hollow_rect_mut(&mut img_buffer, rect, Rgba([255, 0, 0, 255]));
+
+        DynamicImage::ImageRgba8(img_buffer)
     }
 
     fn append_ext(ext: impl AsRef<OsStr>, path: PathBuf) -> PathBuf {

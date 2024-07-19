@@ -21,7 +21,7 @@ indexmap = { version = "2.2.6", features = ["serde"] }
 num_enum = "0.7.2"
 rand = "0.8.5"
 serde = { version = "1", features = ["derive"] }
-thiserror = "1.0.62"
+thiserror = "~1.0.61"
 
 [dependencies.bevy_reflect]
 version = "0.14"
@@ -32,6 +32,7 @@ optional = true
 [dev-dependencies]
 # Enable the bevy_reflect feature when testing.
 darkomen = { path = ".", version = "0.1.4", features = ["bevy_reflect"] }
+imageproc = "0.25.0"
 pretty_assertions = "1.4.0"
 rand_chacha = "0.3"
 regex = "1.5.4"
