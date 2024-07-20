@@ -474,6 +474,10 @@ mod tests {
         let rect = Rect::at(start_x, start_y).of_size(blueprint.width / 8, blueprint.height / 8);
         draw_hollow_rect_mut(&mut img_buffer, rect, Rgba([255, 0, 0, 255]));
 
+        // Now rotate the image 180 degrees to make the origin at the bottom
+        // left which matches the in-game aeiral map view.
+        let img_buffer = image::imageops::rotate180(&img_buffer);
+
         DynamicImage::ImageRgba8(img_buffer)
     }
 
