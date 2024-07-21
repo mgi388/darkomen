@@ -177,10 +177,8 @@ impl<R: Read + Seek> Decoder<R> {
                 let line = self.read_int_tuple_property::<i32>(502, 4)?;
 
                 line_segments.push(LineSegment {
-                    start_x: line[0],
-                    start_y: line[1],
-                    end_x: line[2],
-                    end_y: line[3],
+                    start: IVec2::new(line[0], line[1]),
+                    end: IVec2::new(line[2], line[3]),
                 });
             }
 
