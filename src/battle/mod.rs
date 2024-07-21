@@ -3,10 +3,16 @@ mod decoder;
 #[cfg(feature = "bevy_reflect")]
 use bevy_reflect::prelude::*;
 use bitflags::bitflags;
-use glam::IVec2;
+use glam::{IVec2, Vec2};
 use serde::{Deserialize, Serialize};
 
 pub use decoder::{DecodeError, Decoder};
+
+/// The scale of the blueprint in the game world.
+///
+/// To get the world coordinates from the blueprint coordinates, divide the
+/// blueprint coordinates by the scale.
+pub const SCALE: f32 = 8.;
 
 #[derive(Debug, Clone, Serialize)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
@@ -39,18 +45,28 @@ pub struct Objective {
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct Obstacle {
     pub flags: ObstacleFlags,
-    pub x: i32,
-    pub y: i32,
+    /// The position of the obstacle in the horizontal plane.
+    pub position: IVec2,
     pub z: i32,
     pub radius: u32,
     pub dir: i32,
 }
 
 impl Obstacle {
-    /// Returns the position of the obstacle in the horizontal plane.
+    /// Returns the position of the obstacle in the horizontal plane, in world
+    /// coordinates.
     #[inline]
-    pub fn position(&self) -> IVec2 {
-        IVec2::new(self.x, self.y)
+    pub fn world_position(&self) -> Vec2 {
+        Vec2::new(
+            self.position.x as f32 / SCALE,
+            self.position.y as f32 / SCALE,
+        )
+    }
+
+    /// Returns the radius of the obstacle in world space.
+    #[inline]
+    pub fn world_radius(&self) -> f32 {
+        self.radius as f32 / SCALE
     }
 }
 
@@ -91,6 +107,18 @@ pub struct LineSegment {
 }
 
 impl LineSegment {
+    /// Returns the start position of the line segment in world coordinates.
+    #[inline]
+    pub fn world_start(&self) -> Vec2 {
+        Vec2::new(self.start.x as f32 / SCALE, self.start.y as f32 / SCALE)
+    }
+
+    /// Returns the end position of the line segment in world coordinates.
+    #[inline]
+    pub fn world_end(&self) -> Vec2 {
+        Vec2::new(self.end.x as f32 / SCALE, self.end.y as f32 / SCALE)
+    }
+
     /// Checks if a point is on a line segment.
     fn point_on_line_segment(&self, point: &IVec2) -> bool {
         let crossproduct = (point.y - self.start.y) * (self.end.x - self.start.x)
@@ -204,8 +232,8 @@ bitflags! {
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct Node {
     pub flags: NodeFlags,
-    pub x: i32,
-    pub y: i32,
+    /// The position of the node in the horizontal plane.
+    pub position: IVec2,
     pub radius: u32,
     pub direction: i32,
     pub node_id: u32,
@@ -214,10 +242,26 @@ pub struct Node {
 }
 
 impl Node {
-    /// Returns the position of the node in the horizontal plane.
+    /// Returns whether the node is a waypoint.
     #[inline]
-    pub fn position(&self) -> IVec2 {
-        IVec2::new(self.x, self.y)
+    pub fn is_waypoint(&self) -> bool {
+        self.flags.contains(NodeFlags::IS_WAYPOINT)
+    }
+
+    /// Returns the position of the node in the horizontal plane in world
+    /// coordinates.
+    #[inline]
+    pub fn world_position(&self) -> Vec2 {
+        Vec2::new(
+            self.position.x as f32 / SCALE,
+            self.position.y as f32 / SCALE,
+        )
+    }
+
+    /// Returns the radius of the node in world space.
+    #[inline]
+    pub fn world_radius(&self) -> f32 {
+        self.radius as f32 / SCALE
     }
 }
 

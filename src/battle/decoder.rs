@@ -151,8 +151,7 @@ impl<R: Read + Seek> Decoder<R> {
 
             obstacles.push(Obstacle {
                 flags: ObstacleFlags::from_bits(flags).expect("obstacle flags should be valid"),
-                x,
-                y,
+                position: IVec2::new(x, y),
                 z,
                 radius: radius as u32,
                 dir,
@@ -213,8 +212,7 @@ impl<R: Read + Seek> Decoder<R> {
 
             nodes.push(Node {
                 flags: NodeFlags::from_bits(flags).expect("node flags should be valid"),
-                x,
-                y,
+                position: IVec2::new(x, y),
                 radius,
                 direction,
                 node_id,
@@ -343,6 +341,21 @@ mod tests {
         assert_eq!(b.player_army, "B101mrc");
         assert_eq!(b.enemy_army, "B101nme");
         assert_eq!(b.ctl, "B101");
+
+        const EPSILON: f32 = 0.0001;
+
+        assert!(b.obstacles[0]
+            .world_position()
+            .abs_diff_eq(Vec2::new(138.625, 47.5), EPSILON));
+        assert!((b.obstacles[0].world_radius() - 7.875).abs() < EPSILON);
+        assert!(b.obstacles[5]
+            .world_position()
+            .abs_diff_eq(Vec2::new(-0.75, 161.0), EPSILON));
+
+        assert!(b.nodes[0]
+            .world_position()
+            .abs_diff_eq(Vec2::new(151.25, 119.625), EPSILON));
+        assert!((b.nodes[0].world_radius() - 6.0).abs() < EPSILON);
     }
 
     #[test]
