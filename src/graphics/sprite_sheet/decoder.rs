@@ -1,5 +1,6 @@
 use super::*;
 use image::{DynamicImage, GenericImage, Pixel, Rgb, Rgba};
+use num_enum::{IntoPrimitive, TryFromPrimitive};
 use std::{
     fmt,
     io::{Error as IoError, Read, Seek, SeekFrom},
@@ -9,6 +10,8 @@ use std::{
 pub enum DecodeError {
     IoError(IoError),
     InvalidFormat(String),
+    InvalidFrameType(u8),
+    InvalidCompressionType(u8),
 }
 
 impl std::error::Error for DecodeError {}
@@ -24,6 +27,8 @@ impl fmt::Display for DecodeError {
         match self {
             DecodeError::IoError(error) => write!(f, "IO error: {}", error),
             DecodeError::InvalidFormat(format) => write!(f, "invalid format: {}", format),
+            DecodeError::InvalidFrameType(v) => write!(f, "invalid frame type: {}", v),
+            DecodeError::InvalidCompressionType(v) => write!(f, "invalid compression type: {}", v),
         }
     }
 }
@@ -47,23 +52,14 @@ struct Header {
     frame_count: u16,
 }
 
-#[derive(Clone, Debug)]
 #[repr(u8)]
-enum CompressionType {
-    None,
-    Packbits,
-    ZeroRuns,
-}
-
-impl From<u8> for CompressionType {
-    fn from(value: u8) -> Self {
-        match value {
-            0 => CompressionType::None,
-            1 => CompressionType::Packbits,
-            2 => CompressionType::ZeroRuns,
-            _ => panic!("invalid compression type"),
-        }
-    }
+#[derive(Clone, Copy, Debug, Default, IntoPrimitive, PartialEq, TryFromPrimitive)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+pub enum CompressionType {
+    #[default]
+    None = 0,
+    Packbits = 1,
+    ZeroRuns = 2,
 }
 
 #[derive(Clone, Debug)]
@@ -202,7 +198,7 @@ impl<R: Read + Seek> Decoder<R> {
             frames: frame_headers
                 .iter()
                 .map(|fh| Frame {
-                    frame_type: fh.frame_type.clone(),
+                    frame_type: fh.frame_type,
                     x: fh.x,
                     y: fh.y,
                     width: fh.width,
@@ -252,8 +248,10 @@ impl<R: Read + Seek> Decoder<R> {
             let mut buf = [0; FRAME_HEADER_SIZE_BYTES];
             self.reader.read_exact(&mut buf)?;
 
-            let frame_type = FrameType::from(buf[0]);
-            let compression_type = CompressionType::from(buf[1]);
+            let frame_type =
+                FrameType::try_from(buf[0]).map_err(|_| DecodeError::InvalidFrameType(buf[0]))?;
+            let compression_type = CompressionType::try_from(buf[1])
+                .map_err(|_| DecodeError::InvalidCompressionType(buf[1]))?;
             let color_count = u16::from_le_bytes(buf[2..4].try_into().unwrap());
             let x = i16::from_le_bytes(buf[4..6].try_into().unwrap());
             let y = i16::from_le_bytes(buf[6..8].try_into().unwrap());
@@ -413,19 +411,19 @@ mod tests {
             println!("Decoding {:?}", path.file_name().unwrap());
 
             let file = File::open(path).unwrap();
-            let sprite = Decoder::new(file).decode().unwrap();
+            let s = Decoder::new(file).decode().unwrap();
 
             let parent_dir = path.components().rev().nth(1).unwrap();
             let output_dir = root_output_dir.join(parent_dir);
             std::fs::create_dir_all(&output_dir).unwrap();
 
-            if sprite.texture.width() == 0 || sprite.texture.height() == 0 {
+            if s.texture.width() == 0 || s.texture.height() == 0 {
                 println!("Skipping empty image {:?}", path.file_name().unwrap());
                 return;
             }
 
             let output_path = append_ext("png", output_dir.join(path.file_name().unwrap()));
-            sprite.texture.save(output_path).unwrap();
+            s.texture.save(output_path).unwrap();
         });
     }
 

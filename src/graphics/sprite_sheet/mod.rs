@@ -5,6 +5,8 @@ mod zeroruns;
 #[cfg(feature = "bevy_reflect")]
 use bevy_reflect::prelude::*;
 use image::DynamicImage;
+use num_enum::{IntoPrimitive, TryFromPrimitive};
+use serde::Serialize;
 
 pub use decoder::{DecodeError, Decoder};
 pub(crate) use packbits::PackBitsReader;
@@ -40,37 +42,23 @@ pub struct Frame {
     pub height: u16,
 }
 
-/// Provides information about how to interpret a frame image.
 #[repr(u8)]
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub enum FrameType {
     /// Indicates the frame is a repeat of a previous frame.
-    FrameTypeRepeat,
-    // Indicates the frame should be flipped horizontally.
-    FrameTypeFlipHorizontally,
-    // Indicates the frame should be flipped vertically.
-    FrameTypeFlipVertically,
-    // Indicates the frame should be flipped horizontally and vertically.
-    FrameTypeFlipHorizontallyAndVertically,
-    // Indicates a normal frame.
-    FrameTypeNormal,
-    // Indicates the frame is empty.
-    // There is no frame or palette data associated with the frame.
-    // The frame's width and height are 0.
-    FrameTypeEmpty,
-}
-
-impl From<u8> for FrameType {
-    fn from(value: u8) -> Self {
-        match value {
-            0 => FrameType::FrameTypeRepeat,
-            1 => FrameType::FrameTypeFlipHorizontally,
-            2 => FrameType::FrameTypeFlipVertically,
-            3 => FrameType::FrameTypeFlipHorizontallyAndVertically,
-            4 => FrameType::FrameTypeNormal,
-            5 => FrameType::FrameTypeEmpty,
-            _ => panic!("invalid frame type"),
-        }
-    }
+    FrameTypeRepeat = 0,
+    /// Indicates the frame should be flipped horizontally.
+    FrameTypeFlipHorizontally = 1,
+    /// Indicates the frame should be flipped vertically.
+    FrameTypeFlipVertically = 2,
+    /// Indicates the frame should be flipped horizontally and vertically.
+    FrameTypeFlipHorizontallyAndVertically = 3,
+    /// Indicates a normal frame.
+    #[default]
+    FrameTypeNormal = 4,
+    /// Indicates the frame is empty.
+    /// There is no frame or palette data associated with the frame.
+    /// The frame's width and height are 0.
+    FrameTypeEmpty = 5,
 }
