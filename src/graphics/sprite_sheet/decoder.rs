@@ -87,6 +87,8 @@ where
     reader: R,
     columns: Option<usize>,
     aspect_ratio: Option<Box<dyn Fn(u32) -> f32>>,
+    padding: Option<(u16, u16)>,
+    offset: Option<(u16, u16)>,
 }
 
 impl<R: Read + Seek> Decoder<R> {
@@ -95,6 +97,8 @@ impl<R: Read + Seek> Decoder<R> {
             reader,
             columns: None,
             aspect_ratio: None,
+            padding: None,
+            offset: None,
         }
     }
 
@@ -108,6 +112,11 @@ impl<R: Read + Seek> Decoder<R> {
         F: Fn(u32) -> f32 + 'static,
     {
         self.aspect_ratio = Some(Box::new(f));
+        self
+    }
+
+    pub fn with_padding(mut self, padding: (u16, u16)) -> Self {
+        self.padding = Some(padding);
         self
     }
 
@@ -134,6 +143,11 @@ impl<R: Read + Seek> Decoder<R> {
             let rows = (frame_headers.len() + columns - 1) / columns;
             (columns, rows)
         };
+
+        let (x_padding, y_padding) = self.padding.unwrap_or((0, 0));
+
+        let frame_max_width = frame_max_width + x_padding;
+        let frame_max_height = frame_max_height + y_padding;
 
         let width = (columns * frame_max_width as usize) as u32;
         let height = (rows * frame_max_height as usize) as u32;
@@ -163,6 +177,9 @@ impl<R: Read + Seek> Decoder<R> {
                 }
             }
 
+            let flip_x = fh.frame_type == FrameType::FlipX || fh.frame_type == FrameType::FlipXY;
+            let flip_y = fh.frame_type == FrameType::FlipY || fh.frame_type == FrameType::FlipXY;
+
             // Calculate the top-left coordinates for the frame.
             let x_offset = (index % columns) as u32 * frame_max_width as u32;
             let y_offset = (index / columns) as u32 * frame_max_height as u32;
@@ -179,6 +196,10 @@ impl<R: Read + Seek> Decoder<R> {
             buf.iter().enumerate().for_each(|(i, &b)| {
                 let x = i as u32 % fh.width as u32;
                 let y = i as u32 / fh.width as u32;
+
+                let x = if flip_x { fh.width as u32 - x - 1 } else { x };
+                let y = if flip_y { fh.height as u32 - y - 1 } else { y };
+
                 let mut color = color_table[fh.color_table_offset as usize + b as usize];
 
                 // Convert cyan (r=0, g=255, b=255) to shadow with 45%
@@ -209,8 +230,8 @@ impl<R: Read + Seek> Decoder<R> {
                 tile_size: (frame_max_width, frame_max_height),
                 columns,
                 rows,
-                padding: None,
-                offset: None,
+                padding: self.padding,
+                offset: self.offset,
             },
         })
     }
@@ -411,19 +432,19 @@ mod tests {
             println!("Decoding {:?}", path.file_name().unwrap());
 
             let file = File::open(path).unwrap();
-            let s = Decoder::new(file).decode().unwrap();
+            let sheet = Decoder::new(file).with_padding((4, 4)).decode().unwrap();
 
             let parent_dir = path.components().rev().nth(1).unwrap();
             let output_dir = root_output_dir.join(parent_dir);
             std::fs::create_dir_all(&output_dir).unwrap();
 
-            if s.texture.width() == 0 || s.texture.height() == 0 {
+            if sheet.texture.width() == 0 || sheet.texture.height() == 0 {
                 println!("Skipping empty image {:?}", path.file_name().unwrap());
                 return;
             }
 
             let output_path = append_ext("png", output_dir.join(path.file_name().unwrap()));
-            s.texture.save(output_path).unwrap();
+            sheet.texture.save(output_path).unwrap();
         });
     }
 
