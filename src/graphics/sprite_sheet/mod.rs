@@ -47,18 +47,17 @@ pub struct Frame {
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub enum FrameType {
     /// Indicates the frame is a repeat of a previous frame.
-    FrameTypeRepeat = 0,
-    /// Indicates the frame should be flipped horizontally.
-    FrameTypeFlipHorizontally = 1,
-    /// Indicates the frame should be flipped vertically.
-    FrameTypeFlipVertically = 2,
-    /// Indicates the frame should be flipped horizontally and vertically.
-    FrameTypeFlipHorizontallyAndVertically = 3,
+    Repeat = 0,
+    /// Indicates the frame should be flipped along the x axis.
+    FlipX = 1,
+    /// Indicates the frame should be flipped along the y axis.
+    FlipY = 2,
+    /// Indicates the frame should be flipped along the x and y axes.
+    FlipXY = 3,
     /// Indicates a normal frame.
     #[default]
-    FrameTypeNormal = 4,
-    /// Indicates the frame is empty.
-    /// There is no frame or palette data associated with the frame.
-    /// The frame's width and height are 0.
-    FrameTypeEmpty = 5,
+    Normal = 4,
+    /// Indicates the frame is empty. There is no frame or palette data
+    /// associated with the frame. The frame's width and height are 0.
+    Empty = 5,
 }
