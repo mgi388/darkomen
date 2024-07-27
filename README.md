@@ -28,7 +28,7 @@ The following table shows the game file support in this library:
 | [Sound effects](src/sound/sfx)             | .H                | ✅   | ❌    | ✅ None                       |
 | Sound mono audio                           | .MAD              | ❌   | ❌    |                               |
 | [Sound scripts](src/sound/script)          | .FSM              | ✅   | ✅    | ✅ None                       |
-| Sound stereo audio                         | .SAD              | ❌   | ❌    |                               |
+| [Sound stereo audio](src/sound/sad)        | .SAD              | ✅   | ✅    |                               |
 | [Sprite sheets](src/graphics/sprite_sheet) | .SPR              | ✅   | ❌    | ✅ None                       |
 
 ## Installation
