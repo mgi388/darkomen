@@ -17,7 +17,7 @@ encoding_rs = "0.8.34"
 encoding_rs_io = "0.1.7"
 glam = { version = "0.27.0", default-features = false, features = ["serde"] }
 hound = "3.5.1"
-image = "0.25.1"
+image = "0.25.2"
 indexmap = { version = "2.2.6", features = ["serde"] }
 num_enum = "0.7.2"
 rand = "0.8.5"
