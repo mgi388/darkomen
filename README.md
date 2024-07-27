@@ -12,24 +12,24 @@ The following table shows the game file support in this library:
 
 | Kind                                       | File extension(s) | Read | Write | Known issues?                 |
 | ------------------------------------------ | ----------------- | ---- | ----- | ----------------------------- |
-| [3D models](src/m3d)                       | .M3D              | ✅   | ❌    | ✅ None                       |
+| [3D models](src/m3d)                       | .M3D              | ✅   | ❌    |                               |
 | [Army and save files](src/army)            | .ARM              | ✅   | ✅    | ⚠️ Save files not interpreted |
-| [Battle blueprints](src/battle)            | .BTB              | ✅   | ❌    | ✅ None                       |
+| [Battle blueprints](src/battle)            | .BTB              | ✅   | ❌    |                               |
 | CTL                                        | .CTL              | ❌   | ❌    |                               |
 | Cursors                                    | .ANI              | ❌   | ❌    |                               |
 | Fonts                                      | .FNT              | ❌   | ❌    |                               |
 | Game flows                                 | .DOT              | ❌   | ❌    |                               |
 | [Lights](src/light)                        | .LIT              | ✅   | ❌    | ⚠️ Flags are not correct      |
 | Movies                                     | .TGQ              | ❌   | ❌    |                               |
-| Particle effects                           | .PLB,.H           | ❌   | ❌    |                               |
-| Portrait scripts                           | .KEY,.SEQ         | ❌   | ❌    |                               |
-| [Projects](src/project)                    | .PRJ              | ✅   | ✅    | ✅ None                       |
-| [Shadows](src/shadow)                      | .SHD              | ✅   | ✅    | ✅ None                       |
-| [Sound effects](src/sound/sfx)             | .H                | ✅   | ❌    | ✅ None                       |
+| Particle effects                           | .PLB, .H          | ❌   | ❌    |                               |
+| Portrait scripts                           | .KEY, .SEQ        | ❌   | ❌    |                               |
+| [Projects](src/project)                    | .PRJ              | ✅   | ✅    |                               |
+| [Shadows](src/shadow)                      | .SHD              | ✅   | ✅    |                               |
+| [Sound effects](src/sound/sfx)             | .H                | ✅   | ❌    |                               |
 | Sound mono audio                           | .MAD              | ❌   | ❌    |                               |
-| [Sound scripts](src/sound/script)          | .FSM              | ✅   | ✅    | ✅ None                       |
+| [Sound scripts](src/sound/script)          | .FSM              | ✅   | ✅    |                               |
 | [Sound stereo audio](src/sound/sad)        | .SAD              | ✅   | ✅    |                               |
-| [Sprite sheets](src/graphics/sprite_sheet) | .SPR              | ✅   | ❌    | ✅ None                       |
+| [Sprite sheets](src/graphics/sprite_sheet) | .SPR              | ✅   | ❌    |                               |
 
 ## Installation
 
