@@ -81,9 +81,9 @@ mod tests {
         path::{Path, PathBuf},
     };
 
-    fn roundtrip_test(original_bytes: &[u8], s: &StereoAudio) {
+    fn roundtrip_test(original_bytes: &[u8], a: &StereoAudio) {
         let mut encoded_bytes = Vec::new();
-        Encoder::new(&mut encoded_bytes).encode(s).unwrap();
+        Encoder::new(&mut encoded_bytes).encode(a).unwrap();
 
         let original_bytes = original_bytes
             .chunks(16)
@@ -127,15 +127,15 @@ mod tests {
         let original_bytes = std::fs::read(d.clone()).unwrap();
 
         let file = File::open(d).unwrap();
-        let s = Decoder::new(file).decode().unwrap();
+        let a = Decoder::new(file).decode().unwrap();
 
-        roundtrip_test(&original_bytes, &s);
+        roundtrip_test(&original_bytes, &a);
 
         // Instead of comparing the decoded audio to a known-good audio file, we
         // can compare the SHA-256 hash of the decoded audio to a known-good
         // hash. This way, we can ensure that the audio is decoded correctly
         // without needing to store a known-good audio file in the repository.
-        let wav = s.to_wav().unwrap();
+        let wav = a.to_wav().unwrap();
         let mut hasher = Sha256::new();
         hasher.update(wav.as_slice());
         let result = hasher.finalize();
@@ -191,9 +191,9 @@ mod tests {
             let original_bytes = std::fs::read(path).unwrap();
 
             let file = File::open(path).unwrap();
-            let s = Decoder::new(file).decode().unwrap();
+            let a = Decoder::new(file).decode().unwrap();
 
-            roundtrip_test(&original_bytes, &s);
+            roundtrip_test(&original_bytes, &a);
 
             let parent_dir = path
                 .components()
@@ -212,7 +212,7 @@ mod tests {
             let output_path = append_ext("wav", output_dir.join(path.file_name().unwrap()));
             let mut output_file = File::create(output_path).unwrap();
             output_file
-                .write_all(s.to_wav().unwrap().as_slice())
+                .write_all(a.to_wav().unwrap().as_slice())
                 .unwrap();
         });
     }
