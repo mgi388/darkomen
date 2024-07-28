@@ -207,7 +207,7 @@ impl<R: Read + Seek> Decoder<R> {
             let radius = self.read_int_tuple_property::<i32>(6, 1)?[0] as u32;
             let direction = self.read_int_tuple_property::<i32>(7, 1)?[0];
             let node_id = self.read_int_tuple_property::<i32>(11, 1)?[0] as u32;
-            let uuid = self.read_int_tuple_property::<i32>(12, 1)?[0] as u32;
+            let regiment_id = self.read_int_tuple_property::<i32>(12, 1)?[0] as u32;
             let script_id = self.read_int_tuple_property::<i32>(13, 1)?[0] as u32;
 
             nodes.push(Node {
@@ -216,7 +216,7 @@ impl<R: Read + Seek> Decoder<R> {
                 radius,
                 direction,
                 node_id,
-                uuid,
+                regiment_id,
                 script_id,
             });
         }
@@ -356,6 +356,7 @@ mod tests {
             .world_position()
             .abs_diff_eq(Vec2::new(151.25, 119.625), EPSILON));
         assert!((b.nodes[0].world_radius() - 6.0).abs() < EPSILON);
+        assert_eq!(b.nodes[0].regiment_id, 131);
     }
 
     #[test]
