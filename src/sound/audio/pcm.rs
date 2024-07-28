@@ -11,7 +11,7 @@ impl Pcm16Block {
     pub fn from_bytes(bs: &[u8]) -> Result<Self, BlockError> {
         let mut data = Vec::with_capacity(bs.len() / 2);
         let mut buf = Cursor::new(bs);
-        for _ in 0..bs.len() {
+        for _ in 0..bs.len() / 2 {
             let mut bytes = [0u8; 2];
             buf.read_exact(&mut bytes)?;
             data.push(i16::from_le_bytes(bytes));
