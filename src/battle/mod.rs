@@ -237,7 +237,9 @@ pub struct Node {
     pub radius: u32,
     pub direction: i32,
     pub node_id: u32,
-    pub uuid: u32,
+    /// The ID of the regiment the node belongs to. Corresponds to the ID field
+    /// of the regiment.
+    pub regiment_id: u32,
     pub script_id: u32,
 }
 
