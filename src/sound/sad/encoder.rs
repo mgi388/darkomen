@@ -43,9 +43,9 @@ impl<W: Write> Encoder<W> {
         }
     }
 
-    pub fn encode(&mut self, s: &StereoAudio) -> Result<(), EncodeError> {
-        for i in 0..s.left_blocks.len() - 1 {
-            let left_block = match &s.left_blocks[i] {
+    pub fn encode(&mut self, a: &StereoAudio) -> Result<(), EncodeError> {
+        for i in 0..a.left_blocks.len() - 1 {
+            let left_block = match &a.left_blocks[i] {
                 Block::AdpcmBlock(b) => b,
                 _ => {
                     return Err(EncodeError::IoError(std::io::Error::new(
@@ -56,7 +56,7 @@ impl<W: Write> Encoder<W> {
             };
             self.writer.write_all(&left_block.sample.to_le_bytes())?;
             self.writer.write_all(&left_block.index.to_le_bytes())?;
-            let right_block = match &s.right_blocks[i] {
+            let right_block = match &a.right_blocks[i] {
                 Block::AdpcmBlock(b) => b,
                 _ => {
                     return Err(EncodeError::IoError(std::io::Error::new(
@@ -81,18 +81,18 @@ impl<W: Write> Encoder<W> {
             }
         }
 
-        self.writer.write_all(&s.left_sample99.to_le_bytes())?;
-        self.writer.write_all(&s.left_index99.to_le_bytes())?;
-        self.writer.write_all(&s.right_sample99.to_le_bytes())?;
-        self.writer.write_all(&s.right_index99.to_le_bytes())?;
+        self.writer.write_all(&a.left_sample99.to_le_bytes())?;
+        self.writer.write_all(&a.left_index99.to_le_bytes())?;
+        self.writer.write_all(&a.right_sample99.to_le_bytes())?;
+        self.writer.write_all(&a.right_index99.to_le_bytes())?;
 
-        let Some(last_left_block) = s.left_blocks.last() else {
+        let Some(last_left_block) = a.left_blocks.last() else {
             return Err(EncodeError::IoError(std::io::Error::new(
                 std::io::ErrorKind::InvalidData,
                 "last left block is empty",
             )));
         };
-        let Some(last_right_block) = s.right_blocks.last() else {
+        let Some(last_right_block) = a.right_blocks.last() else {
             return Err(EncodeError::IoError(std::io::Error::new(
                 std::io::ErrorKind::InvalidData,
                 "last right block is empty",
