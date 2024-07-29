@@ -272,8 +272,7 @@ impl<R: Read + Seek> Decoder<R> {
         Ok(Regiment {
             status,
             unknown1: buf[2..4].try_into().unwrap(),
-            id: u16::from_le_bytes(buf[4..6].try_into().unwrap()),
-            unknown2: buf[6..8].try_into().unwrap(),
+            id: u32::from_le_bytes(buf[4..8].try_into().unwrap()),
             mage_class,
             max_armor: buf[9],
             cost: u16::from_le_bytes(buf[10..12].try_into().unwrap()),
