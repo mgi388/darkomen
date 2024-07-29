@@ -72,8 +72,7 @@ pub enum ArmyRace {
 pub struct Regiment {
     pub status: RegimentStatus,
     unknown1: [u8; 2],
-    pub id: u16,
-    unknown2: [u8; 2],
+    pub id: u32,
     pub mage_class: MageClass,
     /// The regiment's maximum level of armor.
     pub max_armor: u8,
@@ -696,6 +695,7 @@ mod tests {
         assert_eq!(a.large_banner_path, "[BOOKS]\\hlban.spr");
         assert_eq!(a.regiments.len(), 4);
         assert_eq!(a.regiments[0].status, RegimentStatus::Active);
+        assert_eq!(a.regiments[0].id, 1);
         assert_eq!(a.regiments[0].unit_profile.name, "Grudgebringer Cavalry");
         assert_eq!(
             a.regiments[0].unit_profile.class,
@@ -703,16 +703,19 @@ mod tests {
         );
         assert_eq!(a.regiments[0].unit_profile.mount, RegimentMount::Horse);
         assert_eq!(a.regiments[0].leader_profile.name, "Morgan Bernhardt");
+        assert_eq!(a.regiments[1].id, 2);
         assert_eq!(a.regiments[1].unit_profile.name, "Grudgebringer Infantry");
         assert_eq!(
             a.regiments[1].unit_profile.class,
             RegimentClass::HumanInfantryman
         );
+        assert_eq!(a.regiments[2].id, 3);
         assert_eq!(a.regiments[2].unit_profile.name, "Grudgebringer Crossbows");
         assert_eq!(
             a.regiments[2].unit_profile.class,
             RegimentClass::HumanArcher
         );
+        assert_eq!(a.regiments[3].id, 4);
         assert_eq!(a.regiments[3].unit_profile.name, "Grudgebringer Cannon");
         assert_eq!(
             a.regiments[3].unit_profile.class,

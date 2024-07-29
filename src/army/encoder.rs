@@ -94,7 +94,6 @@ impl<W: Write> Encoder<W> {
             .write_all(&Into::<u16>::into(r.status).to_le_bytes())?;
         self.writer.write_all(&r.unknown1)?;
         self.writer.write_all(&r.id.to_le_bytes())?;
-        self.writer.write_all(&r.unknown2)?;
         self.writer.write_all(&[Into::<u8>::into(r.mage_class)])?;
         self.writer.write_all(&[r.max_armor])?;
         self.writer.write_all(&r.cost.to_le_bytes())?;
