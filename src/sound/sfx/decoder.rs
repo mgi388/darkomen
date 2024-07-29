@@ -81,7 +81,7 @@ fn parse_sound(tokens: &[Token]) -> (Sound, usize) {
 
                 match field_token.value.as_str() {
                     "SAMPLE" => {
-                        sound.file_name = value.to_string();
+                        sound.file_stem = value.to_string();
                     }
                     "FREQ" => {
                         sound.frequency = value

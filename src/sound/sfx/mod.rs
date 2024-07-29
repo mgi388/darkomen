@@ -112,9 +112,9 @@ bitflags! {
 #[derive(Clone, Debug, Default, Serialize)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct Sound {
-    /// The file name of the sound without the path and extension, e.g.
-    /// `watfal02`.
-    pub file_name: String,
+    /// The file name of the sound excluding the path and extension, i.e. the
+    /// stem of the file name, e.g. `watfal02`.
+    pub file_stem: String,
     /// The frequency of the sound.
     pub frequency: u32,
     /// The frequency deviation of the sound.
