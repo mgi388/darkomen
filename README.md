@@ -26,7 +26,7 @@ The following table shows the game file support in this library:
 | [Projects](src/project)                    | .PRJ              | ✅   | ✅    |                               |
 | [Shadows](src/shadow)                      | .SHD              | ✅   | ✅    |                               |
 | [Sound effects](src/sound/sfx)             | .H                | ✅   | ❌    |                               |
-| Sound mono audio                           | .MAD              | ❌   | ❌    |                               |
+| [Sound mono audio](src/sound/mad)          | .MAD              | ✅   | ✅    |                               |
 | [Sound scripts](src/sound/script)          | .FSM              | ✅   | ✅    |                               |
 | [Sound stereo audio](src/sound/sad)        | .SAD              | ✅   | ✅    |                               |
 | [Sprite sheets](src/graphics/sprite_sheet) | .SPR              | ✅   | ❌    |                               |
