@@ -30,10 +30,10 @@ pub struct Script {
     /// allow the decoder to gracefully decode. It's up to callers to decide
     /// how to handle a missing start pattern.
     pub start_pattern: Option<PatternId>,
-    /// A map of sample IDs to sample file names.
+    /// A map of sample IDs to sample file name stems.
     ///
-    /// The file name is partial is without the path and extension, e.g.
-    /// `mDdumchr1a`.
+    /// The map value excludes the path and extension, i.e. the stem of the file
+    /// name, e.g. `mDdumchr1a`.
     #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
     pub samples: IndexMap<SampleId, String>,
     /// A map of pattern IDs to patterns.
