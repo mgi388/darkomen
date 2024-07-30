@@ -445,6 +445,10 @@ mod tests {
 
             let output_path = append_ext("png", output_dir.join(path.file_name().unwrap()));
             sheet.texture.save(output_path).unwrap();
+
+            let output_path = append_ext("ron", output_dir.join(path.file_name().unwrap()));
+            let mut output_file = File::create(output_path).unwrap();
+            ron::ser::to_writer_pretty(&mut output_file, &sheet, Default::default()).unwrap();
         });
     }
 
