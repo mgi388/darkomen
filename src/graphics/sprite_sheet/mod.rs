@@ -12,9 +12,10 @@ pub use decoder::{DecodeError, Decoder};
 pub(crate) use packbits::PackBitsReader;
 pub(crate) use zeroruns::ZeroRunsReader;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct SpriteSheet {
+    #[serde(skip)]
     #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
     pub texture: DynamicImage,
     pub atlas_layout: AtlasLayout,
@@ -22,7 +23,7 @@ pub struct SpriteSheet {
 }
 
 /// Provides information about how the sprite sheet is laid out.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct AtlasLayout {
     pub tile_size: (u16, u16),
