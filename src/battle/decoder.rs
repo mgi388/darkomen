@@ -205,7 +205,7 @@ impl<R: Read + Seek> Decoder<R> {
             let x = self.read_int_tuple_property::<i32>(1, 1)?[0];
             let y = self.read_int_tuple_property::<i32>(2, 1)?[0];
             let radius = self.read_int_tuple_property::<i32>(6, 1)?[0] as u32;
-            let direction = self.read_int_tuple_property::<i32>(7, 1)?[0];
+            let rotation = self.read_int_tuple_property::<i32>(7, 1)?[0];
             let node_id = self.read_int_tuple_property::<i32>(11, 1)?[0] as u32;
             let regiment_id = self.read_int_tuple_property::<i32>(12, 1)?[0] as u32;
             let script_id = self.read_int_tuple_property::<i32>(13, 1)?[0] as u32;
@@ -214,7 +214,7 @@ impl<R: Read + Seek> Decoder<R> {
                 flags: NodeFlags::from_bits(flags).expect("node flags should be valid"),
                 position: IVec2::new(x, y),
                 radius,
-                direction,
+                rotation,
                 node_id,
                 regiment_id,
                 script_id,
@@ -352,10 +352,12 @@ mod tests {
             .world_position()
             .abs_diff_eq(Vec2::new(-0.75, 161.0), EPSILON));
 
+        // Night Goblins#1
         assert!(b.nodes[0]
             .world_position()
             .abs_diff_eq(Vec2::new(151.25, 119.625), EPSILON));
         assert!((b.nodes[0].world_radius() - 6.0).abs() < EPSILON);
+        assert!((b.nodes[0].rotation_degrees() - 182.10938).abs() < EPSILON);
         assert_eq!(b.nodes[0].regiment_id, 131);
     }
 

@@ -228,14 +228,23 @@ bitflags! {
     }
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Default, Serialize)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct Node {
     pub flags: NodeFlags,
     /// The position of the node in the horizontal plane.
     pub position: IVec2,
     pub radius: u32,
-    pub direction: i32,
+    /// The rotation of the node as a value between 0 (inclusive) and 512
+    /// (exclusive). The rotation is in the range [0, 512) and corresponds to
+    /// the angle in degrees. When looking at an aerial view of the map, 0 is
+    /// north (up), 128 is east (right), 256 is south (down), and 384 is west
+    /// (left).
+    ///
+    /// The rotation represents a 2D rotation around the horizontal plane.
+    ///
+    /// Note: The rotation does not seem to be used for player regiments.
+    pub rotation: i32,
     pub node_id: u32,
     /// The ID of the regiment the node belongs to. Corresponds to the ID field
     /// of the regiment.
@@ -265,10 +274,24 @@ impl Node {
     pub fn world_radius(&self) -> f32 {
         self.radius as f32 / SCALE
     }
+
+    /// Returns the rotation of the node in radians. 0 is north (up), π/2 is
+    /// east (right), π is south (down), and 3π/2 is west (left).
+    #[inline]
+    pub fn rotation_radians(&self) -> f32 {
+        (self.rotation as f32 / 512.0) * std::f32::consts::TAU
+    }
+
+    /// Returns the rotation of the node in degrees. 0 is north (up), 90 is east
+    /// (right), 180 is south (down), and 270 is west (left).
+    #[inline]
+    pub fn rotation_degrees(&self) -> f32 {
+        self.rotation_radians().to_degrees()
+    }
 }
 
 #[repr(transparent)]
-#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
+#[derive(Clone, Copy, Debug, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct NodeFlags(u32);
 
@@ -330,5 +353,36 @@ mod tests {
         assert!(!region.contains_point(IVec2::new(11, 0)));
         assert!(!region.contains_point(IVec2::new(0, 11)));
         assert!(!region.contains_point(IVec2::new(11, 11)));
+    }
+
+    #[test]
+    fn test_node_rotation() {
+        let node = Node {
+            rotation: 0, // north (up)
+            ..Default::default()
+        };
+        assert_eq!(node.rotation_radians(), 0.);
+        assert_eq!(node.rotation_degrees(), 0.);
+
+        let node = Node {
+            rotation: 256, // south (down)
+            ..Default::default()
+        };
+        assert_eq!(node.rotation_radians(), std::f32::consts::PI);
+        assert_eq!(node.rotation_degrees(), 180.);
+
+        let node = Node {
+            rotation: 128, // east (right)
+            ..Default::default()
+        };
+        assert_eq!(node.rotation_radians(), std::f32::consts::PI / 2.);
+        assert_eq!(node.rotation_degrees(), 90.);
+
+        let node = Node {
+            rotation: 384, // west (left)
+            ..Default::default()
+        };
+        assert_eq!(node.rotation_radians(), std::f32::consts::PI * 1.5);
+        assert_eq!(node.rotation_degrees(), 270.);
     }
 }
