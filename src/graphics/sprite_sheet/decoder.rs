@@ -11,7 +11,7 @@ pub enum DecodeError {
     IoError(IoError),
     InvalidFormat(String),
     InvalidFrameType(u8),
-    InvalidCompressionType(u8),
+    InvalidCompression(u8),
 }
 
 impl std::error::Error for DecodeError {}
@@ -28,7 +28,7 @@ impl fmt::Display for DecodeError {
             DecodeError::IoError(error) => write!(f, "IO error: {}", error),
             DecodeError::InvalidFormat(format) => write!(f, "invalid format: {}", format),
             DecodeError::InvalidFrameType(v) => write!(f, "invalid frame type: {}", v),
-            DecodeError::InvalidCompressionType(v) => write!(f, "invalid compression type: {}", v),
+            DecodeError::InvalidCompression(v) => write!(f, "invalid compression: {}", v),
         }
     }
 }
@@ -55,7 +55,7 @@ struct Header {
 #[repr(u8)]
 #[derive(Clone, Copy, Debug, Default, IntoPrimitive, PartialEq, TryFromPrimitive)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
-pub enum CompressionType {
+pub enum Compression {
     #[default]
     None = 0,
     Packbits = 1,
@@ -64,8 +64,8 @@ pub enum CompressionType {
 
 #[derive(Clone, Debug)]
 struct FrameHeader {
-    frame_type: FrameType,
-    compression_type: CompressionType,
+    typ: FrameType,
+    compression: Compression,
     _color_count: u16,
     x: i16,
     y: i16,
@@ -161,24 +161,24 @@ impl<R: Read + Seek> Decoder<R> {
 
             let mut buf = vec![0; fh.uncompressed_size_bytes as usize];
 
-            match fh.compression_type {
-                CompressionType::None => {
+            match fh.compression {
+                Compression::None => {
                     self.reader.read_exact(&mut buf)?;
                 }
-                CompressionType::Packbits => {
+                Compression::Packbits => {
                     let mut reader =
                         PackBitsReader::new(&mut self.reader, fh.compressed_size_bytes as u64);
                     reader.read_exact(&mut buf)?;
                 }
-                CompressionType::ZeroRuns => {
+                Compression::ZeroRuns => {
                     let mut reader =
                         ZeroRunsReader::new(&mut self.reader, fh.compressed_size_bytes as u64);
                     reader.read_exact(&mut buf)?;
                 }
             }
 
-            let flip_x = fh.frame_type == FrameType::FlipX || fh.frame_type == FrameType::FlipXY;
-            let flip_y = fh.frame_type == FrameType::FlipY || fh.frame_type == FrameType::FlipXY;
+            let flip_x = fh.typ == FrameType::FlipX || fh.typ == FrameType::FlipXY;
+            let flip_y = fh.typ == FrameType::FlipY || fh.typ == FrameType::FlipXY;
 
             // Calculate the top-left coordinates for the frame.
             let x_offset = (index % columns) as u32 * frame_max_width as u32;
@@ -219,7 +219,7 @@ impl<R: Read + Seek> Decoder<R> {
             frames: frame_headers
                 .iter()
                 .map(|fh| Frame {
-                    frame_type: fh.frame_type,
+                    typ: fh.typ,
                     x: fh.x,
                     y: fh.y,
                     width: fh.width,
@@ -269,10 +269,10 @@ impl<R: Read + Seek> Decoder<R> {
             let mut buf = [0; FRAME_HEADER_SIZE_BYTES];
             self.reader.read_exact(&mut buf)?;
 
-            let frame_type =
+            let typ =
                 FrameType::try_from(buf[0]).map_err(|_| DecodeError::InvalidFrameType(buf[0]))?;
-            let compression_type = CompressionType::try_from(buf[1])
-                .map_err(|_| DecodeError::InvalidCompressionType(buf[1]))?;
+            let compression = Compression::try_from(buf[1])
+                .map_err(|_| DecodeError::InvalidCompression(buf[1]))?;
             let color_count = u16::from_le_bytes(buf[2..4].try_into().unwrap());
             let x = i16::from_le_bytes(buf[4..6].try_into().unwrap());
             let y = i16::from_le_bytes(buf[6..8].try_into().unwrap());
@@ -285,8 +285,8 @@ impl<R: Read + Seek> Decoder<R> {
             let _padding = u32::from_le_bytes(buf[28..32].try_into().unwrap());
 
             frame_headers.push(FrameHeader {
-                frame_type,
-                compression_type,
+                typ,
+                compression,
                 _color_count: color_count,
                 x,
                 y,
