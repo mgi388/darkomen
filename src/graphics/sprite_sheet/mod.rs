@@ -32,10 +32,10 @@ pub struct AtlasLayout {
     pub offset: Option<(u16, u16)>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Serialize)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct Frame {
-    pub frame_type: FrameType,
+    pub typ: FrameType,
     pub x: i16,
     pub y: i16,
     pub width: u16,
