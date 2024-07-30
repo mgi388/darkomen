@@ -19,7 +19,7 @@ glam = { version = "0.27.0", default-features = false, features = ["serde"] }
 hound = "3.5.1"
 image = "0.25.1"
 indexmap = { version = "2.2.6", features = ["serde"] }
-num_enum = "0.7.2"
+num_enum = "0.7.3"
 rand = "0.8.5"
 serde = { version = "1", features = ["derive"] }
 thiserror = "~1.0.61"
