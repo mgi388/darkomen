@@ -276,11 +276,11 @@ impl<R: Read + Seek> Decoder<R> {
             mage_class,
             max_armor: buf[9],
             cost: u16::from_le_bytes(buf[10..12].try_into().unwrap()),
-            banner_index: u16::from_le_bytes(buf[12..14].try_into().unwrap()),
+            banner_sprite_sheet_index: u16::from_le_bytes(buf[12..14].try_into().unwrap()),
             unknown3: buf[14..16].try_into().unwrap(),
             attributes,
             unit_profile: UnitProfile {
-                sprite_index: u16::from_le_bytes(buf[20..22].try_into().unwrap()),
+                sprite_sheet_index: u16::from_le_bytes(buf[20..22].try_into().unwrap()),
                 name: self.read_string(&buf[22..54])?,
                 name_id: u16::from_le_bytes(buf[54..56].try_into().unwrap()),
                 alignment: troop_alignment,
@@ -299,7 +299,7 @@ impl<R: Read + Seek> Decoder<R> {
             unknown4: buf[79],
             unknown5: buf[80..84].try_into().unwrap(),
             leader_profile: UnitProfile {
-                sprite_index: u16::from_le_bytes(buf[84..86].try_into().unwrap()),
+                sprite_sheet_index: u16::from_le_bytes(buf[84..86].try_into().unwrap()),
                 name: self.read_string(&buf[86..118])?,
                 name_id: u16::from_le_bytes(buf[118..120].try_into().unwrap()),
                 alignment: leader_alignment,

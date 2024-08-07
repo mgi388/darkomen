@@ -77,9 +77,9 @@ pub struct Regiment {
     /// The regiment's maximum level of armor.
     pub max_armor: u8,
     pub cost: u16,
-    /// The index into the list of sprite file names found in ENGREL.EXE for the
-    /// regiment's banner.
-    pub banner_index: u16,
+    /// The index into the list of sprite sheet file names found in ENGREL.EXE
+    /// for the regiment's banner.
+    pub banner_sprite_sheet_index: u16,
     unknown3: [u8; 2],
     pub attributes: RegimentAttributes,
     /// The profile of the regiment's rank and file units.
@@ -464,9 +464,9 @@ pub enum DecodeClassError {
 #[derive(Clone, Debug, Default, Serialize)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct UnitProfile {
-    /// The index into the list of sprite file names found in ENGREL.EXE for the
-    /// regiment's troop sprite.
-    pub sprite_index: u16,
+    /// The index into the list of sprite sheet file names found in ENGREL.EXE
+    /// for the unit's sprite sheet.
+    pub sprite_sheet_index: u16,
     /// The name of the regiment, e.g. "Grudgebringer Cavalry", "Zombies #1",
     /// "Imperial Steam Tank".
     pub name: String,
