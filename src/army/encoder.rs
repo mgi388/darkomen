@@ -97,7 +97,8 @@ impl<W: Write> Encoder<W> {
         self.writer.write_all(&[Into::<u8>::into(r.mage_class)])?;
         self.writer.write_all(&[r.max_armor])?;
         self.writer.write_all(&r.cost.to_le_bytes())?;
-        self.writer.write_all(&r.banner_index.to_le_bytes())?;
+        self.writer
+            .write_all(&r.banner_sprite_sheet_index.to_le_bytes())?;
         self.writer.write_all(&r.unknown3)?;
         self.writer.write_all(&r.attributes.bits().to_le_bytes())?;
         self.write_unit_profile(&r.unit_profile)?;
@@ -126,7 +127,7 @@ impl<W: Write> Encoder<W> {
     }
 
     fn write_unit_profile(&mut self, u: &UnitProfile) -> Result<(), EncodeError> {
-        self.writer.write_all(&u.sprite_index.to_le_bytes())?;
+        self.writer.write_all(&u.sprite_sheet_index.to_le_bytes())?;
         self.write_string_with_limit(&u.name, 32)?;
         self.writer.write_all(&u.name_id.to_le_bytes())?;
         self.writer.write_all(&[Into::<u8>::into(u.alignment)])?;
