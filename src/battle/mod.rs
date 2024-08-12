@@ -41,7 +41,7 @@ pub struct Objective {
     pub val2: i32,
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Default, Serialize)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct Obstacle {
     pub flags: ObstacleFlags,
@@ -71,7 +71,7 @@ impl Obstacle {
 }
 
 #[repr(transparent)]
-#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
+#[derive(Clone, Copy, Debug, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct ObstacleFlags(u32);
 
