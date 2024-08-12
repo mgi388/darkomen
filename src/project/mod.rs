@@ -306,29 +306,20 @@ impl Terrain {
     }
 
     pub fn height_at_world_position(&self, map: Heightmap, x: f32, y: f32) -> f32 {
-        self.height_at_blueprint_position(
-            map,
-            (x * crate::battle::SCALE) as i32,
-            (y * crate::battle::SCALE) as i32,
-        )
-    }
+        // Clamp the coordinates to the bounds of the terrain. In this way, any
+        // coordinates that are out of bounds essentially get the height at the
+        // edge of the terrain. Note: We need to subtract 1 from the width and
+        // height to account for 0-based indexing.
+        let x = (x as i32).clamp(0, self.width as i32 - 1);
+        let y = (y as i32).clamp(0, self.height as i32 - 1);
 
-    fn height_at_blueprint_position(&self, map: Heightmap, x: i32, y: i32) -> f32 {
+        let block_index = (((y >> 3) * self.width_in_blocks() as i32) + (x >> 3)) as usize;
+        let height_offsets_index = ((y % 8) * 8 + (x % 8)) as usize;
+
         let blocks = match map {
             Heightmap::Furniture => &self.heightmap1_blocks,
             Heightmap::Base => &self.heightmap2_blocks,
         };
-
-        // Divide x and y by the blueprint scale to get terrain coordinates.
-        // Then clamp the coordinates to the bounds of the terrain. In this way,
-        // any blueprint coordinates that are out of bounds essentially get the
-        // height at the edge of the terrain. Note: We need to subtract 1 from
-        // the width and height to account for 0-based indexing.
-        let x = (x / crate::battle::SCALE as i32).clamp(0, self.width as i32 - 1);
-        let y = (y / crate::battle::SCALE as i32).clamp(0, self.height as i32 - 1);
-
-        let block_index = (((y >> 3) * self.width_in_blocks() as i32) + (x >> 3)) as usize;
-        let height_offsets_index = ((y % 8) * 8 + (x % 8)) as usize;
 
         debug_assert!(block_index < blocks.len(), "block index out of bounds");
         debug_assert!(
