@@ -56,18 +56,21 @@ impl Lightmap {
             }
 
             for y in 0..8 {
-                let target_y = row * 8 + y;
+                let img_y = row * 8 + y;
 
-                if target_y >= self.height {
+                if img_y >= self.height {
                     break;
                 }
 
                 for x in 0..8 {
-                    let target_x = col * 8 + x;
+                    let img_x = col * 8 + x;
 
-                    if target_x >= self.width {
+                    if img_x >= self.width {
                         break;
                     }
+
+                    // The image needs to be flipped horizontally.
+                    let img_x = self.width - 1 - img_x;
 
                     let offset_height = height_offsets[(x + y * 8) as usize];
 
@@ -78,14 +81,14 @@ impl Lightmap {
                         Lightmap::normalized_offset_height(offset_height),
                     );
 
-                    img.put_pixel(target_x, target_y, Rgba([color, color, color, 255]));
+                    img.put_pixel(img_x, img_y, Rgba([color, color, color, 255]));
                 }
             }
 
             col += 1;
         }
 
-        img.fliph() // needs to be flipped horizontally for some reason
+        img
     }
 
     fn calculate_color(
