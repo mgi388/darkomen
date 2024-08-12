@@ -305,27 +305,38 @@ impl Terrain {
         color as u8 // truncate any fractional part
     }
 
-    /// TODO: Not really working perfectly.
-    pub fn get_height(&self, map: Heightmap, x: i32, y: i32) -> f32 {
+    pub fn height_at_world_position(&self, map: Heightmap, x: f32, y: f32) -> f32 {
+        self.height_at_blueprint_position(
+            map,
+            (x * crate::battle::SCALE) as i32,
+            (y * crate::battle::SCALE) as i32,
+        )
+    }
+
+    fn height_at_blueprint_position(&self, map: Heightmap, x: i32, y: i32) -> f32 {
         let blocks = match map {
             Heightmap::Furniture => &self.heightmap1_blocks,
             Heightmap::Base => &self.heightmap2_blocks,
         };
 
-        // TODO: Should we clamp self.width/height by / 8, or use self.width_in_blocks()?
-        let x = (x / 8).clamp(0, self.width as i32);
-        let y = (y / 8).clamp(0, self.height as i32);
+        // Divide x and y by the blueprint scale to get terrain coordinates.
+        // Then clamp the coordinates to the bounds of the terrain. In this way,
+        // any blueprint coordinates that are out of bounds essentially get the
+        // height at the edge of the terrain. Note: We need to subtract 1 from
+        // the width and height to account for 0-based indexing.
+        let x = (x / crate::battle::SCALE as i32).clamp(0, self.width as i32 - 1);
+        let y = (y / crate::battle::SCALE as i32).clamp(0, self.height as i32 - 1);
 
         let block_index = (((y >> 3) * self.width_in_blocks() as i32) + (x >> 3)) as usize;
         let height_offsets_index = ((y % 8) * 8 + (x % 8)) as usize;
 
-        assert!(
+        debug_assert!(block_index < blocks.len(), "block index out of bounds");
+        debug_assert!(
             height_offsets_index < 64,
             "height offsets index out of bounds"
         );
 
-        // TODO: This clamps to avoid a panic but can we avoid this?
-        let block = &blocks[block_index.min(blocks.len() - 1)];
+        let block = &blocks[block_index];
         let height_offsets = &self.height_offsets[block.height_offsets_index as usize];
 
         let offset_height = height_offsets[height_offsets_index];
@@ -509,13 +520,30 @@ mod tests {
         assert_eq!(p.tracks[1].control_points.len(), 6);
         assert_eq!(p.tracks[1].points.len(), 116);
 
+        use crate::battle::SCALE;
         // Line segment 1 of 'Sightedge' region from B1_01.BTB.
-        assert_eq!(p.terrain.get_height(Heightmap::Furniture, 8, 1592), 9.); // start pos
-        assert_eq!(p.terrain.get_height(Heightmap::Furniture, 8, 408), 19.); // end pos
+        assert_eq!(
+            p.terrain
+                .height_at_world_position(Heightmap::Furniture, 8. / SCALE, 1592. / SCALE),
+            9.
+        ); // start pos
+        assert_eq!(
+            p.terrain
+                .height_at_world_position(Heightmap::Furniture, 8. / SCALE, 408. / SCALE),
+            19.
+        ); // end pos
 
         // A point with a negative x.
-        assert_eq!(p.terrain.get_height(Heightmap::Furniture, 1448, 1856), 50.); // start pos
-        assert_eq!(p.terrain.get_height(Heightmap::Furniture, -248, 1856), 48.); // end pos
+        assert_eq!(
+            p.terrain
+                .height_at_world_position(Heightmap::Furniture, 1448. / SCALE, 1856. / SCALE),
+            50.
+        ); // start pos
+        assert_eq!(
+            p.terrain
+                .height_at_world_position(Heightmap::Furniture, -248. / SCALE, 1856. / SCALE),
+            9.
+        ); // end pos
 
         roundtrip_test(&original_bytes, &p);
     }
