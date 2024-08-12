@@ -10,7 +10,7 @@ use std::{
 pub enum DecodeError {
     IoError(IoError),
     InvalidFormat(String),
-    InvalidFrameType(u8),
+    InvalidSpriteType(u8),
     InvalidCompression(u8),
 }
 
@@ -27,7 +27,7 @@ impl fmt::Display for DecodeError {
         match self {
             DecodeError::IoError(error) => write!(f, "IO error: {}", error),
             DecodeError::InvalidFormat(format) => write!(f, "invalid format: {}", format),
-            DecodeError::InvalidFrameType(v) => write!(f, "invalid frame type: {}", v),
+            DecodeError::InvalidSpriteType(v) => write!(f, "invalid sprite type: {}", v),
             DecodeError::InvalidCompression(v) => write!(f, "invalid compression: {}", v),
         }
     }
@@ -39,17 +39,17 @@ impl fmt::Display for DecodeError {
 const FORMAT: &str = "WHDO";
 
 const HEADER_SIZE_BYTES: usize = 32;
-const FRAME_HEADER_SIZE_BYTES: usize = 32;
+const SPRITE_HEADER_SIZE_BYTES: usize = 32;
 
 #[derive(Clone, Debug)]
 struct Header {
     _file_size_bytes: u16,
-    _frame_header_offset: u16,
-    frame_data_offset: u16,
+    _sprite_header_offset: u16,
+    sprite_data_offset: u16,
     _color_table_offset: u16,
     color_table_entries: u16,
     _palette_count: u16,
-    frame_count: u16,
+    sprite_count: u16,
 }
 
 #[repr(u8)]
@@ -63,8 +63,8 @@ pub enum Compression {
 }
 
 #[derive(Clone, Debug)]
-struct FrameHeader {
-    typ: FrameType,
+struct SpriteHeader {
+    typ: SpriteType,
     compression: Compression,
     _color_count: u16,
     x: i16,
@@ -76,6 +76,25 @@ struct FrameHeader {
     uncompressed_size_bytes: u32,
     color_table_offset: u32,
     _padding: u32, // last 4 bytes are not used
+}
+
+#[repr(u8)]
+#[derive(Clone, Copy, Debug, Default, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive)]
+enum SpriteType {
+    /// Indicates the sprite is a repeat of a previous sprite.
+    Repeat = 0,
+    /// Indicates the sprite should be flipped along the x axis.
+    FlipX = 1,
+    /// Indicates the sprite should be flipped along the y axis.
+    FlipY = 2,
+    /// Indicates the sprite should be flipped along the x and y axes.
+    FlipXY = 3,
+    /// Indicates a normal sprite.
+    #[default]
+    Normal = 4,
+    /// Indicates the sprite is empty. There is no sprite or palette data
+    /// associated with the sprite. The sprite's width and height are 0.
+    Empty = 5,
 }
 
 pub struct Decoder<R>
@@ -93,46 +112,46 @@ impl<R: Read + Seek> Decoder<R> {
     pub fn decode(&mut self) -> Result<SpriteSheet, DecodeError> {
         let header = self.decode_header()?;
 
-        let frame_headers = self.decode_frame_headers(header.clone())?;
+        let sprite_headers = self.decode_sprite_headers(header.clone())?;
 
         let color_table = self.decode_color_table(header.clone())?;
 
-        let mut textures = Vec::with_capacity(frame_headers.len());
-        let mut frames = Vec::with_capacity(frame_headers.len());
+        let mut textures = Vec::with_capacity(sprite_headers.len());
+        let mut texture_descriptors = Vec::with_capacity(sprite_headers.len());
 
-        for fh in frame_headers.iter() {
+        for h in sprite_headers.iter() {
             self.reader.seek(SeekFrom::Start(u64::from(
-                (header.frame_data_offset as u32) + fh.data_offset,
+                (header.sprite_data_offset as u32) + h.data_offset,
             )))?;
 
-            let mut buf = vec![0; fh.uncompressed_size_bytes as usize];
+            let mut buf = vec![0; h.uncompressed_size_bytes as usize];
 
-            match fh.compression {
+            match h.compression {
                 Compression::None => {
                     self.reader.read_exact(&mut buf)?;
                 }
                 Compression::Packbits => {
                     let mut reader =
-                        PackBitsReader::new(&mut self.reader, fh.compressed_size_bytes as u64);
+                        PackBitsReader::new(&mut self.reader, h.compressed_size_bytes as u64);
                     reader.read_exact(&mut buf)?;
                 }
                 Compression::ZeroRuns => {
                     let mut reader =
-                        ZeroRunsReader::new(&mut self.reader, fh.compressed_size_bytes as u64);
+                        ZeroRunsReader::new(&mut self.reader, h.compressed_size_bytes as u64);
                     reader.read_exact(&mut buf)?;
                 }
             }
 
-            let flip_x = fh.typ == FrameType::FlipX || fh.typ == FrameType::FlipXY;
-            let flip_y = fh.typ == FrameType::FlipY || fh.typ == FrameType::FlipXY;
+            let flip_x = h.typ == SpriteType::FlipX || h.typ == SpriteType::FlipXY;
+            let flip_y = h.typ == SpriteType::FlipY || h.typ == SpriteType::FlipXY;
 
-            let mut frame_texture = DynamicImage::new_rgba8(fh.width as u32, fh.height as u32);
+            let mut texture = DynamicImage::new_rgba8(h.width as u32, h.height as u32);
 
             for (i, &b) in buf.iter().enumerate() {
-                let x = i as u32 % fh.width as u32;
-                let y = i as u32 / fh.width as u32;
+                let x = i as u32 % h.width as u32;
+                let y = i as u32 / h.width as u32;
 
-                let mut color = color_table[fh.color_table_offset as usize + b as usize];
+                let mut color = color_table[h.color_table_offset as usize + b as usize];
 
                 // TODO: Color replacements that should probably be done in a
                 // shader.
@@ -154,24 +173,26 @@ impl<R: Read + Seek> Decoder<R> {
                     color = Rgba([0, 0, 0, 200]); // 78% transparency
                 }
 
-                let x = if flip_x { fh.width as u32 - x - 1 } else { x };
-                let y = if flip_y { fh.height as u32 - y - 1 } else { y };
+                let x = if flip_x { h.width as u32 - x - 1 } else { x };
+                let y = if flip_y { h.height as u32 - y - 1 } else { y };
 
-                frame_texture.put_pixel(x, y, color);
+                texture.put_pixel(x, y, color);
             }
 
-            textures.push(frame_texture);
+            textures.push(texture);
 
-            frames.push(Frame {
-                typ: fh.typ,
-                x: fh.x,
-                y: fh.y,
-                width: fh.width,
-                height: fh.height,
+            texture_descriptors.push(TextureDescriptor {
+                x: h.x,
+                y: h.y,
+                width: h.width,
+                height: h.height,
             });
         }
 
-        Ok(SpriteSheet { textures, frames })
+        Ok(SpriteSheet {
+            textures,
+            texture_descriptors,
+        })
     }
 
     fn decode_header(&mut self) -> Result<Header, DecodeError> {
@@ -185,24 +206,24 @@ impl<R: Read + Seek> Decoder<R> {
 
         Ok(Header {
             _file_size_bytes: u16::from_le_bytes([buf[4], buf[5]]),
-            _frame_header_offset: u16::from_le_bytes([buf[8], buf[9]]),
-            frame_data_offset: u16::from_le_bytes([buf[12], buf[13]]),
+            _sprite_header_offset: u16::from_le_bytes([buf[8], buf[9]]),
+            sprite_data_offset: u16::from_le_bytes([buf[12], buf[13]]),
             _color_table_offset: u16::from_le_bytes([buf[16], buf[17]]),
             color_table_entries: u16::from_le_bytes([buf[20], buf[21]]),
             _palette_count: u16::from_le_bytes([buf[24], buf[25]]),
-            frame_count: u16::from_le_bytes([buf[28], buf[29]]),
+            sprite_count: u16::from_le_bytes([buf[28], buf[29]]),
         })
     }
 
-    fn decode_frame_headers(&mut self, header: Header) -> Result<Vec<FrameHeader>, DecodeError> {
-        let mut frame_headers = Vec::with_capacity(header.frame_count as usize);
+    fn decode_sprite_headers(&mut self, header: Header) -> Result<Vec<SpriteHeader>, DecodeError> {
+        let mut headers = Vec::with_capacity(header.sprite_count as usize);
 
-        for _ in 0..header.frame_count {
-            let mut buf = [0; FRAME_HEADER_SIZE_BYTES];
+        for _ in 0..header.sprite_count {
+            let mut buf = [0; SPRITE_HEADER_SIZE_BYTES];
             self.reader.read_exact(&mut buf)?;
 
             let typ =
-                FrameType::try_from(buf[0]).map_err(|_| DecodeError::InvalidFrameType(buf[0]))?;
+                SpriteType::try_from(buf[0]).map_err(|_| DecodeError::InvalidSpriteType(buf[0]))?;
             let compression = Compression::try_from(buf[1])
                 .map_err(|_| DecodeError::InvalidCompression(buf[1]))?;
             let color_count = u16::from_le_bytes(buf[2..4].try_into().unwrap());
@@ -216,7 +237,7 @@ impl<R: Read + Seek> Decoder<R> {
             let color_table_offset = u32::from_le_bytes(buf[24..28].try_into().unwrap());
             let _padding = u32::from_le_bytes(buf[28..32].try_into().unwrap());
 
-            frame_headers.push(FrameHeader {
+            headers.push(SpriteHeader {
                 typ,
                 compression,
                 _color_count: color_count,
@@ -232,7 +253,7 @@ impl<R: Read + Seek> Decoder<R> {
             });
         }
 
-        Ok(frame_headers)
+        Ok(headers)
     }
 
     fn decode_color_table(&mut self, header: Header) -> Result<Vec<Rgba<u8>>, DecodeError> {
@@ -282,7 +303,8 @@ mod tests {
 
         let sheet = Decoder::new(file).decode().unwrap();
 
-        assert_eq!(sheet.frames.len(), 104);
+        assert_eq!(sheet.textures.len(), 104);
+        assert_eq!(sheet.texture_descriptors.len(), 104);
     }
 
     #[test]
@@ -301,7 +323,8 @@ mod tests {
 
         let sprite = Decoder::new(file).decode().unwrap();
 
-        assert_eq!(sprite.frames.len(), 2);
+        assert_eq!(sprite.textures.len(), 2);
+        assert_eq!(sprite.texture_descriptors.len(), 2);
     }
 
     #[test]
