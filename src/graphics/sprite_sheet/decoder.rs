@@ -1,5 +1,5 @@
 use super::*;
-use image::{DynamicImage, GenericImage, Pixel, Rgb, Rgba};
+use image::{DynamicImage, GenericImage, Rgba};
 use num_enum::{IntoPrimitive, TryFromPrimitive};
 use std::{
     fmt,
@@ -35,7 +35,7 @@ impl fmt::Display for DecodeError {
 
 /// The sprite format ID used in all .SPR files.
 ///
-/// "WHDO" is an initialism for "Warhammer: Dark Omen".
+/// "WHDO" is probably an initialism for "Warhammer: Dark Omen".
 const FORMAT: &str = "WHDO";
 
 const HEADER_SIZE_BYTES: usize = 32;
@@ -78,83 +78,29 @@ struct FrameHeader {
     _padding: u32, // last 4 bytes are not used
 }
 
-const DEFAULT_ASPECT_RATIO: f32 = 16. / 9.;
-
 pub struct Decoder<R>
 where
     R: Read + Seek,
 {
     reader: R,
-    columns: Option<usize>,
-    aspect_ratio: Option<Box<dyn Fn(u32) -> f32>>,
-    padding: Option<(u16, u16)>,
-    offset: Option<(u16, u16)>,
 }
 
 impl<R: Read + Seek> Decoder<R> {
     pub fn new(reader: R) -> Self {
-        Decoder {
-            reader,
-            columns: None,
-            aspect_ratio: None,
-            padding: None,
-            offset: None,
-        }
-    }
-
-    pub fn with_columns(mut self, columns: usize) -> Self {
-        self.columns = Some(columns);
-        self
-    }
-
-    pub fn with_aspect_ratio<F>(mut self, f: F) -> Self
-    where
-        F: Fn(u32) -> f32 + 'static,
-    {
-        self.aspect_ratio = Some(Box::new(f));
-        self
-    }
-
-    pub fn with_padding(mut self, padding: (u16, u16)) -> Self {
-        self.padding = Some(padding);
-        self
+        Decoder { reader }
     }
 
     pub fn decode(&mut self) -> Result<SpriteSheet, DecodeError> {
         let header = self.decode_header()?;
 
-        let (mut frame_headers, frame_max_width, frame_max_height) =
-            self.decode_frame_headers(header.clone())?;
+        let frame_headers = self.decode_frame_headers(header.clone())?;
 
         let color_table = self.decode_color_table(header.clone())?;
 
-        let (columns, rows) = if frame_headers.is_empty() {
-            (0, 0)
-        } else if let Some(columns) = self.columns {
-            let rows = (frame_headers.len() + columns - 1) / columns;
-            (columns, rows)
-        } else {
-            let aspect_ratio = if let Some(f) = &self.aspect_ratio {
-                f(header.frame_count as u32)
-            } else {
-                DEFAULT_ASPECT_RATIO
-            };
-            let columns = (frame_headers.len() as f32 * aspect_ratio).sqrt().ceil() as usize;
-            let rows = (frame_headers.len() + columns - 1) / columns;
-            (columns, rows)
-        };
+        let mut textures = Vec::with_capacity(frame_headers.len());
+        let mut frames = Vec::with_capacity(frame_headers.len());
 
-        let (x_padding, y_padding) = self.padding.unwrap_or((0, 0));
-
-        let frame_max_width = frame_max_width + x_padding;
-        let frame_max_height = frame_max_height + y_padding;
-
-        let width = (columns * frame_max_width as usize) as u32;
-        let height = (rows * frame_max_height as usize) as u32;
-
-        let mut texture = DynamicImage::new_rgba8(width, height);
-
-        for (index, fh) in frame_headers.iter_mut().enumerate() {
+        for fh in frame_headers.iter() {
             self.reader.seek(SeekFrom::Start(u64::from(
                 (header.frame_data_offset as u32) + fh.data_offset,
             )))?;
@@ -180,60 +126,52 @@ impl<R: Read + Seek> Decoder<R> {
             let flip_x = fh.typ == FrameType::FlipX || fh.typ == FrameType::FlipXY;
             let flip_y = fh.typ == FrameType::FlipY || fh.typ == FrameType::FlipXY;
 
-            // Calculate the top-left coordinates for the frame.
-            let x_offset = (index % columns) as u32 * frame_max_width as u32;
-            let y_offset = (index / columns) as u32 * frame_max_height as u32;
+            let mut frame_texture = DynamicImage::new_rgba8(fh.width as u32, fh.height as u32);
 
-            // Calculate the top-left coordinates to center the frame in its
-            // allocated space.
-            let x_pad = ((frame_max_width - fh.width) / 2) as u32;
-            let y_pad = ((frame_max_height - fh.height) / 2) as u32;
-
-            fh.x -= x_pad as i16;
-            fh.y -= y_pad as i16;
-
-            // Iterate over the buffer and copy the pixels into the new image.
-            buf.iter().enumerate().for_each(|(i, &b)| {
+            for (i, &b) in buf.iter().enumerate() {
                 let x = i as u32 % fh.width as u32;
                 let y = i as u32 / fh.width as u32;
+
+                let mut color = color_table[fh.color_table_offset as usize + b as usize];
+
+                // TODO: Color replacements that should probably be done in a
+                // shader.
+
+                // If R, G and B are < 8 then the pixel is transparent.
+                if color.0[0] < 8 && color.0[1] < 8 && color.0[2] < 8 {
+                    color = Rgba([0, 0, 0, 0]);
+                }
+
+                // If R, G and B are each exactly 8, then the pixel is full
+                // black. I.e. "black" hack.
+                if color.0[0] == 8 && color.0[1] == 8 && color.0[2] == 8 {
+                    color = Rgba([0, 0, 0, 255]);
+                }
+
+                // If color is cyan then the pixel is part of the sprite's
+                // shadow.
+                if color.0[0] == 0 && color.0[1] == 255 && color.0[2] == 255 {
+                    color = Rgba([0, 0, 0, 200]); // 78% transparency
+                }
 
                 let x = if flip_x { fh.width as u32 - x - 1 } else { x };
                 let y = if flip_y { fh.height as u32 - y - 1 } else { y };
 
-                let mut color = color_table[fh.color_table_offset as usize + b as usize];
+                frame_texture.put_pixel(x, y, color);
+            }
 
-                // Convert cyan (r=0, g=255, b=255) to shadow with 45%
-                // transparency.
-                //
-                // TODO: Only do in shader.
-                if color.to_rgb() == Rgb([0u8, 255u8, 255u8]) {
-                    color = Rgba([0u8, 0u8, 0u8, 115u8]);
-                }
+            textures.push(frame_texture);
 
-                texture.put_pixel(x + x_offset + x_pad, y + y_offset + y_pad, color);
+            frames.push(Frame {
+                typ: fh.typ,
+                x: fh.x,
+                y: fh.y,
+                width: fh.width,
+                height: fh.height,
             });
         }
 
-        Ok(SpriteSheet {
-            texture,
-            frames: frame_headers
-                .iter()
-                .map(|fh| Frame {
-                    typ: fh.typ,
-                    x: fh.x,
-                    y: fh.y,
-                    width: fh.width,
-                    height: fh.height,
-                })
-                .collect(),
-            atlas_layout: AtlasLayout {
-                tile_size: (frame_max_width, frame_max_height),
-                columns,
-                rows,
-                padding: self.padding,
-                offset: self.offset,
-            },
-        })
+        Ok(SpriteSheet { textures, frames })
     }
 
     fn decode_header(&mut self) -> Result<Header, DecodeError> {
@@ -256,14 +194,8 @@ impl<R: Read + Seek> Decoder<R> {
         })
     }
 
-    fn decode_frame_headers(
-        &mut self,
-        header: Header,
-    ) -> Result<(Vec<FrameHeader>, u16, u16), DecodeError> {
+    fn decode_frame_headers(&mut self, header: Header) -> Result<Vec<FrameHeader>, DecodeError> {
         let mut frame_headers = Vec::with_capacity(header.frame_count as usize);
-
-        let mut max_width = 0;
-        let mut max_height = 0;
 
         for _ in 0..header.frame_count {
             let mut buf = [0; FRAME_HEADER_SIZE_BYTES];
@@ -298,12 +230,9 @@ impl<R: Read + Seek> Decoder<R> {
                 color_table_offset,
                 _padding,
             });
-
-            max_width = max_width.max(width);
-            max_height = max_height.max(height);
         }
 
-        Ok((frame_headers, max_width, max_height))
+        Ok(frame_headers)
     }
 
     fn decode_color_table(&mut self, header: Header) -> Result<Vec<Rgba<u8>>, DecodeError> {
@@ -354,11 +283,6 @@ mod tests {
         let sheet = Decoder::new(file).decode().unwrap();
 
         assert_eq!(sheet.frames.len(), 104);
-        assert_eq!(sheet.atlas_layout.tile_size, (59, 64));
-        assert_eq!(sheet.atlas_layout.columns, 14);
-        assert_eq!(sheet.atlas_layout.rows, 8);
-        assert_eq!(sheet.atlas_layout.padding, None);
-        assert_eq!(sheet.atlas_layout.offset, None);
     }
 
     #[test]
@@ -378,11 +302,6 @@ mod tests {
         let sprite = Decoder::new(file).decode().unwrap();
 
         assert_eq!(sprite.frames.len(), 2);
-        assert_eq!(sprite.atlas_layout.tile_size, (32, 32));
-        assert_eq!(sprite.atlas_layout.columns, 2);
-        assert_eq!(sprite.atlas_layout.rows, 1);
-        assert_eq!(sprite.atlas_layout.padding, None);
-        assert_eq!(sprite.atlas_layout.offset, None);
     }
 
     #[test]
@@ -432,23 +351,27 @@ mod tests {
             println!("Decoding {:?}", path.file_name().unwrap());
 
             let file = File::open(path).unwrap();
-            let sheet = Decoder::new(file).with_padding((4, 4)).decode().unwrap();
+            let sheet = Decoder::new(file).decode().unwrap();
 
             let parent_dir = path.components().rev().nth(1).unwrap();
             let output_dir = root_output_dir.join(parent_dir);
             std::fs::create_dir_all(&output_dir).unwrap();
 
-            if sheet.texture.width() == 0 || sheet.texture.height() == 0 {
-                println!("Skipping empty image {:?}", path.file_name().unwrap());
-                return;
-            }
-
-            let output_path = append_ext("png", output_dir.join(path.file_name().unwrap()));
-            sheet.texture.save(output_path).unwrap();
-
             let output_path = append_ext("ron", output_dir.join(path.file_name().unwrap()));
             let mut output_file = File::create(output_path).unwrap();
             ron::ser::to_writer_pretty(&mut output_file, &sheet, Default::default()).unwrap();
+
+            let output_dir = output_dir.join(path.file_stem().unwrap());
+            std::fs::create_dir_all(&output_dir).unwrap();
+
+            for (i, texture) in sheet.textures.iter().enumerate() {
+                if texture.width() == 0 || texture.height() == 0 {
+                    println!("Skipping empty image {:?}", path.file_name().unwrap());
+                    continue;
+                }
+                let output_path = output_dir.join(format!("{}.png", i));
+                texture.save(output_path).unwrap();
+            }
         });
     }
 

@@ -17,20 +17,8 @@ pub(crate) use zeroruns::ZeroRunsReader;
 pub struct SpriteSheet {
     #[serde(skip)]
     #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
-    pub texture: DynamicImage,
-    pub atlas_layout: AtlasLayout,
+    pub textures: Vec<DynamicImage>,
     pub frames: Vec<Frame>,
-}
-
-/// Provides information about how the sprite sheet is laid out.
-#[derive(Clone, Debug, Serialize)]
-#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
-pub struct AtlasLayout {
-    pub tile_size: (u16, u16),
-    pub columns: usize,
-    pub rows: usize,
-    pub padding: Option<(u16, u16)>,
-    pub offset: Option<(u16, u16)>,
 }
 
 #[derive(Clone, Debug, Serialize)]
