@@ -5,7 +5,6 @@ mod zeroruns;
 #[cfg(feature = "bevy_reflect")]
 use bevy_reflect::prelude::*;
 use image::DynamicImage;
-use num_enum::{IntoPrimitive, TryFromPrimitive};
 use serde::Serialize;
 
 pub use decoder::{DecodeError, Decoder};
@@ -18,35 +17,14 @@ pub struct SpriteSheet {
     #[serde(skip)]
     #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
     pub textures: Vec<DynamicImage>,
-    pub frames: Vec<Frame>,
+    pub texture_descriptors: Vec<TextureDescriptor>,
 }
 
 #[derive(Clone, Debug, Serialize)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
-pub struct Frame {
-    pub typ: FrameType,
+pub struct TextureDescriptor {
     pub x: i16,
     pub y: i16,
     pub width: u16,
     pub height: u16,
-}
-
-#[repr(u8)]
-#[derive(Clone, Copy, Debug, Default, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive)]
-#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
-pub enum FrameType {
-    /// Indicates the frame is a repeat of a previous frame.
-    Repeat = 0,
-    /// Indicates the frame should be flipped along the x axis.
-    FlipX = 1,
-    /// Indicates the frame should be flipped along the y axis.
-    FlipY = 2,
-    /// Indicates the frame should be flipped along the x and y axes.
-    FlipXY = 3,
-    /// Indicates a normal frame.
-    #[default]
-    Normal = 4,
-    /// Indicates the frame is empty. There is no frame or palette data
-    /// associated with the frame. The frame's width and height are 0.
-    Empty = 5,
 }
