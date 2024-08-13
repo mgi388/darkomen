@@ -288,6 +288,14 @@ impl Node {
     pub fn rotation_degrees(&self) -> f32 {
         self.rotation_radians().to_degrees()
     }
+
+    /// Returns whether the node belongs to player 1's regiment.
+    ///
+    /// TODO: Is there a more reliable way to determine this?
+    #[inline]
+    pub fn is_player1_regiment(&self) -> bool {
+        self.regiment_id <= 100
+    }
 }
 
 #[repr(transparent)]
