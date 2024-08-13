@@ -32,7 +32,7 @@ optional = true
 
 [dev-dependencies]
 # Enable the bevy_reflect feature when testing.
-darkomen = { path = ".", version = "0", features = ["bevy_reflect"] }
+darkomen = { path = ".", version = "0.2.0", features = ["bevy_reflect"] }
 imageproc = "0.25"
 pretty_assertions = "1.4"
 rand_chacha = "0.3"
