@@ -114,40 +114,6 @@ pub struct Instance {
     pub unknown3: i32,
 }
 
-impl Instance {
-    pub fn position_lossy(&self) -> Vec3 {
-        Vec3::new(
-            self.position.x as f32,
-            self.position.y as f32,
-            self.position.z as f32,
-        )
-    }
-
-    pub fn rotation_lossy(&self) -> Vec3 {
-        Vec3::new(
-            self.rotation.x as f32,
-            self.rotation.y as f32,
-            self.rotation.z as f32,
-        )
-    }
-
-    pub fn aabb_min_lossy(&self) -> Vec3 {
-        Vec3::new(
-            self.aabb_min.x as f32,
-            self.aabb_min.y as f32,
-            self.aabb_min.z as f32,
-        )
-    }
-
-    pub fn aabb_max_lossy(&self) -> Vec3 {
-        Vec3::new(
-            self.aabb_max.x as f32,
-            self.aabb_max.y as f32,
-            self.aabb_max.z as f32,
-        )
-    }
-}
-
 #[derive(Clone, Debug, Serialize)]
 pub enum Heightmap {
     /// The heightmap that includes the base terrain and furniture instances
