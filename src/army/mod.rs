@@ -435,7 +435,9 @@ pub enum Weapon {
 }
 
 #[repr(u8)]
-#[derive(Clone, Copy, Debug, Default, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive)]
+#[derive(
+    Clone, Copy, Debug, Default, IntoPrimitive, PartialEq, PartialOrd, Serialize, TryFromPrimitive,
+)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub enum Projectile {
     #[default]
