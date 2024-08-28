@@ -245,15 +245,15 @@ impl<R: Read + Seek> Decoder<R> {
             .ok_or(DecodeError::InvalidRegimentAttributes(attributes_u32))?;
         let mage_class =
             MageClass::try_from(buf[8]).map_err(|_| DecodeError::InvalidMageClass(buf[8]))?;
-        let troop_alignment = RegimentAlignment::try_from(buf[56])
+        let unit_alignment = RegimentAlignment::try_from(buf[56])
             .map_err(|_| DecodeError::InvalidRegimentAlignment(buf[56]))?;
-        let troop_mount = RegimentMount::try_from(buf[73])
+        let unit_mount = RegimentMount::try_from(buf[73])
             .map_err(|_| DecodeError::InvalidRegimentMount(buf[73]))?;
-        let troop_weapon =
+        let unit_weapon =
             Weapon::try_from(buf[75]).map_err(|_| DecodeError::InvalidWeapon(buf[75]))?;
-        let troop_class = RegimentClass::try_from(buf[76])
+        let unit_class = RegimentClass::try_from(buf[76])
             .map_err(|_| DecodeError::InvalidRegimentClass(buf[76]))?;
-        let troop_projectile =
+        let unit_projectile =
             Projectile::try_from(buf[78]).map_err(|_| DecodeError::InvalidProjectile(buf[78]))?;
         let leader_alignment = RegimentAlignment::try_from(buf[120])
             .map_err(|_| DecodeError::InvalidRegimentAlignment(buf[120]))?;
@@ -283,18 +283,18 @@ impl<R: Read + Seek> Decoder<R> {
                 sprite_sheet_index: u16::from_le_bytes(buf[20..22].try_into().unwrap()),
                 name: self.read_string(&buf[22..54])?,
                 name_id: u16::from_le_bytes(buf[54..56].try_into().unwrap()),
-                alignment: troop_alignment,
-                max_troop_count: buf[57],
-                alive_troop_count: buf[58],
+                alignment: unit_alignment,
+                max_unit_count: buf[57],
+                alive_unit_count: buf[58],
                 rank_count: buf[59],
                 unknown1: buf[60..64].into(),
                 stats: self.read_unit_stats(&buf[64..73]),
-                mount: troop_mount,
+                mount: unit_mount,
                 armor: buf[74],
-                weapon: troop_weapon,
-                class: troop_class,
+                weapon: unit_weapon,
+                class: unit_class,
                 point_value: buf[77],
-                projectile: troop_projectile,
+                projectile: unit_projectile,
             },
             unknown4: buf[79],
             unknown5: buf[80..84].try_into().unwrap(),
@@ -303,8 +303,8 @@ impl<R: Read + Seek> Decoder<R> {
                 name: self.read_string(&buf[86..118])?,
                 name_id: u16::from_le_bytes(buf[118..120].try_into().unwrap()),
                 alignment: leader_alignment,
-                max_troop_count: buf[121],
-                alive_troop_count: buf[122],
+                max_unit_count: buf[121],
+                alive_unit_count: buf[122],
                 rank_count: buf[123],
                 unknown1: buf[124..127].into(),
                 stats: self.read_unit_stats(&buf[127..136]),
@@ -330,8 +330,8 @@ impl<R: Read + Seek> Decoder<R> {
             unknown8: buf[168..180].try_into().unwrap(),
             purchased_armor: buf[180],
             max_purchasable_armor: buf[181],
-            repurchased_troop_count: buf[182],
-            max_purchasable_troop_count: buf[183],
+            repurchased_unit_count: buf[182],
+            max_purchasable_unit_count: buf[183],
             book_profile: buf[184..188].try_into().unwrap(),
         })
     }

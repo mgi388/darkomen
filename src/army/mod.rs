@@ -129,8 +129,8 @@ pub struct Regiment {
     unknown8: [u8; 12],
     pub purchased_armor: u8,
     pub max_purchasable_armor: u8,
-    pub repurchased_troop_count: u8,
-    pub max_purchasable_troop_count: u8,
+    pub repurchased_unit_count: u8,
+    pub max_purchasable_unit_count: u8,
     pub book_profile: [u8; 4],
 }
 
@@ -144,7 +144,7 @@ impl Regiment {
     /// Returns the number of units in the regiment that are alive.
     #[inline]
     pub fn alive_unit_count(&self) -> usize {
-        self.unit_profile.alive_troop_count as usize
+        self.unit_profile.alive_unit_count as usize
     }
 
     /// Returns the rank count.
@@ -479,10 +479,10 @@ pub struct UnitProfile {
     /// - 0x40 (decimal 64) is neutral.
     /// - 0x80 (decimal 128) is evil.
     pub alignment: RegimentAlignment,
-    /// The maximum number of troops allowed in the regiment.
-    pub max_troop_count: u8,
-    /// The number of troops currently alive in the regiment.
-    pub alive_troop_count: u8,
+    /// The maximum number of units allowed in the regiment.
+    pub max_unit_count: u8,
+    /// The number of units currently alive in the regiment.
+    pub alive_unit_count: u8,
     pub rank_count: u8,
     unknown1: Vec<u8>,
     pub stats: UnitStats,
