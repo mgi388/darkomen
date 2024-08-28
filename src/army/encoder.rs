@@ -119,8 +119,8 @@ impl<W: Write> Encoder<W> {
         self.writer.write_all(&r.unknown8)?;
         self.writer.write_all(&[r.purchased_armor])?;
         self.writer.write_all(&[r.max_purchasable_armor])?;
-        self.writer.write_all(&[r.repurchased_troop_count])?;
-        self.writer.write_all(&[r.max_purchasable_troop_count])?;
+        self.writer.write_all(&[r.repurchased_unit_count])?;
+        self.writer.write_all(&[r.max_purchasable_unit_count])?;
         self.writer.write_all(&r.book_profile)?;
 
         Ok(())
@@ -131,8 +131,8 @@ impl<W: Write> Encoder<W> {
         self.write_string_with_limit(&u.name, 32)?;
         self.writer.write_all(&u.name_id.to_le_bytes())?;
         self.writer.write_all(&[Into::<u8>::into(u.alignment)])?;
-        self.writer.write_all(&[u.max_troop_count])?;
-        self.writer.write_all(&[u.alive_troop_count])?;
+        self.writer.write_all(&[u.max_unit_count])?;
+        self.writer.write_all(&[u.alive_unit_count])?;
         self.writer.write_all(&[u.rank_count])?;
         self.writer.write_all(&u.unknown1)?;
         self.writer.write_all(&[u.stats.movement])?;
