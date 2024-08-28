@@ -321,10 +321,45 @@ mod tests {
 
         let file = File::open(d.clone()).unwrap();
 
-        let sprite = Decoder::new(file).decode().unwrap();
+        let sheet = Decoder::new(file).decode().unwrap();
 
-        assert_eq!(sprite.textures.len(), 2);
-        assert_eq!(sprite.texture_descriptors.len(), 2);
+        assert_eq!(sheet.textures.len(), 2);
+        assert_eq!(sheet.texture_descriptors.len(), 2);
+    }
+
+    #[test]
+    fn test_decode_mi() {
+        let d: PathBuf = [
+            std::env::var("DARKOMEN_PATH").unwrap().as_str(),
+            "DARKOMEN",
+            "GRAPHICS",
+            "SPRITES",
+            "MI.SPR",
+        ]
+        .iter()
+        .collect();
+
+        let file = File::open(d.clone()).unwrap();
+
+        let sheet = Decoder::new(file).decode().unwrap();
+
+        assert_eq!(sheet.textures.len(), 48);
+        assert_eq!(sheet.texture_descriptors.len(), 48);
+
+        // Check the first texture descriptor. These values are known to be
+        // correct and a correct sprite anchor can be created from these values.
+        assert_eq!(sheet.texture_descriptors[0].x, -22);
+        assert_eq!(sheet.texture_descriptors[0].y, -55);
+        assert_eq!(sheet.texture_descriptors[0].width, 46);
+        assert_eq!(sheet.texture_descriptors[0].height, 44);
+
+        // Check the first 8 texture descriptors y and height. There's nothing
+        // special about these values, they are just known to have the same
+        // value for this particular magic item.
+        for i in 0..8 {
+            assert_eq!(sheet.texture_descriptors[i].y, -55);
+            assert_eq!(sheet.texture_descriptors[i].height, 44);
+        }
     }
 
     #[test]
