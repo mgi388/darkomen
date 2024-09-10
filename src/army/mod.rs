@@ -136,21 +136,28 @@ pub struct Regiment {
 
 impl Regiment {
     /// Returns the display name of the regiment.
-    #[inline]
+    #[inline(always)]
     pub fn display_name(&self) -> &str {
         self.unit_profile.name.as_str()
     }
 
     /// Returns the number of units in the regiment that are alive.
-    #[inline]
+    #[inline(always)]
     pub fn alive_unit_count(&self) -> usize {
         self.unit_profile.alive_unit_count as usize
     }
 
     /// Returns the rank count.
-    #[inline]
+    #[inline(always)]
     pub fn rank_count(&self) -> usize {
         self.unit_profile.rank_count as usize
+    }
+
+    /// A value from 1 to 4, inclusive, that indicates the regiment's threat
+    /// rating.
+    #[inline(always)]
+    pub fn threat_rating(&self) -> u8 {
+        (self.unit_profile.point_value >> 3) + 1
     }
 }
 
@@ -490,6 +497,18 @@ pub struct UnitProfile {
     pub armor: u8,
     pub weapon: Weapon,
     pub class: RegimentClass,
+    /// A value from 0 to 31, inclusive, that indicates the regiment's threat
+    /// rating.
+    ///
+    /// - 0-7: Threat rating 1
+    /// - 8-15: Threat rating 2
+    /// - 16-23: Threat rating 3
+    /// - 24-31: Threat rating 4
+    ///
+    /// For example, the Dread King has the maximum value of 31 and a threat
+    /// rating of 4.
+    ///
+    /// This is set in the `unit_profile`, but 0 in the `leader_profile`.
     pub point_value: u8,
     pub projectile: Projectile,
 }
@@ -517,6 +536,26 @@ mod tests {
         fs::File,
         path::{Path, PathBuf},
     };
+
+    #[test]
+    fn test_regiment_threat_rating() {
+        fn make_regiment(point_value: u8) -> Regiment {
+            Regiment {
+                unit_profile: UnitProfile {
+                    point_value,
+                    ..Default::default()
+                },
+                ..Default::default()
+            }
+        }
+
+        assert_eq!(make_regiment(0).threat_rating(), 1);
+        assert_eq!(make_regiment(1).threat_rating(), 1);
+        assert_eq!(make_regiment(7).threat_rating(), 1);
+        assert_eq!(make_regiment(8).threat_rating(), 2);
+        assert_eq!(make_regiment(20).threat_rating(), 3);
+        assert_eq!(make_regiment(31).threat_rating(), 4);
+    }
 
     #[test]
     fn test_regiment_class_is_infantry() {
