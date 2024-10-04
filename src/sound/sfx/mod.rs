@@ -4,7 +4,7 @@ mod lexer;
 #[cfg(feature = "bevy_reflect")]
 use bevy_reflect::prelude::*;
 use bitflags::bitflags;
-use rand::Rng;
+use rand::{seq::SliceRandom as _, Rng};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -38,9 +38,8 @@ pub struct Sfx {
 
 impl Sfx {
     /// Returns a random sound from the SFX.
-    pub fn random_sound(&self, rng: &mut impl Rng) -> &Sound {
-        let sound_index = rng.gen_range(0..self.sounds.len());
-        &self.sounds[sound_index]
+    pub fn random_sound(&self, rng: &mut impl Rng) -> Option<&Sound> {
+        self.sounds.choose(rng)
     }
 }
 
