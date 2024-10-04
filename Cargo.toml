@@ -2,7 +2,7 @@
 name = "darkomen"
 version = "0.2.1"
 edition = "2021"
-description = "Warhammer: Dark Omen library in Rust"
+description = "Warhammer: Dark Omen library and CLI in Rust"
 repository = "https://github.com/mgi388/darkomen"
 license = "MIT OR Apache-2.0"
 exclude = ["testdata/"]
@@ -10,6 +10,7 @@ exclude = ["testdata/"]
 [features]
 default = []
 bevy_reflect = ["dep:bevy_reflect"]
+cli = ["dep:anyhow", "dep:clap", "dep:ron", "dep:tempfile"]
 
 [dependencies]
 bitflags = { version = "2.6", features = ["serde"] }
@@ -24,15 +25,32 @@ rand = "0.8"
 serde = { version = "1", features = ["derive"] }
 thiserror = "1.0"
 
+[dependencies.anyhow]
+version = "1"
+optional = true
+
 [dependencies.bevy_reflect]
 version = "0.14"
 default-features = false
 features = ["glam"]
 optional = true
 
+[dependencies.clap]
+version = "4"
+features = ["derive"]
+optional = true
+
+[dependencies.ron]
+version = "0.8"
+optional = true
+
+[dependencies.tempfile]
+version = "3"
+optional = true
+
 [dev-dependencies]
-# Enable the bevy_reflect feature when testing.
-darkomen = { path = ".", features = ["bevy_reflect"] }
+# Enable the `bevy_reflect` and `cli` features when testing.
+darkomen = { path = ".", features = ["bevy_reflect", "cli"] }
 imageproc = "0.25"
 pretty_assertions = "1.4"
 rand_chacha = "0.3"

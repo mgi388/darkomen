@@ -11,7 +11,7 @@ use thiserror::Error;
 pub use decoder::{DecodeError, Decoder};
 pub use encoder::{EncodeError, Encoder};
 
-#[derive(Debug, Clone, Default, Serialize)]
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct Army {
     save_file_header: Vec<u8>,
@@ -55,7 +55,9 @@ pub struct Army {
 }
 
 #[repr(u8)]
-#[derive(Clone, Copy, Debug, Default, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive)]
+#[derive(
+    Clone, Copy, Debug, Default, Deserialize, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive,
+)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub enum ArmyRace {
     #[default]
@@ -67,7 +69,7 @@ pub enum ArmyRace {
     UndeadMultiplayer = 5,
 }
 
-#[derive(Clone, Debug, Default, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct Regiment {
     pub status: RegimentStatus,
@@ -162,7 +164,9 @@ impl Regiment {
 }
 
 #[repr(u16)]
-#[derive(Clone, Copy, Debug, Default, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive)]
+#[derive(
+    Clone, Copy, Debug, Default, Deserialize, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive,
+)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub enum RegimentStatus {
     #[default]
@@ -185,7 +189,9 @@ pub enum RegimentStatus {
 }
 
 #[repr(u8)]
-#[derive(Clone, Copy, Debug, Default, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive)]
+#[derive(
+    Clone, Copy, Debug, Default, Deserialize, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive,
+)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub enum MageClass {
     #[default]
@@ -197,7 +203,9 @@ pub enum MageClass {
 }
 
 #[repr(u8)]
-#[derive(Clone, Copy, Debug, Default, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive)]
+#[derive(
+    Clone, Copy, Debug, Default, Deserialize, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive,
+)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub enum RegimentAlignment {
     #[default]
@@ -207,7 +215,9 @@ pub enum RegimentAlignment {
 }
 
 #[repr(u8)]
-#[derive(Clone, Copy, Debug, Default, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive)]
+#[derive(
+    Clone, Copy, Debug, Default, Deserialize, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive,
+)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub enum RegimentClass {
     #[default]
@@ -293,7 +303,9 @@ impl RegimentClass {
 }
 
 #[repr(u8)]
-#[derive(Clone, Copy, Debug, Default, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive)]
+#[derive(
+    Clone, Copy, Debug, Default, Deserialize, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive,
+)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub enum RegimentType {
     #[default]
@@ -308,7 +320,9 @@ pub enum RegimentType {
 }
 
 #[repr(u8)]
-#[derive(Clone, Copy, Debug, Default, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive)]
+#[derive(
+    Clone, Copy, Debug, Default, Deserialize, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive,
+)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub enum RegimentRace {
     #[default]
@@ -322,7 +336,9 @@ pub enum RegimentRace {
 }
 
 #[repr(u8)]
-#[derive(Clone, Copy, Debug, Default, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive)]
+#[derive(
+    Clone, Copy, Debug, Default, Deserialize, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive,
+)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub enum RegimentMount {
     #[default]
@@ -404,7 +420,7 @@ bitflags! {
     }
 }
 
-#[derive(Clone, Debug, Default, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct LastBattleStats {
     /// The number of units in the regiment that were killed in the last battle.
@@ -417,7 +433,9 @@ pub struct LastBattleStats {
 }
 
 #[repr(u16)]
-#[derive(Clone, Copy, Debug, Default, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive)]
+#[derive(
+    Clone, Copy, Debug, Default, Deserialize, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive,
+)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub enum MagicBook {
     #[default]
@@ -429,7 +447,9 @@ pub enum MagicBook {
 }
 
 #[repr(u8)]
-#[derive(Clone, Copy, Debug, Default, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive)]
+#[derive(
+    Clone, Copy, Debug, Default, Deserialize, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive,
+)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub enum Weapon {
     #[default]
@@ -443,7 +463,16 @@ pub enum Weapon {
 
 #[repr(u8)]
 #[derive(
-    Clone, Copy, Debug, Default, IntoPrimitive, PartialEq, PartialOrd, Serialize, TryFromPrimitive,
+    Clone,
+    Copy,
+    Debug,
+    Default,
+    Deserialize,
+    IntoPrimitive,
+    PartialEq,
+    PartialOrd,
+    Serialize,
+    TryFromPrimitive,
 )]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub enum Projectile {
@@ -470,7 +499,7 @@ pub enum DecodeClassError {
     InvalidRace(#[from] TryFromPrimitiveError<RegimentRace>),
 }
 
-#[derive(Clone, Debug, Default, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct UnitProfile {
     /// The index into the list of sprite sheet file names found in ENGREL.EXE
@@ -513,7 +542,7 @@ pub struct UnitProfile {
     pub projectile: Projectile,
 }
 
-#[derive(Clone, Debug, Default, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct UnitStats {
     pub movement: u8,
