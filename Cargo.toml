@@ -54,7 +54,7 @@ darkomen = { path = ".", features = ["bevy_reflect", "cli"] }
 imageproc = "0.25"
 pretty_assertions = "1.4"
 rand_chacha = "0.3"
-regex = "1.10"
+regex = "1.11"
 ron = "0.8"
 sha2 = "0.10"
 
