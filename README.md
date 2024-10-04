@@ -1,4 +1,4 @@
-# Warhammer: Dark Omen library in Rust
+# Warhammer: Dark Omen library and CLI in Rust
 
 [![Crates.io](https://img.shields.io/crates/v/darkomen.svg)](https://crates.io/crates/darkomen)
 [![Docs.rs](https://docs.rs/darkomen/badge.svg)](https://docs.rs/darkomen)

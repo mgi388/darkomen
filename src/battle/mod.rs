@@ -70,13 +70,12 @@ impl Obstacle {
     }
 }
 
-#[repr(transparent)]
-#[derive(Clone, Copy, Debug, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
-#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
-pub struct ObstacleFlags(u32);
-
 bitflags! {
-    impl ObstacleFlags: u32 {
+    #[repr(transparent)]
+    #[derive(Clone, Copy, Debug, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
+    #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+    #[cfg_attr(feature = "bevy_reflect", reflect_value(Debug, Default, Deserialize, Hash, PartialEq, Serialize))]
+    pub struct ObstacleFlags: u32 {
         const NONE = 0;
         const IS_ENABLED = 1 << 0;
         const BLOCKS_MOVEMENT = 1 << 1;
@@ -199,19 +198,20 @@ impl Region {
     }
 }
 
-#[repr(transparent)]
-#[derive(Clone, Copy, Debug, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
-#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
-pub struct RegionFlags(u32);
-
 bitflags! {
-    impl RegionFlags: u32 {
+    #[repr(transparent)]
+    #[derive(Clone, Copy, Debug, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
+    #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+    #[cfg_attr(feature = "bevy_reflect", reflect_value(Debug, Default, Deserialize, Hash, PartialEq, Serialize))]
+    pub struct RegionFlags: u32 {
         const NONE = 0;
         const UNKNOWN_FLAG_1 = 1 << 0;
         const IS_CLOSED = 1 << 1;
         const IS_OPEN = 1 << 2;
         const UNKNOWN_FLAG_2 = 1 << 3;
+        /// The region is used for holes in the battle's navmesh.
         const IS_BOUNDARY_REVERSED = 1 << 4;
+        /// The region is used for the outer geometry of the battle's navmesh.
         const IS_BATTLE_BOUNDARY = 1 << 5;
         const UNKNOWN_FLAG_3 = 1 << 6;
         const IS_BOUNDARY = 1 << 7;
@@ -298,13 +298,12 @@ impl Node {
     }
 }
 
-#[repr(transparent)]
-#[derive(Clone, Copy, Debug, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
-#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
-pub struct NodeFlags(u32);
-
 bitflags! {
-    impl NodeFlags: u32 {
+    #[repr(transparent)]
+    #[derive(Clone, Copy, Debug, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
+    #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+    #[cfg_attr(feature = "bevy_reflect", reflect_value(Debug, Default, Deserialize, Hash, PartialEq, Serialize))]
+    pub struct NodeFlags: u32 {
         const NONE = 0;
         const IS_CENTERED_POINT = 1 << 0;
         const IS_REGIMENT = 1 << 1;
