@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 pub use decoder::{DecodeError, Decoder};
 pub use encoder::{EncodeError, Encoder};
 
-#[derive(Clone, Debug, Default, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct Project {
     /// The base model file name, including the extension. E.g. `base.M3D`.
@@ -72,7 +72,7 @@ impl Project {
     }
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct Instance {
     prev: i32,
@@ -123,7 +123,7 @@ pub enum Heightmap {
     Base = 2,
 }
 
-#[derive(Clone, Debug, Default, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct Terrain {
     pub width: u32,
@@ -302,7 +302,7 @@ impl Terrain {
     }
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct TerrainBlock {
     /// The base height of all 64 (8x8) values in the block.
@@ -329,7 +329,7 @@ fn normalize(value: f32, min: f32, max: f32) -> f32 {
     (value - min) / (max - min)
 }
 
-#[derive(Clone, Debug, Default, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct Attributes {
     pub width: u32,
@@ -338,7 +338,7 @@ pub struct Attributes {
     pub unknown: Vec<u8>,
 }
 
-#[derive(Clone, Debug, Default, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct Excl {
     pub unknown1: u32, // seems like a count, but unknown
@@ -346,14 +346,14 @@ pub struct Excl {
     pub unknown2: Vec<u8>,
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct Track {
     pub control_points: Vec<TrackControlPoint>,
     pub points: Vec<Vec3>,
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct TrackControlPoint {
     pub x: f32,
