@@ -1,6 +1,6 @@
 [package]
 name = "darkomen"
-version = "0.2.1"
+version = "0.3.0"
 edition = "2021"
 description = "Warhammer: Dark Omen library and CLI in Rust"
 repository = "https://github.com/mgi388/darkomen"
