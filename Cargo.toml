@@ -10,10 +10,12 @@ exclude = ["testdata/"]
 [features]
 default = ["cli"]
 bevy_reflect = ["dep:bevy_reflect"]
-cli = ["dep:anyhow", "dep:clap", "dep:ron", "dep:tempfile"]
+cli = ["dep:anyhow", "dep:clap", "dep:ron", "dep:serde_json", "dep:tempfile"]
 
 [dependencies]
+anyhow = { version = "1", optional = true }
 bitflags = { version = "2.6", features = ["serde"] }
+clap = { version = "4", features = ["derive"], optional = true }
 encoding_rs = "0.8"
 encoding_rs_io = "0.1"
 glam = { version = "0.27.0", default-features = false, features = ["serde"] }
@@ -22,30 +24,16 @@ image = "0.25"
 indexmap = { version = "2", features = ["serde"] }
 num_enum = "0.7"
 rand = "0.8"
+ron = { version = "0.8", optional = true }
 serde = { version = "1", features = ["derive"] }
-thiserror = "1.0"
-
-[dependencies.anyhow]
-version = "1"
-optional = true
+serde_json = { version = "1", optional = true }
+tempfile = { version = "3", optional = true }
+thiserror = "1"
 
 [dependencies.bevy_reflect]
 version = "0.14"
 default-features = false
 features = ["glam"]
-optional = true
-
-[dependencies.clap]
-version = "4"
-features = ["derive"]
-optional = true
-
-[dependencies.ron]
-version = "0.8"
-optional = true
-
-[dependencies.tempfile]
-version = "3"
 optional = true
 
 [dev-dependencies]
