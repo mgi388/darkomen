@@ -101,7 +101,7 @@ pub struct Instance {
     locked: i32,
     exclude_from_terrain_shadow: i32,
     exclude_from_walk: i32,
-    pub magic_item_code: u32,
+    pub magic_item_id: u32,
     pub particle_effect_code: u32,
     /// Slot is 1-based, not 0-based. A slot of 1 refers to the first furniture
     /// model and a slot of 0 means the instance is not used.
@@ -641,9 +641,9 @@ mod tests {
                 assert_eq!(track.control_points.len(), 6);
             }
 
-            // Each instance with a GFX code should have a furniture
-            // model slot, i.e. instances with GFX always have an
-            // associated furniture model.
+            // Each instance with a GFX code should have a furniture model slot,
+            // i.e. instances with GFX always have an associated furniture
+            // model.
             for instance in &project.instances {
                 assert!(
                     instance.gfx_code == 0 || instance.furniture_model_slot != 0,
