@@ -260,7 +260,7 @@ impl<R: Read + Seek> Decoder<R> {
             locked: i32::from_le_bytes(buf[104..108].try_into().unwrap()),
             exclude_from_terrain_shadow: i32::from_le_bytes(buf[108..112].try_into().unwrap()),
             exclude_from_walk: i32::from_le_bytes(buf[112..116].try_into().unwrap()),
-            magic_item_code: u32::from_le_bytes(buf[116..120].try_into().unwrap()),
+            magic_item_id: u32::from_le_bytes(buf[116..120].try_into().unwrap()),
             particle_effect_code: u32::from_le_bytes(buf[120..124].try_into().unwrap()),
             furniture_dead_model_slot: u32::from_le_bytes(buf[124..128].try_into().unwrap()),
             dead_model_id: i32::from_le_bytes(buf[128..132].try_into().unwrap()),

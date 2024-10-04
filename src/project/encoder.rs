@@ -173,7 +173,7 @@ impl<W: Write> Encoder<W> {
         self.writer
             .write_all(&i.exclude_from_terrain_shadow.to_le_bytes())?;
         self.writer.write_all(&i.exclude_from_walk.to_le_bytes())?;
-        self.writer.write_all(&i.magic_item_code.to_le_bytes())?;
+        self.writer.write_all(&i.magic_item_id.to_le_bytes())?;
         self.writer
             .write_all(&i.particle_effect_code.to_le_bytes())?;
         self.writer
