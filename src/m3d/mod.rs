@@ -41,13 +41,12 @@ impl TextureDescriptor {
     }
 }
 
-#[repr(transparent)]
-#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
-#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
-pub struct ObjectFlags(u32);
-
 bitflags! {
-    impl ObjectFlags: u32 {
+    #[repr(transparent)]
+    #[derive(Clone, Copy, Debug, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
+    #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+    #[cfg_attr(feature = "bevy_reflect", reflect_value(Debug, Default, Deserialize, Hash, PartialEq, Serialize))]
+    pub struct ObjectFlags: u32 {
         const NONE = 0;
         const UNKNOWN_FLAG_1 = 1 << 0;
         const CUSTOM_TRANSLATION_ENABLED = 1 << 1;
