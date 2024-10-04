@@ -8,7 +8,7 @@ license = "MIT OR Apache-2.0"
 exclude = ["testdata/"]
 
 [features]
-default = []
+default = ["cli"]
 bevy_reflect = ["dep:bevy_reflect"]
 cli = ["dep:anyhow", "dep:clap", "dep:ron", "dep:tempfile"]
 
@@ -49,8 +49,8 @@ version = "3"
 optional = true
 
 [dev-dependencies]
-# Enable the `bevy_reflect` and `cli` features when testing.
-darkomen = { path = ".", features = ["bevy_reflect", "cli"] }
+# Enable the `bevy_reflect` feature when testing.
+darkomen = { path = ".", features = ["bevy_reflect"] }
 imageproc = "0.25"
 pretty_assertions = "1.4"
 rand_chacha = "0.3"
