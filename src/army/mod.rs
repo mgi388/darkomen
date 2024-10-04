@@ -48,10 +48,31 @@ pub struct Army {
     /// The amount of gold available to the army for buying new units and
     /// reinforcements.
     pub gold_in_coffers: u16,
+    /// A list of magic items in the army's inventory.
+    ///
+    /// Each magic item is an index into the list of magic items. A value of 1
+    /// means the Grudgebringer Sword is equipped in that slot. A value of 0
+    /// means the army does not have anything in that slot.
     pub magic_items: Vec<u8>,
     unknown3: Vec<u8>,
     pub regiments: Vec<Regiment>,
     save_file_footer: Vec<u8>,
+}
+
+impl Army {
+    /// Returns true if the army has any magic items in its inventory.
+    pub fn any_magic_items(&self) -> bool {
+        self.magic_items.iter().any(|&item| item != 0)
+    }
+
+    /// Returns a list of all magic items in the army's inventory.
+    pub fn all_magic_items(&self) -> Vec<u8> {
+        self.magic_items
+            .iter()
+            .filter(|&&item| item != 0)
+            .copied()
+            .collect()
+    }
 }
 
 #[repr(u8)]
@@ -160,6 +181,20 @@ impl Regiment {
     #[inline(always)]
     pub fn threat_rating(&self) -> u8 {
         (self.unit_profile.point_value >> 3) + 1
+    }
+
+    /// Returns true if the regiment has any magic items equipped.
+    pub fn any_magic_items(&self) -> bool {
+        self.magic_items.iter().any(|&item| item != 65535)
+    }
+
+    /// Returns a list of all magic items equipped to the regiment.
+    pub fn all_magic_items(&self) -> Vec<u16> {
+        self.magic_items
+            .iter()
+            .filter(|&&item| item != 65535)
+            .copied()
+            .collect()
     }
 }
 
