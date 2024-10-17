@@ -27,15 +27,15 @@ pub struct TextureDescriptor {
     pub file_name: String,
 }
 
+/// Texture flags embedded in the prefix of the file name, e.g. `_1WOOD8.bmp`,
+/// `_2wtpool.bmp`. The prefix is either: `_1`, `_2`, or no prefix.
+///
+/// - `_1` seems like it's possibly just color keying
+/// - `_2` are all water (and jewel) textures, so must possibly to do with
+///   transparency, translucency or animation.
 impl TextureDescriptor {
-    /// Texture flags embedded in the prefix of the file name, e.g.
-    /// `_1WOOD8.bmp`, `_2wtpool.bmp`. The prefix is either: `_1`, `_2`, or no
-    /// prefix.
-    ///
-    /// - `_1` seems like it's possibly just color keying
-    /// - `_2` are all water (and jewel) textures, so must possibly to do with
-    ///   transparency, translucency or animation.
-
+    /// Returns `true` if the texture descriptor indicates that the texture is
+    /// color keyed.
     pub fn is_color_keyed(&self) -> bool {
         self.file_name.to_ascii_lowercase().starts_with("_1")
     }
