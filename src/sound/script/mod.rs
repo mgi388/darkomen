@@ -112,11 +112,13 @@ impl<'a> IntoIterator for &'a Sequence {
 }
 
 impl Sequence {
+    /// Returns the number of samples in the sequence.
     #[inline]
     pub fn len(&self) -> usize {
         self.0.len()
     }
 
+    /// Returns `true` if the sequence is empty.
     #[inline]
     pub fn is_empty(&self) -> bool {
         self.len() == 0

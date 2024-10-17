@@ -118,8 +118,8 @@ impl LineSegment {
         Vec2::new(self.end.x as f32 / SCALE, self.end.y as f32 / SCALE)
     }
 
-    /// Checks if a point is on a line segment.
-    fn point_on_line_segment(&self, point: &IVec2) -> bool {
+    /// Returns `true` if a point is on a line segment.
+    fn is_point_on_line_segment(&self, point: &IVec2) -> bool {
         let crossproduct = (point.y - self.start.y) * (self.end.x - self.start.x)
             - (point.x - self.start.x) * (self.end.y - self.start.y);
         if crossproduct != 0 {
@@ -141,8 +141,9 @@ impl LineSegment {
         true
     }
 
-    /// Checks if the ray from the point intersects with the line segment.
-    fn ray_intersects_segment(&self, point: &IVec2) -> bool {
+    /// Returns `true` if the ray from the point is intersecting with the line
+    /// segment.
+    fn is_ray_intersecting_segment(&self, point: &IVec2) -> bool {
         // Ensure the point is between the y-coordinates of the line segment's
         // endpoints.
         if point.y < self.start.y.min(self.end.y) || point.y > self.start.y.max(self.end.y) {
@@ -172,23 +173,23 @@ pub struct Region {
 }
 
 impl Region {
-    /// Returns whether the region is a deployment zone.
+    /// Returns `true` if the region is a deployment zone.
     pub fn is_deployment_zone(&self) -> bool {
         self.flags.contains(RegionFlags::IS_PLAYER1_DEPLOYMENT_ZONE)
             || self.flags.contains(RegionFlags::IS_PLAYER2_DEPLOYMENT_ZONE)
     }
 
-    /// Returns whether the given point is contained within the region.
-    pub fn contains_point(&self, point: IVec2) -> bool {
+    /// Returns `true` if the given point is contained within the region.
+    pub fn is_point_contained(&self, point: IVec2) -> bool {
         let mut intersections = 0;
         for line in &self.line_segments {
             // Check if point is exactly on the line segment.
-            if line.point_on_line_segment(&point) {
+            if line.is_point_on_line_segment(&point) {
                 return true;
             }
 
             // Check for intersections with the ray.
-            if line.ray_intersects_segment(&point) {
+            if line.is_ray_intersecting_segment(&point) {
                 intersections += 1;
             }
         }
@@ -253,7 +254,7 @@ pub struct Node {
 }
 
 impl Node {
-    /// Returns whether the node is a waypoint.
+    /// Returns `true` if the node is a waypoint.
     #[inline]
     pub fn is_waypoint(&self) -> bool {
         self.flags.contains(NodeFlags::IS_WAYPOINT)
@@ -289,7 +290,7 @@ impl Node {
         self.rotation_radians().to_degrees()
     }
 
-    /// Returns whether the node belongs to player 1's regiment.
+    /// Returns `true` if the node belongs to player 1's regiment.
     ///
     /// TODO: Is there a more reliable way to determine this?
     #[inline]
@@ -329,7 +330,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_region_contains_point() {
+    fn test_region_is_point_contained() {
         let region = Region {
             line_segments: vec![
                 LineSegment {
@@ -352,14 +353,14 @@ mod tests {
             ..Default::default()
         };
 
-        assert!(region.contains_point(IVec2::new(5, 5)));
-        assert!(region.contains_point(IVec2::new(0, 0)));
-        assert!(region.contains_point(IVec2::new(10, 0)));
-        assert!(region.contains_point(IVec2::new(10, 10)));
-        assert!(region.contains_point(IVec2::new(0, 10)));
-        assert!(!region.contains_point(IVec2::new(11, 0)));
-        assert!(!region.contains_point(IVec2::new(0, 11)));
-        assert!(!region.contains_point(IVec2::new(11, 11)));
+        assert!(region.is_point_contained(IVec2::new(5, 5)));
+        assert!(region.is_point_contained(IVec2::new(0, 0)));
+        assert!(region.is_point_contained(IVec2::new(10, 0)));
+        assert!(region.is_point_contained(IVec2::new(10, 10)));
+        assert!(region.is_point_contained(IVec2::new(0, 10)));
+        assert!(!region.is_point_contained(IVec2::new(11, 0)));
+        assert!(!region.is_point_contained(IVec2::new(0, 11)));
+        assert!(!region.is_point_contained(IVec2::new(11, 11)));
     }
 
     #[test]
