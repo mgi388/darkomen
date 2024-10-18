@@ -133,7 +133,7 @@ pub struct Regiment {
     ///
     /// This is displayed as the gold shields in the troop roster.
     pub min_armor: u8,
-    /// The magic book that is equipped to the regiment. A magic book is one of
+    /// The spell book that is equipped to the regiment. A spell book is one of
     /// the magic items.
     ///
     /// This is an index into the list of magic items. In the original game, the
@@ -141,8 +141,8 @@ pub struct Regiment {
     ///
     /// A value of 22 means the Bright Book is equipped. A value of 23 means the
     /// Ice Book is equipped. A value of 65535 means the regiment does not have
-    /// a magic book slot—only magic users can equip magic books.
-    pub magic_book: MagicBook,
+    /// a spell book slot. Only mages can equip spell books.
+    pub spell_book: SpellBook,
     /// A list of magic items that are equipped to the regiment.
     ///
     /// Each magic item is an index into the list of magic items. A value of 1
@@ -471,7 +471,7 @@ pub struct LastBattleStats {
     Clone, Copy, Debug, Default, Deserialize, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive,
 )]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
-pub enum MagicBook {
+pub enum SpellBook {
     #[default]
     None = 65535,
     BrightBook = 22,
@@ -849,7 +849,7 @@ mod tests {
 
         assert_eq!(a.regiments[4].unit_profile.name, "Bright Wizard");
         assert_eq!(a.regiments[4].mage_class, MageClass::BaseMage);
-        assert_eq!(a.regiments[4].magic_book, MagicBook::BrightBook);
+        assert_eq!(a.regiments[4].spell_book, SpellBook::BrightBook);
 
         roundtrip_test(&original_bytes, &a);
     }

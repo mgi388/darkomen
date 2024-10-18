@@ -112,7 +112,7 @@ impl<W: Write> Encoder<W> {
         self.writer.write_all(&[r.duplicate_id])?;
         self.writer.write_all(&[r.min_armor])?;
         self.writer
-            .write_all(&Into::<u16>::into(r.magic_book).to_le_bytes())?;
+            .write_all(&Into::<u16>::into(r.spell_book).to_le_bytes())?;
         self.writer.write_all(&r.magic_items[0].to_le_bytes())?;
         self.writer.write_all(&r.magic_items[1].to_le_bytes())?;
         self.writer.write_all(&r.magic_items[2].to_le_bytes())?;

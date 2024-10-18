@@ -21,7 +21,7 @@ pub enum DecodeError {
     InvalidWeapon(u8),
     InvalidProjectile(u8),
     InvalidRegimentClass(u8),
-    InvalidMagicBook(u16),
+    InvalidSpellBook(u16),
 }
 
 impl std::error::Error for DecodeError {}
@@ -53,8 +53,8 @@ impl fmt::Display for DecodeError {
                 write!(f, "invalid regiment mount: {}", v)
             }
             DecodeError::InvalidRegimentClass(v) => write!(f, "invalid regiment class: {}", v),
-            DecodeError::InvalidMagicBook(v) => {
-                write!(f, "invalid magic book: {}", v)
+            DecodeError::InvalidSpellBook(v) => {
+                write!(f, "invalid spell book: {}", v)
             }
         }
     }
@@ -265,9 +265,9 @@ impl<R: Read + Seek> Decoder<R> {
             .map_err(|_| DecodeError::InvalidRegimentClass(buf[139]))?;
         let leader_projectile =
             Projectile::try_from(buf[141]).map_err(|_| DecodeError::InvalidProjectile(buf[141]))?;
-        let magic_book_u16 = u16::from_le_bytes(buf[160..162].try_into().unwrap());
-        let magic_book = MagicBook::try_from(magic_book_u16)
-            .map_err(|_| DecodeError::InvalidMagicBook(magic_book_u16))?;
+        let spell_book_u16 = u16::from_le_bytes(buf[160..162].try_into().unwrap());
+        let spell_book = SpellBook::try_from(spell_book_u16)
+            .map_err(|_| DecodeError::InvalidSpellBook(spell_book_u16))?;
 
         Ok(Regiment {
             status,
@@ -321,7 +321,7 @@ impl<R: Read + Seek> Decoder<R> {
             total_experience: u16::from_le_bytes(buf[156..158].try_into().unwrap()),
             duplicate_id: buf[158],
             min_armor: buf[159],
-            magic_book,
+            spell_book,
             magic_items: [
                 u16::from_le_bytes(buf[162..164].try_into().unwrap()),
                 u16::from_le_bytes(buf[164..166].try_into().unwrap()),
