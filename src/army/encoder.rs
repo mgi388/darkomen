@@ -44,10 +44,126 @@ impl<W: Write> Encoder<W> {
     }
 
     pub fn encode(&mut self, army: &Army) -> Result<(), EncodeError> {
-        self.writer.write_all(&army.save_file_header)?;
+        self.write_save_file_header(army)?;
         self.write_header(army)?;
         self.write_regiments(army)?;
         self.writer.write_all(&army.save_file_footer)?;
+        Ok(())
+    }
+
+    fn write_save_file_header(&mut self, army: &Army) -> Result<(), EncodeError> {
+        let Some(header) = army.save_file_header.as_ref() else {
+            return Ok(());
+        };
+
+        self.write_string(&header.display_name)?;
+        self.writer.write_all(&header.display_name_remainder)?;
+        self.write_string(&header.suggested_display_name)?;
+        self.writer
+            .write_all(&header.suggested_display_name_remainder)?;
+
+        self.writer.write_all(
+            &(if header.bogenhafen_mission {
+                1u32
+            } else {
+                0u32
+            })
+            .to_le_bytes(),
+        )?;
+        self.writer.write_all(
+            &(if header.goblin_camp_or_ragnar {
+                1u32
+            } else {
+                0u32
+            })
+            .to_le_bytes(),
+        )?;
+        self.writer.write_all(
+            &(if header.goblin_camp_mission {
+                1u32
+            } else {
+                0u32
+            })
+            .to_le_bytes(),
+        )?;
+        self.writer.write_all(
+            &(if header.ragnar_mission_pre_battle {
+                1u32
+            } else {
+                0u32
+            })
+            .to_le_bytes(),
+        )?;
+        self.writer.write_all(
+            &(if header.vingtienne_or_treeman {
+                1u32
+            } else {
+                0u32
+            })
+            .to_le_bytes(),
+        )?;
+        self.writer.write_all(
+            &(if header.vingtienne_mission {
+                1u32
+            } else {
+                0u32
+            })
+            .to_le_bytes(),
+        )?;
+        self.writer
+            .write_all(&(if header.treeman_mission { 1u32 } else { 0u32 }).to_le_bytes())?;
+        self.writer
+            .write_all(&(if header.carstein_defeated { 1u32 } else { 0u32 }).to_le_bytes())?;
+        self.writer.write_all(
+            &(if header.hand_of_nagash_defeated {
+                1u32
+            } else {
+                0u32
+            })
+            .to_le_bytes(),
+        )?;
+        self.writer.write_all(
+            &(if header.black_grail_defeated {
+                1u32
+            } else {
+                0u32
+            })
+            .to_le_bytes(),
+        )?;
+        self.writer.write_all(&header.unknown1.to_le_bytes())?;
+        self.writer
+            .write_all(&(if header.helmgart_mission { 1u32 } else { 0u32 }).to_le_bytes())?;
+        self.writer
+            .write_all(&(if header.ragnar_mission { 1u32 } else { 0u32 }).to_le_bytes())?;
+        self.writer
+            .write_all(&(if header.loren_king_met { 1u32 } else { 0u32 }).to_le_bytes())?;
+        self.writer
+            .write_all(&(if header.axebite_mission { 1u32 } else { 0u32 }).to_le_bytes())?;
+        self.writer.write_all(&header.unknown2.to_le_bytes())?;
+        self.writer.write_all(&header.unknown3.to_le_bytes())?;
+        self.writer.write_all(&header.unknown4.to_le_bytes())?;
+        self.writer.write_all(&header.unknown5.to_le_bytes())?;
+        self.writer.write_all(&header.unknown6.to_le_bytes())?;
+        self.writer.write_all(&header.unknown7.to_le_bytes())?;
+        self.writer.write_all(
+            &(if header.previous_battle_won_1 {
+                1u32
+            } else {
+                0u32
+            })
+            .to_le_bytes(),
+        )?;
+        self.writer.write_all(
+            &(if header.previous_battle_won_2 {
+                1u32
+            } else {
+                0u32
+            })
+            .to_le_bytes(),
+        )?;
+        self.writer
+            .write_all(&header.previous_answer.to_le_bytes())?;
+
         Ok(())
     }
 

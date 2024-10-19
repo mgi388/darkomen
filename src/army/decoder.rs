@@ -144,7 +144,9 @@ impl<R: Read + Seek> Decoder<R> {
         })
     }
 
-    fn maybe_read_save_file_header(&mut self) -> Result<(u64, Vec<u8>), DecodeError> {
+    fn maybe_read_save_file_header(
+        &mut self,
+    ) -> Result<(u64, Option<SaveFileHeader>), DecodeError> {
         let mut buf = [0; size_of::<u32>()];
         self.reader.read_exact(&mut buf)?;
 
@@ -153,13 +155,62 @@ impl<R: Read + Seek> Decoder<R> {
         if format != FORMAT {
             self.reader.seek(SeekFrom::Start(0))?;
 
-            let mut save_file_header = vec![0; SAVE_HEADER_SIZE_BYTES];
-            self.reader.read_exact(&mut save_file_header)?;
+            let mut buf = vec![0; SAVE_HEADER_SIZE_BYTES];
+            self.reader.read_exact(&mut buf)?;
 
-            return Ok((SAVE_HEADER_SIZE_BYTES as u64, save_file_header));
+            let display_name_buf = &buf[0..90];
+            let (display_name_buf, display_name_remainder) = display_name_buf
+                .iter()
+                .enumerate()
+                .find(|(_, &b)| b == 0)
+                .map(|(i, _)| display_name_buf.split_at(i + 1))
+                .unwrap_or((display_name_buf, &[]));
+
+            let suggested_display_name_buf = &buf[90..408];
+            let (suggested_display_name_buf, suggested_display_name_remainder) =
+                suggested_display_name_buf
+                    .iter()
+                    .enumerate()
+                    .find(|(_, &b)| b == 0)
+                    .map(|(i, _)| suggested_display_name_buf.split_at(i + 1))
+                    .unwrap_or((suggested_display_name_buf, &[]));
+
+            return Ok((
+                SAVE_HEADER_SIZE_BYTES as u64,
+                Some(SaveFileHeader {
+                    display_name: self.read_string(display_name_buf)?,
+                    display_name_remainder: display_name_remainder.to_vec(),
+                    suggested_display_name: self.read_string(suggested_display_name_buf)?,
+                    suggested_display_name_remainder: suggested_display_name_remainder.to_vec(),
+                    bogenhafen_mission: buf[408] != 0,
+                    goblin_camp_or_ragnar: buf[412] != 0,
+                    goblin_camp_mission: buf[416] != 0,
+                    ragnar_mission_pre_battle: buf[420] != 0,
+                    vingtienne_or_treeman: buf[424] != 0,
+                    vingtienne_mission: buf[428] != 0,
+                    treeman_mission: buf[432] != 0,
+                    carstein_defeated: buf[436] != 0,
+                    hand_of_nagash_defeated: buf[440] != 0,
+                    black_grail_defeated: buf[444] != 0,
+                    unknown1: u32::from_le_bytes(buf[448..452].try_into().unwrap()),
+                    helmgart_mission: buf[452] != 0,
+                    ragnar_mission: buf[456] != 0,
+                    loren_king_met: buf[460] != 0,
+                    axebite_mission: buf[464] != 0,
+                    unknown2: u32::from_le_bytes(buf[468..472].try_into().unwrap()),
+                    unknown3: u32::from_le_bytes(buf[472..476].try_into().unwrap()),
+                    unknown4: u32::from_le_bytes(buf[476..480].try_into().unwrap()),
+                    unknown5: u32::from_le_bytes(buf[480..484].try_into().unwrap()),
+                    unknown6: u32::from_le_bytes(buf[484..488].try_into().unwrap()),
+                    unknown7: u32::from_le_bytes(buf[488..492].try_into().unwrap()),
+                    previous_battle_won_1: buf[492] != 0,
+                    previous_battle_won_2: buf[496] != 0,
+                    previous_answer: u32::from_le_bytes(buf[500..504].try_into().unwrap()),
+                }),
+            ));
         }
 
-        Ok((0, vec![]))
+        Ok((0, None))
     }
 
     fn read_header(&mut self, start_pos: u64) -> Result<Header, DecodeError> {
