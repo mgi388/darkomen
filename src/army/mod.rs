@@ -273,16 +273,22 @@ pub enum RegimentStatus {
     Active = 17,
     ActivePermanent = 19,
     ActiveAutodeploy = 27,
-    Unknown2 = 51,
-    Unknown3 = 81,
+    Unknown2 = 50,
+    Unknown3 = 51,
+    Unknown4 = 59,
+    Unknown5 = 81,
     ActiveNewTemporary = 273,
-    Unknown4 = 283,
+    Unknown6 = 283,
     InactiveDestroyed = 306,
+    Unknown7 = 307,
     ActiveTemporary = 275,
     InactiveDeparted = 784,
+    Unknown8 = 785,
+    Unknown9 = 786,
     ActiveAboutToLeave = 787,
-    Unknown5 = 819,
-    Unknown6 = 848,
+    Unknown10 = 818,
+    Unknown11 = 819,
+    Unknown12 = 848,
 }
 
 #[repr(u8)]
@@ -1067,37 +1073,63 @@ mod tests {
         .iter()
         .collect();
 
-        let root_output_dir: PathBuf = [
-            env!("CARGO_MANIFEST_DIR"),
-            "decoded",
-            "armies",
-            "save-files",
-        ]
-        .iter()
-        .collect();
+        let root_output_dir: PathBuf = [env!("CARGO_MANIFEST_DIR"), "decoded"].iter().collect();
+
         std::fs::create_dir_all(&root_output_dir).unwrap();
 
-        for entry in std::fs::read_dir(d).unwrap() {
-            let entry = entry.unwrap();
-            let path = entry.path();
+        fn visit_dirs(dir: &Path, cb: &mut dyn FnMut(&Path)) {
+            println!("Reading dir {:?}", dir.display());
 
+            let mut paths = std::fs::read_dir(dir)
+                .unwrap()
+                .map(|res| res.map(|e| e.path()))
+                .collect::<Result<Vec<_>, std::io::Error>>()
+                .unwrap();
+
+            paths.sort();
+
+            for path in paths {
+                if path.is_dir() {
+                    visit_dirs(&path, cb);
+                } else {
+                    cb(&path);
+                }
+            }
+        }
+
+        visit_dirs(&d, &mut |path| {
             if path.is_dir() {
-                continue;
+                return;
             }
 
-            println!("Decoding {:?}", path.clone().file_name().unwrap());
+            println!("Decoding {:?}", path.file_name().unwrap());
 
-            let original_bytes = std::fs::read(&path).unwrap();
+            let original_bytes = std::fs::read(path).unwrap();
 
-            let file = File::open(&path).unwrap();
+            let file = File::open(path).unwrap();
             let army = Decoder::new(file).decode().unwrap();
 
-            let output_path = append_ext("ron", root_output_dir.join(path.file_name().unwrap()));
+            let parent_dir = path
+                .components()
+                .collect::<Vec<_>>()
+                .iter()
+                .rev()
+                .skip(1) // skip the file name
+                .take_while(|c| c.as_os_str() != "testdata")
+                .collect::<Vec<_>>()
+                .iter()
+                .rev()
+                .collect::<PathBuf>();
+
+            let output_dir = root_output_dir.join(parent_dir);
+            std::fs::create_dir_all(&output_dir).unwrap();
+
+            let output_path = append_ext("ron", output_dir.join(path.file_name().unwrap()));
             let mut output_file = File::create(output_path).unwrap();
             ron::ser::to_writer_pretty(&mut output_file, &army, Default::default()).unwrap();
 
             roundtrip_test(&original_bytes, &army);
-        }
+        });
     }
 
     fn append_ext(ext: impl AsRef<OsStr>, path: PathBuf) -> PathBuf {
