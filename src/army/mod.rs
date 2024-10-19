@@ -239,7 +239,13 @@ impl Regiment {
         (self.unit_profile.point_value >> 3) + 1
     }
 
-    /// Returns true if the regiment has any magic items equipped.
+    /// Returns `true` if the regiment is a mage.
+    #[inline(always)]
+    pub fn is_mage(&self) -> bool {
+        self.mage_class != MageClass::None
+    }
+
+    /// Returns `true` if the regiment has any magic items equipped.
     pub fn any_magic_items(&self) -> bool {
         self.magic_items.iter().any(|&item| item != 65535)
     }
