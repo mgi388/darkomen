@@ -13,8 +13,64 @@ pub use encoder::{EncodeError, Encoder};
 
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+pub struct SaveFileHeader {
+    /// The name displayed when loading the save file.
+    pub display_name: String,
+    /// There are some bytes after the null-terminated string. Not sure what
+    /// they are for.
+    display_name_remainder: Vec<u8>,
+    /// The name suggested when saving the game.
+    pub suggested_display_name: String,
+    /// There are some bytes after the null-terminated string. Not sure what
+    /// they are for.
+    suggested_display_name_remainder: Vec<u8>,
+    /// Protect Bogenhafen mission played.
+    pub bogenhafen_mission: bool,
+    /// Attacked Goblin Camp or helped Ragnar.
+    pub goblin_camp_or_ragnar: bool,
+    /// Attacked the goblin camp together with Munz.
+    pub goblin_camp_mission: bool,
+    /// Helps Ragnar but mission has not been started.
+    pub ragnar_mission_pre_battle: bool,
+    /// Attacked Greenskins in Vingtienne or helped Treeman.
+    pub vingtienne_or_treeman: bool,
+    /// Attacked the Greenskins near Vingtienne.
+    pub vingtienne_mission: bool,
+    /// Helped the treeman in Loren Lake mission.
+    pub treeman_mission: bool,
+    /// Manfred von Carstein defeated.
+    pub carstein_defeated: bool,
+    /// Hand of Nagash defeated.
+    pub hand_of_nagash_defeated: bool,
+    /// Black Grail defeated.
+    pub black_grail_defeated: bool,
+    pub unknown1: u32,
+    /// Helmgart mission played.
+    pub helmgart_mission: bool,
+    /// Helped Ragnar defeat the trolls.
+    pub ragnar_mission: bool,
+    /// Talked with King Orion (Woodelf King).
+    pub loren_king_met: bool,
+    /// Helped Azkuz moving through the Axebite Pass.
+    pub axebite_mission: bool,
+    pub unknown2: u32,
+    pub unknown3: u32,
+    pub unknown4: u32,
+    pub unknown5: u32,
+    pub unknown6: u32,
+    pub unknown7: u32,
+    /// Previous fought battle won.
+    pub previous_battle_won_1: bool,
+    /// Previous fought battle won.
+    pub previous_battle_won_2: bool,
+    /// Answer for last asked question.
+    pub previous_answer: u32,
+}
+
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct Army {
-    save_file_header: Vec<u8>,
+    save_file_header: Option<SaveFileHeader>,
     /// The army's race.
     ///
     /// This is used in multiplayer mode to group armies by race.
