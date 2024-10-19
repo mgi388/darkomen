@@ -928,6 +928,10 @@ mod tests {
         let file = File::open(d).unwrap();
         let a = Decoder::new(file).decode().unwrap();
 
+        let save_file_header = a.save_file_header.as_ref().unwrap();
+        assert_eq!(save_file_header.display_name, "Grenzgrafschaften - 1026gc");
+        assert_eq!(save_file_header.suggested_display_name, "Handelsposten 1");
+
         assert_eq!(a.regiments[0].status, RegimentStatus::ActiveAutodeploy);
         assert_eq!(a.regiments[0].last_battle_stats.kill_count, 10);
         assert_eq!(a.regiments[0].last_battle_stats.experience, 46);
@@ -953,6 +957,13 @@ mod tests {
 
         let file = File::open(d).unwrap();
         let a = Decoder::new(file).decode().unwrap();
+
+        let save_file_header = a.save_file_header.as_ref().unwrap();
+        assert_eq!(save_file_header.display_name, "Stadt Grissburg - 1410gc");
+        assert_eq!(
+            save_file_header.suggested_display_name,
+            "Prinzen der Grenze 2"
+        );
 
         assert_eq!(a.regiments[0].last_battle_stats.unit_killed_count, 3);
         assert_eq!(a.regiments[0].last_battle_stats.kill_count, 19);
