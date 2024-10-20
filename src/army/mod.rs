@@ -205,7 +205,21 @@ pub struct Regiment {
     /// means the Grudgebringer Sword is equipped in that slot. A value of 65535
     /// means the regiment does not have anything equipped in that slot.
     pub magic_items: [u16; 3],
-    unknown8: [u16; 5],
+    /// A list of spells that the regiment can cast.
+    ///
+    /// Each spell is an index into the list of magic items unless the value is
+    /// 0 or 65535. From testing changes to `SPARE9MR.ARM` in the original game,
+    /// it doesn't seem like this can be changed to a specific set of spells.
+    /// The changes seem to be ignored. It's possible that a CTL file overrides
+    /// this value, or for player regiments, the threat level determines the
+    /// number of spells to provision.
+    ///
+    /// See `GAMEDATA/1PBAT/B1_04/B104NME.ARM` for an example of all 0s in the
+    /// spells field.
+    ///
+    /// See `GAMEDATA/1PBAT/B3_08/B308MRC.ARM` and
+    /// `GAMEDATA/1PBAT/B3_08/B308NME.ARM` for an example with non-zero values.
+    pub spells: [u16; 5],
     /// The amount of gold captured by the regiment in the last battle. The
     /// total amount of gold captured by the army can be calculated by summing
     /// the gold captured by each regiment.
