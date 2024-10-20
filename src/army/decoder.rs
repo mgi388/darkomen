@@ -378,7 +378,7 @@ impl<R: Read + Seek> Decoder<R> {
                 u16::from_le_bytes(buf[164..166].try_into().unwrap()),
                 u16::from_le_bytes(buf[166..168].try_into().unwrap()),
             ],
-            unknown8: [
+            spells: [
                 u16::from_le_bytes(buf[168..170].try_into().unwrap()),
                 u16::from_le_bytes(buf[170..172].try_into().unwrap()),
                 u16::from_le_bytes(buf[172..174].try_into().unwrap()),
