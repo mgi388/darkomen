@@ -232,7 +232,12 @@ impl<W: Write> Encoder<W> {
         self.writer.write_all(&r.magic_items[0].to_le_bytes())?;
         self.writer.write_all(&r.magic_items[1].to_le_bytes())?;
         self.writer.write_all(&r.magic_items[2].to_le_bytes())?;
-        self.writer.write_all(&r.unknown8)?;
+        self.writer.write_all(&r.unknown8[0].to_le_bytes())?;
+        self.writer.write_all(&r.unknown8[1].to_le_bytes())?;
+        self.writer.write_all(&r.unknown8[2].to_le_bytes())?;
+        self.writer.write_all(&r.unknown8[3].to_le_bytes())?;
+        self.writer.write_all(&r.unknown8[4].to_le_bytes())?;
+        self.writer.write_all(&r.gold_captured.to_le_bytes())?;
         self.writer.write_all(&[r.purchased_armor])?;
         self.writer.write_all(&[r.max_purchasable_armor])?;
         self.writer.write_all(&[r.repurchased_unit_count])?;

@@ -205,7 +205,11 @@ pub struct Regiment {
     /// means the Grudgebringer Sword is equipped in that slot. A value of 65535
     /// means the regiment does not have anything equipped in that slot.
     pub magic_items: [u16; 3],
-    unknown8: [u8; 12],
+    unknown8: [u16; 5],
+    /// The amount of gold captured by the regiment in the last battle. The
+    /// total amount of gold captured by the army can be calculated by summing
+    /// the gold captured by each regiment.
+    pub gold_captured: u16,
     pub purchased_armor: u8,
     pub max_purchasable_armor: u8,
     pub repurchased_unit_count: u8,
@@ -981,6 +985,38 @@ mod tests {
         assert_eq!(a.regiments[0].last_battle_stats.kill_count, 19);
         assert_eq!(a.regiments[0].last_battle_stats.experience, 175);
         assert_eq!(a.regiments[0].total_experience, 221); // 46 from the first battle plus 175 from the battle prior to this save equals 221
+
+        roundtrip_test(&original_bytes, &a);
+    }
+
+    #[test]
+    fn test_decode_save_file_en_000() {
+        let d: PathBuf = [
+            env!("CARGO_MANIFEST_DIR"),
+            "src",
+            "army",
+            "testdata",
+            "save-files",
+            "en",
+            "darkomen.000",
+        ]
+        .iter()
+        .collect();
+
+        let original_bytes = std::fs::read(d.clone()).unwrap();
+
+        let file = File::open(d).unwrap();
+        let a = Decoder::new(file).decode().unwrap();
+
+        let save_file_header = a.save_file_header.as_ref().unwrap();
+        assert_eq!(save_file_header.display_name, "Trading Post 1 - 56gc");
+        assert_eq!(save_file_header.suggested_display_name, "Trading Post 1");
+
+        assert_eq!(a.regiments[0].status, RegimentStatus::ActiveAutodeploy);
+        assert_eq!(a.regiments[0].last_battle_stats.kill_count, 10);
+        assert_eq!(a.regiments[0].last_battle_stats.experience, 48);
+        assert_eq!(a.regiments[0].total_experience, 48);
+        assert_eq!(a.regiments[0].gold_captured, 150);
 
         roundtrip_test(&original_bytes, &a);
     }
