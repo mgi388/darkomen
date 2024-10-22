@@ -44,15 +44,15 @@ impl<W: Write> Encoder<W> {
     }
 
     pub fn encode(&mut self, army: &Army) -> Result<(), EncodeError> {
-        self.write_save_file_header(army)?;
+        self.write_save_game_header(army)?;
         self.write_header(army)?;
         self.write_regiments(army)?;
-        self.writer.write_all(&army.save_file_footer)?;
+        self.writer.write_all(&army.save_game_footer)?;
         Ok(())
     }
 
-    fn write_save_file_header(&mut self, army: &Army) -> Result<(), EncodeError> {
-        let Some(header) = army.save_file_header.as_ref() else {
+    fn write_save_game_header(&mut self, army: &Army) -> Result<(), EncodeError> {
+        let Some(header) = army.save_game_header.as_ref() else {
             return Ok(());
         };
 

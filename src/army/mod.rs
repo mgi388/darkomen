@@ -13,7 +13,7 @@ pub use encoder::{EncodeError, Encoder};
 
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
-pub struct SaveFileHeader {
+pub struct SaveGameHeader {
     /// The name displayed when loading the save file.
     pub display_name: String,
     /// There are some bytes after the null-terminated string. Not sure what
@@ -70,7 +70,7 @@ pub struct SaveFileHeader {
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct Army {
-    save_file_header: Option<SaveFileHeader>,
+    pub save_game_header: Option<SaveGameHeader>,
     /// The army's race.
     ///
     /// This is used in multiplayer mode to group armies by race.
@@ -112,7 +112,7 @@ pub struct Army {
     pub magic_items: Vec<u8>,
     unknown3: Vec<u8>,
     pub regiments: Vec<Regiment>,
-    save_file_footer: Vec<u8>,
+    save_game_footer: Vec<u8>,
 }
 
 impl Army {
@@ -941,13 +941,13 @@ mod tests {
     }
 
     #[test]
-    fn test_decode_save_file_000() {
+    fn test_decode_save_game_000() {
         let d: PathBuf = [
             env!("CARGO_MANIFEST_DIR"),
             "src",
             "army",
             "testdata",
-            "save-files",
+            "save-games",
             "darkomen.000", // http://en.dark-omen.org/downloads/view-details/4.-savegames/1.-original-campaigns/save-game-1-1-trading-post.html
         ]
         .iter()
@@ -958,9 +958,9 @@ mod tests {
         let file = File::open(d).unwrap();
         let a = Decoder::new(file).decode().unwrap();
 
-        let save_file_header = a.save_file_header.as_ref().unwrap();
-        assert_eq!(save_file_header.display_name, "Grenzgrafschaften - 1026gc");
-        assert_eq!(save_file_header.suggested_display_name, "Handelsposten 1");
+        let save_game_header = a.save_game_header.as_ref().unwrap();
+        assert_eq!(save_game_header.display_name, "Grenzgrafschaften - 1026gc");
+        assert_eq!(save_game_header.suggested_display_name, "Handelsposten 1");
 
         assert_eq!(a.regiments[0].status, RegimentStatus::ActiveAutodeploy);
         assert_eq!(a.regiments[0].last_battle_stats.kill_count, 10);
@@ -971,13 +971,13 @@ mod tests {
     }
 
     #[test]
-    fn test_decode_save_file_001() {
+    fn test_decode_save_game_001() {
         let d: PathBuf = [
             env!("CARGO_MANIFEST_DIR"),
             "src",
             "army",
             "testdata",
-            "save-files",
+            "save-games",
             "darkomen.001", // http://en.dark-omen.org/downloads/view-details/4.-savegames/1.-original-campaigns/save-game-1-2-border-counties.html
         ]
         .iter()
@@ -988,10 +988,10 @@ mod tests {
         let file = File::open(d).unwrap();
         let a = Decoder::new(file).decode().unwrap();
 
-        let save_file_header = a.save_file_header.as_ref().unwrap();
-        assert_eq!(save_file_header.display_name, "Stadt Grissburg - 1410gc");
+        let save_game_header = a.save_game_header.as_ref().unwrap();
+        assert_eq!(save_game_header.display_name, "Stadt Grissburg - 1410gc");
         assert_eq!(
-            save_file_header.suggested_display_name,
+            save_game_header.suggested_display_name,
             "Prinzen der Grenze 2"
         );
 
@@ -1004,13 +1004,13 @@ mod tests {
     }
 
     #[test]
-    fn test_decode_save_file_en_000() {
+    fn test_decode_save_game_en_000() {
         let d: PathBuf = [
             env!("CARGO_MANIFEST_DIR"),
             "src",
             "army",
             "testdata",
-            "save-files",
+            "save-games",
             "en",
             "darkomen.000",
         ]
@@ -1022,15 +1022,41 @@ mod tests {
         let file = File::open(d).unwrap();
         let a = Decoder::new(file).decode().unwrap();
 
-        let save_file_header = a.save_file_header.as_ref().unwrap();
-        assert_eq!(save_file_header.display_name, "Trading Post 1 - 56gc");
-        assert_eq!(save_file_header.suggested_display_name, "Trading Post 1");
+        let save_game_header = a.save_game_header.as_ref().unwrap();
+        assert_eq!(save_game_header.display_name, "Trading Post 1 - 56gc");
+        assert_eq!(save_game_header.suggested_display_name, "Trading Post 1");
 
         assert_eq!(a.regiments[0].status, RegimentStatus::ActiveAutodeploy);
         assert_eq!(a.regiments[0].last_battle_stats.kill_count, 10);
         assert_eq!(a.regiments[0].last_battle_stats.experience, 48);
         assert_eq!(a.regiments[0].total_experience, 48);
         assert_eq!(a.regiments[0].gold_captured, 150);
+
+        roundtrip_test(&original_bytes, &a);
+    }
+
+    #[test]
+    fn test_decode_save_game_en_003() {
+        let d: PathBuf = [
+            env!("CARGO_MANIFEST_DIR"),
+            "src",
+            "army",
+            "testdata",
+            "save-games",
+            "en",
+            "darkomen.003",
+        ]
+        .iter()
+        .collect();
+
+        let original_bytes = std::fs::read(d.clone()).unwrap();
+
+        let file = File::open(d).unwrap();
+        let a = Decoder::new(file).decode().unwrap();
+
+        let save_game_header = a.save_game_header.as_ref().unwrap();
+        assert_eq!(save_game_header.display_name, "Grissburg 1 - 883gc");
+        assert_eq!(save_game_header.suggested_display_name, "Grissburg 1");
 
         roundtrip_test(&original_bytes, &a);
     }
@@ -1112,13 +1138,13 @@ mod tests {
     }
 
     #[test]
-    fn test_decode_all_save_files() {
+    fn test_decode_all_save_games() {
         let d: PathBuf = [
             env!("CARGO_MANIFEST_DIR"),
             "src",
             "army",
             "testdata",
-            "save-files",
+            "save-games",
         ]
         .iter()
         .collect();
