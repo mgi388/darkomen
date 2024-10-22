@@ -62,7 +62,7 @@ impl fmt::Display for DecodeError {
 
 pub(crate) const FORMAT: u32 = 0x0000029e;
 pub(crate) const HEADER_SIZE_BYTES: usize = 192;
-const SAVE_HEADER_SIZE_BYTES: usize = 504;
+const SAVE_GAME_HEADER_SIZE_BYTES: usize = 504;
 pub(crate) const REGIMENT_SIZE_BYTES: usize = 188;
 
 pub(crate) struct Header {
@@ -110,7 +110,7 @@ impl<R: Read + Seek> Decoder<R> {
     }
 
     pub fn decode(&mut self) -> Result<Army, DecodeError> {
-        let (start_pos, save_file_header) = self.maybe_read_save_file_header()?;
+        let (start_pos, save_game_header) = self.maybe_read_save_game_header()?;
 
         let header = self.read_header(start_pos)?;
 
@@ -119,11 +119,11 @@ impl<R: Read + Seek> Decoder<R> {
 
         let regiments = self.read_regiments(&header)?;
 
-        let mut save_file_footer = Vec::new();
-        self.reader.read_to_end(&mut save_file_footer)?;
+        let mut save_game_footer = Vec::new();
+        self.reader.read_to_end(&mut save_game_footer)?;
 
         Ok(Army {
-            save_file_header,
+            save_game_header,
             race,
             unknown1: header.unknown1,
             default_name_index: header.default_name_index,
@@ -140,13 +140,13 @@ impl<R: Read + Seek> Decoder<R> {
             magic_items: header.magic_items.to_vec(),
             unknown3: header.unknown3.to_vec(),
             regiments,
-            save_file_footer,
+            save_game_footer,
         })
     }
 
-    fn maybe_read_save_file_header(
+    fn maybe_read_save_game_header(
         &mut self,
-    ) -> Result<(u64, Option<SaveFileHeader>), DecodeError> {
+    ) -> Result<(u64, Option<SaveGameHeader>), DecodeError> {
         let mut buf = [0; size_of::<u32>()];
         self.reader.read_exact(&mut buf)?;
 
@@ -155,7 +155,7 @@ impl<R: Read + Seek> Decoder<R> {
         if format != FORMAT {
             self.reader.seek(SeekFrom::Start(0))?;
 
-            let mut buf = vec![0; SAVE_HEADER_SIZE_BYTES];
+            let mut buf = vec![0; SAVE_GAME_HEADER_SIZE_BYTES];
             self.reader.read_exact(&mut buf)?;
 
             let display_name_buf = &buf[0..90];
@@ -176,8 +176,8 @@ impl<R: Read + Seek> Decoder<R> {
                     .unwrap_or((suggested_display_name_buf, &[]));
 
             return Ok((
-                SAVE_HEADER_SIZE_BYTES as u64,
-                Some(SaveFileHeader {
+                SAVE_GAME_HEADER_SIZE_BYTES as u64,
+                Some(SaveGameHeader {
                     display_name: self.read_string(display_name_buf)?,
                     display_name_remainder: display_name_remainder.to_vec(),
                     suggested_display_name: self.read_string(suggested_display_name_buf)?,
