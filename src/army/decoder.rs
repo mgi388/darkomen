@@ -1,11 +1,13 @@
-use super::*;
-use encoding_rs::WINDOWS_1252;
-use encoding_rs_io::DecodeReaderBytesBuilder;
 use std::{
     fmt,
     io::{Error as IoError, Read, Seek, SeekFrom},
     mem::size_of,
 };
+
+use encoding_rs::WINDOWS_1252;
+use encoding_rs_io::DecodeReaderBytesBuilder;
+
+use super::*;
 
 #[derive(Debug)]
 pub enum DecodeError {
@@ -63,7 +65,12 @@ impl fmt::Display for DecodeError {
 pub(crate) const FORMAT: u32 = 0x0000029e;
 pub(crate) const HEADER_SIZE_BYTES: usize = 192;
 const SAVE_GAME_HEADER_SIZE_BYTES: usize = 504;
+pub(crate) const SAVE_GAME_DISPLAY_NAME_SIZE_BYTES: usize = 90;
 pub(crate) const REGIMENT_SIZE_BYTES: usize = 188;
+pub(crate) const SAVE_GAME_FOOTER_UNKNOWN1_SIZE_BYTES: usize = 1976;
+pub(crate) const SAVE_GAME_CUTSCENE_ANIMATION_COUNT: usize = 38;
+pub(crate) const SAVE_GAME_CUTSCENE_SIZE_BYTES: usize = 288;
+pub(crate) const SAVE_GAME_ASSET_PATH_SIZE_BYTES: usize = 256;
 
 pub(crate) struct Header {
     _format: u32,
@@ -119,8 +126,7 @@ impl<R: Read + Seek> Decoder<R> {
 
         let regiments = self.read_regiments(&header)?;
 
-        let mut save_game_footer = Vec::new();
-        self.reader.read_to_end(&mut save_game_footer)?;
+        let save_game_footer = self.maybe_read_save_game_footer()?;
 
         Ok(Army {
             save_game_header,
@@ -158,16 +164,17 @@ impl<R: Read + Seek> Decoder<R> {
             let mut buf = vec![0; SAVE_GAME_HEADER_SIZE_BYTES];
             self.reader.read_exact(&mut buf)?;
 
-            let display_name_buf = &buf[0..90];
-            let (display_name_buf, display_name_remainder) = display_name_buf
+            let display_name_buf = &buf[0..SAVE_GAME_DISPLAY_NAME_SIZE_BYTES];
+            let (display_name_buf, display_name_residual_bytes) = display_name_buf
                 .iter()
                 .enumerate()
                 .find(|(_, &b)| b == 0)
                 .map(|(i, _)| display_name_buf.split_at(i + 1))
                 .unwrap_or((display_name_buf, &[]));
 
-            let suggested_display_name_buf = &buf[90..408];
-            let (suggested_display_name_buf, suggested_display_name_remainder) =
+            let suggested_display_name_buf =
+                &buf[SAVE_GAME_DISPLAY_NAME_SIZE_BYTES..SAVE_GAME_DISPLAY_NAME_SIZE_BYTES * 2];
+            let (suggested_display_name_buf, suggested_display_name_residual_bytes) =
                 suggested_display_name_buf
                     .iter()
                     .enumerate()
@@ -175,13 +182,44 @@ impl<R: Read + Seek> Decoder<R> {
                     .map(|(i, _)| suggested_display_name_buf.split_at(i + 1))
                     .unwrap_or((suggested_display_name_buf, &[]));
 
+            let unknown0 = buf[SAVE_GAME_DISPLAY_NAME_SIZE_BYTES * 2..408].to_vec();
+
             return Ok((
                 SAVE_GAME_HEADER_SIZE_BYTES as u64,
                 Some(SaveGameHeader {
                     display_name: self.read_string(display_name_buf)?,
-                    display_name_remainder: display_name_remainder.to_vec(),
+                    display_name_residual_bytes: if display_name_residual_bytes
+                        .iter()
+                        .all(|&b| b == 0)
+                    {
+                        None
+                    } else {
+                        Some(
+                            display_name_residual_bytes
+                                .iter()
+                                .rposition(|&b| b != 0) // find the last non-zero byte
+                                .map(|pos| &display_name_residual_bytes[..=pos]) // include the last non-zero byte
+                                .unwrap_or(display_name_residual_bytes)
+                                .to_vec(),
+                        )
+                    },
                     suggested_display_name: self.read_string(suggested_display_name_buf)?,
-                    suggested_display_name_remainder: suggested_display_name_remainder.to_vec(),
+                    suggested_display_name_residual_bytes: if suggested_display_name_residual_bytes
+                        .iter()
+                        .all(|&b| b == 0)
+                    {
+                        None
+                    } else {
+                        Some(
+                            suggested_display_name_residual_bytes
+                                .iter()
+                                .rposition(|&b| b != 0) // find the last non-zero byte
+                                .map(|pos| &suggested_display_name_residual_bytes[..=pos]) // include the last non-zero byte
+                                .unwrap_or(suggested_display_name_residual_bytes)
+                                .to_vec(),
+                        )
+                    },
+                    unknown0,
                     bogenhafen_mission: buf[408] != 0,
                     goblin_camp_or_ragnar: buf[412] != 0,
                     goblin_camp_mission: buf[416] != 0,
@@ -211,6 +249,143 @@ impl<R: Read + Seek> Decoder<R> {
         }
 
         Ok((0, None))
+    }
+
+    fn maybe_read_save_game_footer(&mut self) -> Result<Option<SaveGameFooter>, DecodeError> {
+        let mut buf = Vec::new();
+        self.reader.read_to_end(&mut buf)?;
+
+        if buf.is_empty() {
+            return Ok(None);
+        }
+
+        let unknown1 = buf[0..SAVE_GAME_FOOTER_UNKNOWN1_SIZE_BYTES].to_vec();
+
+        let background_image_path_offset_end =
+            SAVE_GAME_FOOTER_UNKNOWN1_SIZE_BYTES + SAVE_GAME_ASSET_PATH_SIZE_BYTES;
+        let background_image_path_buf =
+            &buf[SAVE_GAME_FOOTER_UNKNOWN1_SIZE_BYTES..background_image_path_offset_end];
+        let (background_image_path_buf, background_image_path_residual_bytes) =
+            background_image_path_buf
+                .iter()
+                .enumerate()
+                .find(|(_, &b)| b == 0)
+                .map(|(i, _)| background_image_path_buf.split_at(i + 1))
+                .unwrap_or((background_image_path_buf, &[]));
+        let background_image_path = self.read_string(background_image_path_buf)?;
+
+        let unknown2_offset_end = background_image_path_offset_end + 16;
+        let unknown2 = buf[background_image_path_offset_end..unknown2_offset_end].to_vec();
+
+        let animations_offset_end = unknown2_offset_end
+            + SAVE_GAME_CUTSCENE_ANIMATION_COUNT * SAVE_GAME_CUTSCENE_SIZE_BYTES;
+        let mut animations_buf =
+            [0; SAVE_GAME_CUTSCENE_ANIMATION_COUNT * SAVE_GAME_CUTSCENE_SIZE_BYTES];
+        animations_buf.copy_from_slice(&buf[unknown2_offset_end..animations_offset_end]);
+        let mut animations = Vec::with_capacity(SAVE_GAME_CUTSCENE_ANIMATION_COUNT);
+        for i in 0..SAVE_GAME_CUTSCENE_ANIMATION_COUNT {
+            animations.push(self.read_cutscene_animation(
+                &animations_buf
+                    [i * SAVE_GAME_CUTSCENE_SIZE_BYTES..(i + 1) * SAVE_GAME_CUTSCENE_SIZE_BYTES],
+            )?);
+        }
+
+        let unknown3 = buf[animations_offset_end..].to_vec();
+
+        let hex: Vec<String> = buf
+            .chunks(16)
+            .map(|chunk| {
+                chunk
+                    .iter()
+                    .map(|b| format!("{:02x}", b))
+                    .collect::<Vec<String>>()
+                    .join("")
+            })
+            .collect();
+
+        Ok(Some(SaveGameFooter {
+            unknown1: unknown1.clone(),
+            unknown1_as_u16s: unknown1
+                .chunks_exact(2)
+                .map(|chunk| u16::from_le_bytes(chunk.try_into().unwrap()))
+                .collect(),
+            unknown1_as_u32s: unknown1
+                .clone()
+                .chunks_exact(4)
+                .map(|chunk| u32::from_le_bytes(chunk.try_into().unwrap()))
+                .collect(),
+            background_image_path: if background_image_path.is_empty() {
+                None
+            } else {
+                Some(background_image_path)
+            },
+            background_image_path_residual_bytes: if background_image_path_residual_bytes
+                .iter()
+                .all(|&b| b == 0)
+            {
+                None
+            } else {
+                Some(
+                    background_image_path_residual_bytes
+                        .iter()
+                        .rposition(|&b| b != 0) // find the last non-zero byte
+                        .map(|pos| &background_image_path_residual_bytes[..=pos]) // include the last non-zero byte
+                        .unwrap_or(background_image_path_residual_bytes)
+                        .to_vec(),
+                )
+            },
+            unknown2: unknown2
+                .chunks_exact(4)
+                .map(|chunk| u32::from_le_bytes(chunk.try_into().unwrap()))
+                .collect(),
+            cutscene_animations: animations,
+            unknown3: unknown3.clone(),
+            unknown3_as_u16s: unknown3
+                .chunks_exact(2)
+                .map(|chunk| u16::from_le_bytes(chunk.try_into().unwrap()))
+                .collect(),
+            unknown3_as_u32s: unknown3
+                .clone()
+                .chunks_exact(4)
+                .map(|chunk| u32::from_le_bytes(chunk.try_into().unwrap()))
+                .collect(),
+            hex,
+        }))
+    }
+
+    fn read_cutscene_animation(&mut self, buf: &[u8]) -> Result<CutsceneAnimation, DecodeError> {
+        // 16 bytes for enabled, unknown1, position, and path.
+        const PATH_OFFSET_END: usize = 16 + SAVE_GAME_ASSET_PATH_SIZE_BYTES;
+
+        Ok(CutsceneAnimation {
+            enabled: u32::from_le_bytes(buf[0..4].try_into().unwrap()) != 0,
+            unknown1: u32::from_le_bytes(buf[4..8].try_into().unwrap()),
+            position: UVec2::new(
+                u32::from_le_bytes(buf[8..12].try_into().unwrap()),
+                u32::from_le_bytes(buf[12..16].try_into().unwrap()),
+            ),
+            path: self.read_string(&buf[16..PATH_OFFSET_END])?,
+            unknown2: u32::from_le_bytes(
+                buf[PATH_OFFSET_END..PATH_OFFSET_END + 4]
+                    .try_into()
+                    .unwrap(),
+            ),
+            unknown3: u32::from_le_bytes(
+                buf[PATH_OFFSET_END + 4..PATH_OFFSET_END + 8]
+                    .try_into()
+                    .unwrap(),
+            ),
+            sprite_count: u32::from_le_bytes(
+                buf[PATH_OFFSET_END + 8..PATH_OFFSET_END + 12]
+                    .try_into()
+                    .unwrap(),
+            ),
+            frame_duration_millis: u32::from_le_bytes(
+                buf[PATH_OFFSET_END + 12..PATH_OFFSET_END + 16]
+                    .try_into()
+                    .unwrap(),
+            ),
+        })
     }
 
     fn read_header(&mut self, start_pos: u64) -> Result<Header, DecodeError> {

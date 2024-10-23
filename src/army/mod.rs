@@ -4,6 +4,7 @@ mod encoder;
 #[cfg(feature = "bevy_reflect")]
 use bevy_reflect::prelude::*;
 use bitflags::bitflags;
+use glam::UVec2;
 use num_enum::{IntoPrimitive, TryFromPrimitive, TryFromPrimitiveError};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -16,14 +17,23 @@ pub use encoder::{EncodeError, Encoder};
 pub struct SaveGameHeader {
     /// The name displayed when loading the save file.
     pub display_name: String,
-    /// There are some bytes after the null-terminated string. Not sure what
-    /// they are for.
-    display_name_remainder: Vec<u8>,
+    /// The original game writes over the existing display name with the new
+    /// path but the old bytes are not cleared first. This field is used to
+    /// store the residual bytes, if there are any. If it's `None` then there
+    /// are no residual bytes / all bytes are zero after the null-terminated
+    /// string. If it's `Some`, then it contains the residual bytes, up to, but
+    /// not including, the last nul-terminated string.
+    display_name_residual_bytes: Option<Vec<u8>>,
     /// The name suggested when saving the game.
     pub suggested_display_name: String,
-    /// There are some bytes after the null-terminated string. Not sure what
-    /// they are for.
-    suggested_display_name_remainder: Vec<u8>,
+    /// The original game writes over the existing suggested display name with
+    /// the new path but the old bytes are not cleared first. This field is used
+    /// to store the residual bytes, if there are any. If it's `None` then there
+    /// are no residual bytes / all bytes are zero after the null-terminated
+    /// string. If it's `Some`, then it contains the residual bytes, up to, but
+    /// not including, the last nul-terminated string.
+    suggested_display_name_residual_bytes: Option<Vec<u8>>,
+    unknown0: Vec<u8>,
     /// Protect Bogenhafen mission played.
     pub bogenhafen_mission: bool,
     /// Attacked Goblin Camp or helped Ragnar.
@@ -69,8 +79,62 @@ pub struct SaveGameHeader {
 
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+pub struct CutsceneAnimation {
+    /// Whether the animation is enabled.
+    pub enabled: bool,
+    unknown1: u32,
+    /// The initial position of the animation within the background image.
+    pub position: UVec2,
+    /// The path to the sprite sheet file, e.g. "[SPRITES]\m_empbi1.spr".
+    pub path: String,
+    unknown2: u32,
+    unknown3: u32,
+    /// The number of sprites in the sprite sheet / the number of frames in the
+    /// animation.
+    pub sprite_count: u32,
+    /// The duration, in milliseconds, to display each frame of the animation.
+    pub frame_duration_millis: u32,
+}
+
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+pub struct SaveGameFooter {
+    unknown1: Vec<u8>,
+    unknown1_as_u16s: Vec<u16>, // TODO: Remove, debug only.
+    unknown1_as_u32s: Vec<u32>, // TODO: Remove, debug only.
+    /// The path to the background image file, e.g. "[PICTURES]\m_empn.bmp".
+    pub background_image_path: Option<String>,
+    /// The original game writes over the existing background image path with
+    /// the new path but the old bytes are not cleared first. This field is used
+    /// to store the residual bytes, if there are any. If it's `None` then there
+    /// are no residual bytes / all bytes are zero after the null-terminated
+    /// string. If it's `Some`, then it contains the residual bytes, up to, but
+    /// not including, the last nul-terminated string.
+    background_image_path_residual_bytes: Option<Vec<u8>>,
+    // 4 u32s. First is always 0. Third is always one more than second, e.g. we
+    // see pairs like [0, 1] and [52, 53]. Fourth is always some big number, so
+    // may not be a u32, but around the first level (as in save games where I
+    // saved frequently) it seems to be `1551335452` in the English save games,
+    // but `3011451320` in the German save game, so could be some language
+    // specific data. It may be u8s and could make up 4 portraits / tracks that
+    // need to load for the current cutscene.
+    unknown2: Vec<u32>,
+    /// A list of animations used on the cutscene screens shown in between
+    /// battles.
+    pub cutscene_animations: Vec<CutsceneAnimation>,
+    unknown3: Vec<u8>,
+    unknown3_as_u16s: Vec<u16>, // TODO: Remove, debug only.
+    unknown3_as_u32s: Vec<u32>, // TODO: Remove, debug only.
+    hex: Vec<String>,           // TODO: Remove, debug only.
+}
+
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct Army {
+    /// An optional save game header if the army is a save game.
     pub save_game_header: Option<SaveGameHeader>,
+    /// An optional save game footer if the army is a save game.
+    pub save_game_footer: Option<SaveGameFooter>,
     /// The army's race.
     ///
     /// This is used in multiplayer mode to group armies by race.
@@ -112,7 +176,6 @@ pub struct Army {
     pub magic_items: Vec<u8>,
     unknown3: Vec<u8>,
     pub regiments: Vec<Regiment>,
-    save_game_footer: Vec<u8>,
 }
 
 impl Army {
@@ -1024,7 +1087,9 @@ mod tests {
 
         let save_game_header = a.save_game_header.as_ref().unwrap();
         assert_eq!(save_game_header.display_name, "Trading Post 1 - 56gc");
+        assert_eq!(save_game_header.display_name_residual_bytes, None);
         assert_eq!(save_game_header.suggested_display_name, "Trading Post 1");
+        assert_eq!(save_game_header.suggested_display_name_residual_bytes, None);
 
         assert_eq!(a.regiments[0].status, RegimentStatus::ActiveAutodeploy);
         assert_eq!(a.regiments[0].last_battle_stats.kill_count, 10);
@@ -1056,7 +1121,29 @@ mod tests {
 
         let save_game_header = a.save_game_header.as_ref().unwrap();
         assert_eq!(save_game_header.display_name, "Grissburg 1 - 883gc");
+        assert_eq!(
+            String::from_utf8(
+                save_game_header
+                    .display_name_residual_bytes
+                    .as_ref()
+                    .unwrap()
+                    .to_vec()
+            )
+            .unwrap(),
+            "83gc" // residual from "Border Princes 2 - 883gc" in the previous save game
+        );
         assert_eq!(save_game_header.suggested_display_name, "Grissburg 1");
+        assert_eq!(
+            String::from_utf8(
+                save_game_header
+                    .suggested_display_name_residual_bytes
+                    .as_ref()
+                    .unwrap()
+                    .to_vec()
+            )
+            .unwrap(),
+            "es 2" // residual from "Border Princes 2" in the previous save game
+        );
 
         roundtrip_test(&original_bytes, &a);
     }

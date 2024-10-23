@@ -1,10 +1,15 @@
-use super::*;
-use decoder::{FORMAT, REGIMENT_SIZE_BYTES};
-use encoding_rs::WINDOWS_1252;
 use std::{
     ffi::CString,
     io::{BufWriter, Write},
 };
+
+use encoding_rs::WINDOWS_1252;
+
+use crate::army::decoder::{
+    FORMAT, REGIMENT_SIZE_BYTES, SAVE_GAME_ASSET_PATH_SIZE_BYTES, SAVE_GAME_DISPLAY_NAME_SIZE_BYTES,
+};
+
+use super::*;
 
 #[derive(Debug)]
 pub enum EncodeError {
@@ -44,23 +49,51 @@ impl<W: Write> Encoder<W> {
     }
 
     pub fn encode(&mut self, army: &Army) -> Result<(), EncodeError> {
-        self.write_save_game_header(army)?;
+        self.maybe_write_save_game_header(army)?;
         self.write_header(army)?;
         self.write_regiments(army)?;
-        self.writer.write_all(&army.save_game_footer)?;
+        self.maybe_write_save_game_footer(army)?;
         Ok(())
     }
 
-    fn write_save_game_header(&mut self, army: &Army) -> Result<(), EncodeError> {
+    fn maybe_write_save_game_header(&mut self, army: &Army) -> Result<(), EncodeError> {
         let Some(header) = army.save_game_header.as_ref() else {
             return Ok(());
         };
 
-        self.write_string(&header.display_name)?;
-        self.writer.write_all(&header.display_name_remainder)?;
-        self.write_string(&header.suggested_display_name)?;
-        self.writer
-            .write_all(&header.suggested_display_name_remainder)?;
+        let display_name_bytes_written = self.write_string(&header.display_name)?;
+        if let Some(display_name_residual_bytes) = header.display_name_residual_bytes.as_ref() {
+            let padding_size_bytes = SAVE_GAME_DISPLAY_NAME_SIZE_BYTES
+                - (display_name_bytes_written + display_name_residual_bytes.len());
+            let padding = vec![0; padding_size_bytes];
+            self.writer.write_all(display_name_residual_bytes)?;
+            self.writer.write_all(&padding)?;
+        } else {
+            let padding_size_bytes = SAVE_GAME_DISPLAY_NAME_SIZE_BYTES - display_name_bytes_written;
+            let padding = vec![0; padding_size_bytes];
+            self.writer.write_all(&padding)?;
+        }
+
+        let suggested_display_name_bytes_written =
+            self.write_string(&header.suggested_display_name)?;
+        if let Some(suggested_display_name_residual_bytes) =
+            header.suggested_display_name_residual_bytes.as_ref()
+        {
+            let padding_size_bytes = SAVE_GAME_DISPLAY_NAME_SIZE_BYTES
+                - (suggested_display_name_bytes_written
+                    + suggested_display_name_residual_bytes.len());
+            let padding = vec![0; padding_size_bytes];
+            self.writer
+                .write_all(suggested_display_name_residual_bytes)?;
+            self.writer.write_all(&padding)?;
+        } else {
+            let padding_size_bytes =
+                SAVE_GAME_DISPLAY_NAME_SIZE_BYTES - suggested_display_name_bytes_written;
+            let padding = vec![0; padding_size_bytes];
+            self.writer.write_all(&padding)?;
+        }
+
+        self.writer.write_all(&header.unknown0)?;
 
         self.writer.write_all(
             &(if header.bogenhafen_mission {
@@ -163,6 +196,61 @@ impl<W: Write> Encoder<W> {
         )?;
         self.writer
             .write_all(&header.previous_answer.to_le_bytes())?;
+
+        Ok(())
+    }
+
+    fn maybe_write_save_game_footer(&mut self, army: &Army) -> Result<(), EncodeError> {
+        let Some(footer) = army.save_game_footer.as_ref() else {
+            return Ok(());
+        };
+
+        self.writer.write_all(&footer.unknown1)?;
+
+        let background_image_path = footer.background_image_path.as_ref().map_or("", |s| s);
+        let background_image_path_bytes_written = self.write_string(background_image_path)?;
+        if let Some(background_image_path_residual_bytes) =
+            footer.background_image_path_residual_bytes.as_ref()
+        {
+            let padding_size_bytes = SAVE_GAME_ASSET_PATH_SIZE_BYTES
+                - (background_image_path_bytes_written
+                    + background_image_path_residual_bytes.len());
+            let padding = vec![0; padding_size_bytes];
+            self.writer
+                .write_all(background_image_path_residual_bytes)?;
+            self.writer.write_all(&padding)?;
+        } else {
+            let padding_size_bytes =
+                SAVE_GAME_ASSET_PATH_SIZE_BYTES - background_image_path_bytes_written;
+            let padding = vec![0; padding_size_bytes];
+            self.writer.write_all(&padding)?;
+        }
+
+        for v in footer.unknown2.iter() {
+            self.writer.write_all(&v.to_le_bytes())?;
+        }
+
+        for a in &footer.cutscene_animations {
+            self.write_cutscene_animation(a)?;
+        }
+
+        self.writer.write_all(&footer.unknown3)?;
+
+        Ok(())
+    }
+
+    fn write_cutscene_animation(&mut self, a: &CutsceneAnimation) -> Result<(), EncodeError> {
+        self.writer
+            .write_all(&(if a.enabled { 1u32 } else { 0u32 }).to_le_bytes())?;
+        self.writer.write_all(&a.unknown1.to_le_bytes())?;
+        self.writer.write_all(&a.position.x.to_le_bytes())?;
+        self.writer.write_all(&a.position.y.to_le_bytes())?;
+        self.write_string_with_limit(&a.path, SAVE_GAME_ASSET_PATH_SIZE_BYTES)?;
+        self.writer.write_all(&a.unknown2.to_le_bytes())?;
+        self.writer.write_all(&a.unknown3.to_le_bytes())?;
+        self.writer.write_all(&a.sprite_count.to_le_bytes())?;
+        self.writer
+            .write_all(&a.frame_duration_millis.to_le_bytes())?;
 
         Ok(())
     }
@@ -284,7 +372,7 @@ impl<W: Write> Encoder<W> {
         Ok(())
     }
 
-    fn write_string(&mut self, s: &str) -> Result<(), EncodeError> {
+    fn write_string(&mut self, s: &str) -> Result<usize, EncodeError> {
         let (windows_1252_bytes, _, _) = WINDOWS_1252.encode(s);
 
         let c_string = CString::new(windows_1252_bytes).map_err(|_| EncodeError::InvalidString)?;
@@ -292,7 +380,7 @@ impl<W: Write> Encoder<W> {
 
         self.writer.write_all(bytes)?;
 
-        Ok(())
+        Ok(bytes.len())
     }
 
     fn write_string_with_limit(&mut self, s: &str, limit: usize) -> Result<(), EncodeError> {
