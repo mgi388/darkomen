@@ -16,6 +16,7 @@ pub enum DecodeError {
     InvalidString,
     InvalidArmyRace(u8),
     InvalidRegimentStatus(u16),
+    InvalidRegimentFlags(u16),
     InvalidMageClass(u8),
     InvalidRegimentAttributes(u32),
     InvalidRegimentAlignment(u8),
@@ -42,6 +43,7 @@ impl fmt::Display for DecodeError {
             DecodeError::InvalidString => write!(f, "invalid string"),
             DecodeError::InvalidArmyRace(v) => write!(f, "invalid army race: {}", v),
             DecodeError::InvalidRegimentStatus(v) => write!(f, "invalid regiment status: {}", v),
+            DecodeError::InvalidRegimentFlags(v) => write!(f, "invalid regiment flags: {}", v),
             DecodeError::InvalidMageClass(v) => write!(f, "invalid mage class: {}", v),
             DecodeError::InvalidRegimentAttributes(v) => {
                 write!(f, "invalid regiment attributes: {}", v)
@@ -497,6 +499,8 @@ impl<R: Read + Seek> Decoder<R> {
 
         Ok(Regiment {
             status,
+            flags: RegimentFlags::from_bits(status_u16)
+                .ok_or(DecodeError::InvalidRegimentFlags(status_u16))?,
             unknown1: buf[2..4].try_into().unwrap(),
             id: u32::from_le_bytes(buf[4..8].try_into().unwrap()),
             mage_class,
