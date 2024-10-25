@@ -212,7 +212,6 @@ pub enum ArmyRace {
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct Regiment {
-    pub status: RegimentStatus,
     pub flags: RegimentFlags,
     unknown1: [u8; 2],
     pub id: u32,
@@ -342,78 +341,74 @@ impl Regiment {
     }
 }
 
-#[repr(u16)]
-#[derive(
-    Clone, Copy, Debug, Default, Deserialize, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive,
-)]
-#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
-pub enum RegimentStatus {
-    #[default]
-    None = 0,
-    Unknown1 = 1,
-    InactiveNotEncountered = 16,
-    Active = 17,
-    ActivePermanent = 19,
-    ActiveAutodeploy = 27,
-    Unknown2 = 50,
-    Unknown3 = 51,
-    Unknown4 = 59,
-    Unknown5 = 81,
-    ActiveNewTemporary = 273,
-    Unknown6 = 283,
-    InactiveDestroyed = 306,
-    Unknown7 = 307,
-    ActiveTemporary = 275,
-    InactiveDeparted = 784,
-    Unknown8 = 785,
-    Unknown9 = 786,
-    ActiveAboutToLeave = 787,
-    Unknown10 = 818,
-    Unknown11 = 819,
-    Unknown12 = 848,
-}
-
 bitflags! {
     #[repr(transparent)]
     #[derive(Clone, Copy, Debug, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
     #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
     #[cfg_attr(feature = "bevy_reflect", reflect_value(Debug, Default, Deserialize, Hash, PartialEq, Serialize))]
     pub struct RegimentFlags: u16 {
+        /// No flags are set. This is the default state.
         const NONE = 0;
+        /// Set if the regiment is active. Active regiments can be deployed to
+        /// the battlefield. This is used when deciding if the regiment should
+        /// be shown in the troop roster, or if the regiment is available in the
+        /// army reserve. Also known as "available for hire".
         const ACTIVE = 1 << 0;
-        const UNKNOWN_REGIMENT_FLAG_1 = 1 << 1;
-        /// The flag seems to be unused in the original game, or it's only set
-        /// during battle.
+        /// Set if the regiment was deployed in the last battle. This is used
+        /// when deciding if the regiment should be shown on the victory screen
+        /// battle stats roster.
+        const DEPLOYED_LAST_BATTLE = 1 << 1;
+        /// The flag seems to be unused in any .ARM or save games. It's possible
+        /// it's only set during battle.
         const UNKNOWN_REGIMENT_FLAG_2 = 1 << 2;
-        // TODO: Is it auto deploy or must deploy? As in, are there some
-        // regiments that start out deployed but you can still undeploy them vs
-        // some that start out deployed and have to remain on the battlefield?
-        const AUTO_DEPLOY = 1 << 3;
+        /// Set if the regiment must be deployed to the battlefield. Regiments
+        /// that must be deployed cannot be taken off the battlefield. The
+        /// player is not allowed to put them in the army reserve.
+        const MUST_DEPLOY = 1 << 3;
+        /// TODO: Not sure what this flag is yet. This is used by almost every
+        /// regiment across .ARM and save games. Removed this from a regiment
+        /// and they battled fine and then the flag stayed off after the battle
+        /// was finished (i.e. it wasn't reinstated after the battle).
         const UNKNOWN_REGIMENT_FLAG_4 = 1 << 4;
+        /// TODO: Not sure what this flag is yet. This is only used in save
+        /// games and compared to [`RegimentFlags::UNKNOWN_REGIMENT_FLAG_4`],
+        /// it's only used by a handful of regiments.
         const UNKNOWN_REGIMENT_FLAG_5 = 1 << 5;
-        const INACTIVE = 1 << 6;
-        /// The flag seems to be unused in the original game, or it's only set
-        /// during battle.
+        /// Set if the regiment is undeployable. Undeployable regiments cannot
+        /// be deployed to the battlefield and do not appear in the army
+        /// reserve. This overrides the [`RegimentFlags::ACTIVE`] flag when
+        /// deciding if the regiment can be deployed. This is used for cases
+        /// such as underground battles where artillery regiments like cannons
+        /// and mortars are not available (you can imagine they stay above
+        /// ground back at base). Regiments with the [`RegimentFlags::ACTIVE`]
+        /// flag as well as the [`RegimentFlags::UNDEPLOYABLE`] flag are shown
+        /// in the troop roster but cannot be deployed to the battlefield.
+        const UNDEPLOYABLE = 1 << 6;
+        /// The flag seems to be unused in any .ARM or save games. It's possible
+        /// it's only set during battle.
         const UNKNOWN_REGIMENT_FLAG_7 = 1 << 7;
+        /// Set if the regiment is temporarily in the army. In the troop roster,
+        /// temporary regiments are shown with a green arrow next to the banner.
         const TEMPORARY = 1 << 8;
+        /// Set if the regiment has departed.
         const DEPARTED = 1 << 9;
-        /// The flag seems to be unused in the original game, or it's only set
-        /// during battle.
+        /// The flag seems to be unused in any .ARM or save games. It's possible
+        /// it's only set during battle.
         const UNKNOWN_REGIMENT_FLAG_10 = 1 << 10;
-        /// The flag seems to be unused in the original game, or it's only set
-        /// during battle.
+        /// The flag seems to be unused in any .ARM or save games. It's possible
+        /// it's only set during battle.
         const UNKNOWN_REGIMENT_FLAG_11 = 1 << 11;
-        /// The flag seems to be unused in the original game, or it's only set
-        /// during battle.
+        /// The flag seems to be unused in any .ARM or save games. It's possible
+        /// it's only set during battle.
         const UNKNOWN_REGIMENT_FLAG_12 = 1 << 12;
-        /// The flag seems to be unused in the original game, or it's only set
-        /// during battle.
+        /// The flag seems to be unused in any .ARM or save games. It's possible
+        /// it's only set during battle.
         const UNKNOWN_REGIMENT_FLAG_13 = 1 << 13;
-        /// The flag seems to be unused in the original game, or it's only set
-        /// during battle.
+        /// The flag seems to be unused in any .ARM or save games. It's possible
+        /// it's only set during battle.
         const UNKNOWN_REGIMENT_FLAG_14 = 1 << 14;
-        /// The flag seems to be unused in the original game, or it's only set
-        /// during battle.
+        /// The flag seems to be unused in any .ARM or save games. It's possible
+        /// it's only set during battle.
         const UNKNOWN_REGIMENT_FLAG_15 = 1 << 15;
     }
 }
@@ -993,7 +988,6 @@ mod tests {
         assert_eq!(a.small_banner_disabled_path, "[BOOKS]\\hgban.spr");
         assert_eq!(a.large_banner_path, "[BOOKS]\\hlban.spr");
         assert_eq!(a.regiments.len(), 4);
-        assert_eq!(a.regiments[0].status, RegimentStatus::Active);
         assert!(a.regiments[0].flags.contains(RegimentFlags::ACTIVE));
         assert_eq!(a.regiments[0].id, 1);
         assert_eq!(a.regiments[0].unit_profile.name, "Grudgebringer Cavalry");
@@ -1072,8 +1066,7 @@ mod tests {
         assert_eq!(save_game_header.display_name, "Grenzgrafschaften - 1026gc");
         assert_eq!(save_game_header.suggested_display_name, "Handelsposten 1");
 
-        assert_eq!(a.regiments[0].status, RegimentStatus::ActiveAutodeploy);
-        assert!(a.regiments[0].flags.contains(RegimentFlags::AUTO_DEPLOY));
+        assert!(a.regiments[0].flags.contains(RegimentFlags::MUST_DEPLOY));
         assert_eq!(a.regiments[0].last_battle_stats.kill_count, 10);
         assert_eq!(a.regiments[0].last_battle_stats.experience, 46);
         assert_eq!(a.regiments[0].total_experience, 46);
@@ -1139,8 +1132,7 @@ mod tests {
         assert_eq!(save_game_header.suggested_display_name, "Trading Post 1");
         assert_eq!(save_game_header.suggested_display_name_residual_bytes, None);
 
-        assert_eq!(a.regiments[0].status, RegimentStatus::ActiveAutodeploy);
-        assert!(a.regiments[0].flags.contains(RegimentFlags::AUTO_DEPLOY));
+        assert!(a.regiments[0].flags.contains(RegimentFlags::MUST_DEPLOY));
         assert_eq!(a.regiments[0].last_battle_stats.kill_count, 10);
         assert_eq!(a.regiments[0].last_battle_stats.experience, 48);
         assert_eq!(a.regiments[0].total_experience, 48);
