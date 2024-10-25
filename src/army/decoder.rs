@@ -15,7 +15,6 @@ pub enum DecodeError {
     InvalidFormat(u32),
     InvalidString,
     InvalidArmyRace(u8),
-    InvalidRegimentStatus(u16),
     InvalidRegimentFlags(u16),
     InvalidMageClass(u8),
     InvalidRegimentAttributes(u32),
@@ -42,7 +41,6 @@ impl fmt::Display for DecodeError {
             DecodeError::InvalidFormat(format) => write!(f, "invalid format: {}", format),
             DecodeError::InvalidString => write!(f, "invalid string"),
             DecodeError::InvalidArmyRace(v) => write!(f, "invalid army race: {}", v),
-            DecodeError::InvalidRegimentStatus(v) => write!(f, "invalid regiment status: {}", v),
             DecodeError::InvalidRegimentFlags(v) => write!(f, "invalid regiment flags: {}", v),
             DecodeError::InvalidMageClass(v) => write!(f, "invalid mage class: {}", v),
             DecodeError::InvalidRegimentAttributes(v) => {
@@ -466,8 +464,6 @@ impl<R: Read + Seek> Decoder<R> {
         self.reader.read_exact(&mut buf)?;
 
         let status_u16 = u16::from_le_bytes(buf[0..2].try_into().unwrap());
-        let status = RegimentStatus::try_from(status_u16)
-            .map_err(|_| DecodeError::InvalidRegimentStatus(status_u16))?;
         let attributes_u32 = u32::from_le_bytes(buf[16..20].try_into().unwrap());
         let attributes = RegimentAttributes::from_bits(attributes_u32)
             .ok_or(DecodeError::InvalidRegimentAttributes(attributes_u32))?;
@@ -498,7 +494,6 @@ impl<R: Read + Seek> Decoder<R> {
             .map_err(|_| DecodeError::InvalidSpellBook(spell_book_u16))?;
 
         Ok(Regiment {
-            status,
             flags: RegimentFlags::from_bits(status_u16)
                 .ok_or(DecodeError::InvalidRegimentFlags(status_u16))?,
             unknown1: buf[2..4].try_into().unwrap(),
