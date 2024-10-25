@@ -294,8 +294,7 @@ impl<W: Write> Encoder<W> {
     }
 
     fn write_regiment(&mut self, r: &Regiment) -> Result<(), EncodeError> {
-        self.writer
-            .write_all(&Into::<u16>::into(r.status).to_le_bytes())?;
+        self.writer.write_all(&r.flags.bits().to_le_bytes())?;
         self.writer.write_all(&r.unknown1)?;
         self.writer.write_all(&r.id.to_le_bytes())?;
         self.writer.write_all(&[Into::<u8>::into(r.mage_class)])?;

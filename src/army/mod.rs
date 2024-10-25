@@ -213,6 +213,7 @@ pub enum ArmyRace {
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct Regiment {
     pub status: RegimentStatus,
+    pub flags: RegimentFlags,
     unknown1: [u8; 2],
     pub id: u32,
     pub mage_class: MageClass,
@@ -370,6 +371,51 @@ pub enum RegimentStatus {
     Unknown10 = 818,
     Unknown11 = 819,
     Unknown12 = 848,
+}
+
+bitflags! {
+    #[repr(transparent)]
+    #[derive(Clone, Copy, Debug, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
+    #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+    #[cfg_attr(feature = "bevy_reflect", reflect_value(Debug, Default, Deserialize, Hash, PartialEq, Serialize))]
+    pub struct RegimentFlags: u16 {
+        const NONE = 0;
+        const ACTIVE = 1 << 0;
+        const UNKNOWN_REGIMENT_FLAG_1 = 1 << 1;
+        /// The flag seems to be unused in the original game, or it's only set
+        /// during battle.
+        const UNKNOWN_REGIMENT_FLAG_2 = 1 << 2;
+        // TODO: Is it auto deploy or must deploy? As in, are there some
+        // regiments that start out deployed but you can still undeploy them vs
+        // some that start out deployed and have to remain on the battlefield?
+        const AUTO_DEPLOY = 1 << 3;
+        const UNKNOWN_REGIMENT_FLAG_4 = 1 << 4;
+        const UNKNOWN_REGIMENT_FLAG_5 = 1 << 5;
+        const INACTIVE = 1 << 6;
+        /// The flag seems to be unused in the original game, or it's only set
+        /// during battle.
+        const UNKNOWN_REGIMENT_FLAG_7 = 1 << 7;
+        const TEMPORARY = 1 << 8;
+        const DEPARTED = 1 << 9;
+        /// The flag seems to be unused in the original game, or it's only set
+        /// during battle.
+        const UNKNOWN_REGIMENT_FLAG_10 = 1 << 10;
+        /// The flag seems to be unused in the original game, or it's only set
+        /// during battle.
+        const UNKNOWN_REGIMENT_FLAG_11 = 1 << 11;
+        /// The flag seems to be unused in the original game, or it's only set
+        /// during battle.
+        const UNKNOWN_REGIMENT_FLAG_12 = 1 << 12;
+        /// The flag seems to be unused in the original game, or it's only set
+        /// during battle.
+        const UNKNOWN_REGIMENT_FLAG_13 = 1 << 13;
+        /// The flag seems to be unused in the original game, or it's only set
+        /// during battle.
+        const UNKNOWN_REGIMENT_FLAG_14 = 1 << 14;
+        /// The flag seems to be unused in the original game, or it's only set
+        /// during battle.
+        const UNKNOWN_REGIMENT_FLAG_15 = 1 << 15;
+    }
 }
 
 #[repr(u8)]
@@ -948,6 +994,7 @@ mod tests {
         assert_eq!(a.large_banner_path, "[BOOKS]\\hlban.spr");
         assert_eq!(a.regiments.len(), 4);
         assert_eq!(a.regiments[0].status, RegimentStatus::Active);
+        assert!(a.regiments[0].flags.contains(RegimentFlags::ACTIVE));
         assert_eq!(a.regiments[0].id, 1);
         assert_eq!(a.regiments[0].unit_profile.name, "Grudgebringer Cavalry");
         assert_eq!(
@@ -1026,6 +1073,7 @@ mod tests {
         assert_eq!(save_game_header.suggested_display_name, "Handelsposten 1");
 
         assert_eq!(a.regiments[0].status, RegimentStatus::ActiveAutodeploy);
+        assert!(a.regiments[0].flags.contains(RegimentFlags::AUTO_DEPLOY));
         assert_eq!(a.regiments[0].last_battle_stats.kill_count, 10);
         assert_eq!(a.regiments[0].last_battle_stats.experience, 46);
         assert_eq!(a.regiments[0].total_experience, 46);
@@ -1092,6 +1140,7 @@ mod tests {
         assert_eq!(save_game_header.suggested_display_name_residual_bytes, None);
 
         assert_eq!(a.regiments[0].status, RegimentStatus::ActiveAutodeploy);
+        assert!(a.regiments[0].flags.contains(RegimentFlags::AUTO_DEPLOY));
         assert_eq!(a.regiments[0].last_battle_stats.kill_count, 10);
         assert_eq!(a.regiments[0].last_battle_stats.experience, 48);
         assert_eq!(a.regiments[0].total_experience, 48);
