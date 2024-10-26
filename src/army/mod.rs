@@ -374,16 +374,16 @@ bitflags! {
         /// games and compared to [`RegimentFlags::UNKNOWN_REGIMENT_FLAG_4`],
         /// it's only used by a handful of regiments.
         const UNKNOWN_REGIMENT_FLAG_5 = 1 << 5;
-        /// Set if the regiment is undeployable. Undeployable regiments cannot
-        /// be deployed to the battlefield and do not appear in the army
+        /// Set if the regiment is non-deployable. Non-deployable regiments
+        /// cannot be deployed to the battlefield and do not appear in the army
         /// reserve. This overrides the [`RegimentFlags::ACTIVE`] flag when
         /// deciding if the regiment can be deployed. This is used for cases
         /// such as underground battles where artillery regiments like cannons
         /// and mortars are not available (you can imagine they stay above
         /// ground back at base). Regiments with the [`RegimentFlags::ACTIVE`]
-        /// flag as well as the [`RegimentFlags::UNDEPLOYABLE`] flag are shown
+        /// flag as well as the [`RegimentFlags::NON_DEPLOYABLE`] flag are shown
         /// in the troop roster but cannot be deployed to the battlefield.
-        const UNDEPLOYABLE = 1 << 6;
+        const NON_DEPLOYABLE = 1 << 6;
         /// The flag seems to be unused in any .ARM or save games. It's possible
         /// it's only set during battle.
         const UNKNOWN_REGIMENT_FLAG_7 = 1 << 7;
