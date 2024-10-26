@@ -364,7 +364,7 @@ impl<W: Write> Encoder<W> {
 
     fn write_last_battle_stats(&mut self, s: &LastBattleStats) -> Result<(), EncodeError> {
         self.writer.write_all(&s.unit_killed_count.to_le_bytes())?;
-        self.writer.write_all(&s.unknown1)?;
+        self.writer.write_all(&s.unknown1.to_le_bytes())?;
         self.writer.write_all(&s.kill_count.to_le_bytes())?;
         self.writer.write_all(&s.experience.to_le_bytes())?;
 
