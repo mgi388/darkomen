@@ -585,7 +585,7 @@ impl<R: Read + Seek> Decoder<R> {
     fn read_last_battle_stats(&mut self, buf: &[u8]) -> Result<LastBattleStats, DecodeError> {
         Ok(LastBattleStats {
             unit_killed_count: u16::from_le_bytes(buf[0..2].try_into().unwrap()),
-            unknown1: buf[2..4].try_into().unwrap(),
+            unknown1: u16::from_le_bytes(buf[2..4].try_into().unwrap()),
             kill_count: u16::from_le_bytes(buf[4..6].try_into().unwrap()),
             experience: u16::from_le_bytes(buf[6..8].try_into().unwrap()),
         })

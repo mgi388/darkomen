@@ -649,7 +649,7 @@ bitflags! {
 pub struct LastBattleStats {
     /// The number of units in the regiment that were killed in the last battle.
     pub unit_killed_count: u16,
-    unknown1: [u8; 2], // always seems to be 0, could be padding
+    unknown1: u16,
     /// The number of units the regiment killed in the last battle.
     pub kill_count: u16,
     /// The regiment's experience gained in the last battle.
