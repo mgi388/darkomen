@@ -14,6 +14,39 @@ pub use encoder::{EncodeError, Encoder};
 
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+pub struct ScriptState {
+    /// The 4th u32:
+    ///  - 0x13 (19u32) is saved after a cutscene (which could also be just
+    ///    before a battle would start).
+    ///  - 0x3A (58u32) is saved at the victory screen.
+    unknown0: Vec<u32>,
+    /// The base address in the script where the campaign should start executing
+    /// from. In the English version of the game, this is `0x4C3C48`. In the
+    /// German version of the game, this is `0x4C3D90`. Combine with
+    /// `execution_offset_index
+    /// * 4` to get the address to start executing from.
+    pub base_execution_address: u32,
+    unknown1: Vec<u8>,
+    unknown1_hex: Vec<String>,  // TODO: Remove, debug only.
+    unknown1_as_u32s: Vec<u32>, // TODO: Remove, debug only.
+    /// The offset index to add to the base execution address to get the address
+    /// to start executing from. To account for alignment, multiply this value
+    /// by 4 before adding it to the base address.
+    pub execution_offset_index: u32,
+    unknown2: Vec<u8>,
+    unknown2_hex: Vec<String>,  // TODO: Remove, debug only.
+    unknown2_as_u32s: Vec<u32>, // TODO: Remove, debug only.
+}
+
+impl ScriptState {
+    /// Returns the address to start executing from.
+    pub fn execution_address(&self) -> u32 {
+        self.base_execution_address + self.execution_offset_index * 4
+    }
+}
+
+#[derive(Debug, Clone, Default, Deserialize, Serialize)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct SaveGameHeader {
     /// The name displayed when loading the save file.
     pub display_name: String,
@@ -33,7 +66,11 @@ pub struct SaveGameHeader {
     /// string. If it's `Some`, then it contains the residual bytes, up to, but
     /// not including, the last nul-terminated string.
     suggested_display_name_residual_bytes: Option<Vec<u8>>,
-    unknown0: Vec<u8>,
+    script_state_hex: Vec<String>,  // TODO: Remove, debug only.
+    script_state_as_u32s: Vec<u32>, // TODO: Remove, debug only.
+    /// The script state of the save game. Used by the WHMTG scripting engine to
+    /// run the next part of the campaign.
+    pub script_state: ScriptState,
     /// Protect Bogenhafen mission played.
     pub bogenhafen_mission: bool,
     /// Attacked Goblin Camp or helped Ragnar.
@@ -1065,6 +1102,10 @@ mod tests {
         let save_game_header = a.save_game_header.as_ref().unwrap();
         assert_eq!(save_game_header.display_name, "Grenzgrafschaften - 1026gc");
         assert_eq!(save_game_header.suggested_display_name, "Handelsposten 1");
+        assert_eq!(
+            save_game_header.script_state.base_execution_address,
+            0x4C3D90
+        );
 
         assert!(a.regiments[0].flags.contains(RegimentFlags::MUST_DEPLOY));
         assert_eq!(a.regiments[0].last_battle_stats.kill_count, 10);
@@ -1097,6 +1138,10 @@ mod tests {
         assert_eq!(
             save_game_header.suggested_display_name,
             "Prinzen der Grenze 2"
+        );
+        assert_eq!(
+            save_game_header.script_state.base_execution_address,
+            0x4C3D90
         );
 
         assert_eq!(a.regiments[0].last_battle_stats.unit_killed_count, 3);
@@ -1131,6 +1176,11 @@ mod tests {
         assert_eq!(save_game_header.display_name_residual_bytes, None);
         assert_eq!(save_game_header.suggested_display_name, "Trading Post 1");
         assert_eq!(save_game_header.suggested_display_name_residual_bytes, None);
+        assert_eq!(
+            save_game_header.script_state.base_execution_address,
+            0x4C3C48
+        );
+        assert_eq!(save_game_header.script_state.execution_offset_index, 370);
 
         assert!(a.regiments[0].flags.contains(RegimentFlags::MUST_DEPLOY));
         assert_eq!(a.regiments[0].last_battle_stats.kill_count, 10);
@@ -1185,6 +1235,11 @@ mod tests {
             .unwrap(),
             "es 2" // residual from "Border Princes 2" in the previous save game
         );
+        assert_eq!(
+            save_game_header.script_state.base_execution_address,
+            0x4C3C48
+        );
+        assert_eq!(save_game_header.script_state.execution_offset_index, 489);
 
         roundtrip_test(&original_bytes, &a);
     }

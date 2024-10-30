@@ -56,6 +56,20 @@ impl<W: Write> Encoder<W> {
         Ok(())
     }
 
+    fn write_script_state(&mut self, s: &ScriptState) -> Result<(), EncodeError> {
+        for v in s.unknown0.iter() {
+            self.writer.write_all(&v.to_le_bytes())?;
+        }
+        self.writer
+            .write_all(&s.base_execution_address.to_le_bytes())?;
+        self.writer.write_all(&s.unknown1)?;
+        self.writer
+            .write_all(&s.execution_offset_index.to_le_bytes())?;
+        self.writer.write_all(&s.unknown2)?;
+
+        Ok(())
+    }
+
     fn maybe_write_save_game_header(&mut self, army: &Army) -> Result<(), EncodeError> {
         let Some(header) = army.save_game_header.as_ref() else {
             return Ok(());
@@ -93,7 +107,7 @@ impl<W: Write> Encoder<W> {
             self.writer.write_all(&padding)?;
         }
 
-        self.writer.write_all(&header.unknown0)?;
+        self.write_script_state(&header.script_state)?;
 
         self.writer.write_all(
             &(if header.bogenhafen_mission {

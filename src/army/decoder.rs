@@ -150,6 +150,51 @@ impl<R: Read + Seek> Decoder<R> {
         })
     }
 
+    fn read_script_state(&mut self, buf: &[u8]) -> Result<ScriptState, DecodeError> {
+        let unknown0 = buf[0..16].to_vec();
+        let unknown1 = buf[20..108].to_vec();
+        let unknown2 = buf[112..].to_vec();
+
+        Ok(ScriptState {
+            unknown0: unknown0
+                .chunks_exact(4)
+                .map(|chunk| u32::from_le_bytes(chunk.try_into().unwrap()))
+                .collect(),
+            base_execution_address: u32::from_le_bytes(buf[16..20].try_into().unwrap()),
+            unknown1: unknown1.clone(),
+            unknown1_hex: unknown1
+                .chunks(16)
+                .map(|chunk| {
+                    chunk
+                        .iter()
+                        .map(|b| format!("{:02x}", b))
+                        .collect::<Vec<String>>()
+                        .join("")
+                })
+                .collect(),
+            unknown1_as_u32s: unknown1
+                .chunks_exact(4)
+                .map(|chunk| u32::from_le_bytes(chunk.try_into().unwrap()))
+                .collect(),
+            execution_offset_index: u32::from_le_bytes(buf[108..112].try_into().unwrap()),
+            unknown2: unknown2.clone(),
+            unknown2_hex: unknown2
+                .chunks(16)
+                .map(|chunk| {
+                    chunk
+                        .iter()
+                        .map(|b| format!("{:02x}", b))
+                        .collect::<Vec<String>>()
+                        .join("")
+                })
+                .collect(),
+            unknown2_as_u32s: unknown2
+                .chunks_exact(4)
+                .map(|chunk| u32::from_le_bytes(chunk.try_into().unwrap()))
+                .collect(),
+        })
+    }
+
     fn maybe_read_save_game_header(
         &mut self,
     ) -> Result<(u64, Option<SaveGameHeader>), DecodeError> {
@@ -183,6 +228,8 @@ impl<R: Read + Seek> Decoder<R> {
                     .unwrap_or((suggested_display_name_buf, &[]));
 
             let unknown0 = buf[SAVE_GAME_DISPLAY_NAME_SIZE_BYTES * 2..408].to_vec();
+
+            let script_state = self.read_script_state(&unknown0)?;
 
             return Ok((
                 SAVE_GAME_HEADER_SIZE_BYTES as u64,
@@ -219,7 +266,22 @@ impl<R: Read + Seek> Decoder<R> {
                                 .to_vec(),
                         )
                     },
-                    unknown0,
+                    script_state_hex: unknown0
+                        .clone()
+                        .chunks(16)
+                        .map(|chunk| {
+                            chunk
+                                .iter()
+                                .map(|b| format!("{:02x}", b))
+                                .collect::<Vec<String>>()
+                                .join("")
+                        })
+                        .collect(),
+                    script_state_as_u32s: unknown0
+                        .chunks_exact(4)
+                        .map(|chunk| u32::from_le_bytes(chunk.try_into().unwrap()))
+                        .collect(),
+                    script_state,
                     bogenhafen_mission: buf[408] != 0,
                     goblin_camp_or_ragnar: buf[412] != 0,
                     goblin_camp_mission: buf[416] != 0,
