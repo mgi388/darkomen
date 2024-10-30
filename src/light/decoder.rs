@@ -1,11 +1,13 @@
-use super::*;
-use glam::Vec3;
 use std::{
     fmt,
     io::{Error as IoError, Read, Seek},
 };
 
-const FORMAT: u32 = 1;
+use glam::Vec3;
+
+use super::*;
+
+pub(crate) const FORMAT: u32 = 1;
 
 const HEADER_SIZE_BYTES: usize = 8;
 const LIGHT_SIZE_BYTES: usize = 32;
@@ -14,6 +16,7 @@ const LIGHT_SIZE_BYTES: usize = 32;
 pub enum DecodeError {
     IoError(IoError),
     InvalidFormat(String),
+    InvalidLightFlags(u32),
 }
 
 impl std::error::Error for DecodeError {}
@@ -29,6 +32,7 @@ impl fmt::Display for DecodeError {
         match self {
             DecodeError::IoError(e) => write!(f, "IO error: {}", e),
             DecodeError::InvalidFormat(s) => write!(f, "invalid format: {}", s),
+            DecodeError::InvalidLightFlags(v) => write!(f, "invalid light flags: {}", v),
         }
     }
 }
@@ -76,18 +80,20 @@ impl<R: Read + Seek> Decoder<R> {
         for i in 0..light_count {
             let b = &buf[i * LIGHT_SIZE_BYTES..(i + 1) * LIGHT_SIZE_BYTES];
 
+            let flags_u32 = u32::from_le_bytes(b[12..16].try_into().unwrap());
             let light = Light {
                 position: Vec3::new(
                     i32::from_le_bytes(b[0..4].try_into().unwrap()) as f32 / 1024.,
                     i32::from_le_bytes(b[4..8].try_into().unwrap()) as f32 / 1024.,
                     i32::from_le_bytes(b[8..12].try_into().unwrap()) as f32 / 1024.,
                 ),
-                flags: u32::from_le_bytes(b[12..16].try_into().unwrap()),
-                unknown: u32::from_le_bytes(b[16..20].try_into().unwrap()),
+                flags: LightFlags::from_bits(flags_u32)
+                    .ok_or(DecodeError::InvalidLightFlags(flags_u32))?,
+                attenuation: i32::from_le_bytes(b[16..20].try_into().unwrap()) as f32 / 1024.,
                 color: Vec3::new(
-                    u32::from_le_bytes(b[20..24].try_into().unwrap()) as f32 / 255.,
-                    u32::from_le_bytes(b[24..28].try_into().unwrap()) as f32 / 255.,
-                    u32::from_le_bytes(b[28..32].try_into().unwrap()) as f32 / 255.,
+                    u32::from_le_bytes(b[20..24].try_into().unwrap()) as f32 / 256.,
+                    u32::from_le_bytes(b[24..28].try_into().unwrap()) as f32 / 256.,
+                    u32::from_le_bytes(b[28..32].try_into().unwrap()) as f32 / 256.,
                 ),
             };
 
@@ -95,97 +101,5 @@ impl<R: Read + Seek> Decoder<R> {
         }
 
         Ok(lights)
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::{
-        ffi::{OsStr, OsString},
-        fs::File,
-        path::{Path, PathBuf},
-    };
-
-    #[test]
-    fn test_decode_b1_01() {
-        let d: PathBuf = [
-            std::env::var("DARKOMEN_PATH").unwrap().as_str(),
-            "DARKOMEN",
-            "GAMEDATA",
-            "1PBAT",
-            "B1_01",
-            "B1_01.LIT",
-        ]
-        .iter()
-        .collect();
-
-        let file = File::open(d.clone()).unwrap();
-        let lights = Decoder::new(file).decode().unwrap();
-
-        assert_eq!(lights.len(), 3);
-    }
-
-    #[test]
-    fn test_decode_all() {
-        let d: PathBuf = [
-            std::env::var("DARKOMEN_PATH").unwrap().as_str(),
-            "DARKOMEN",
-            "GAMEDATA",
-            "1PBAT",
-        ]
-        .iter()
-        .collect();
-
-        let root_output_dir: PathBuf = [env!("CARGO_MANIFEST_DIR"), "decoded", "lights"]
-            .iter()
-            .collect();
-
-        std::fs::create_dir_all(&root_output_dir).unwrap();
-
-        fn visit_dirs(dir: &Path, cb: &mut dyn FnMut(&Path)) {
-            println!("Reading dir {:?}", dir.display());
-
-            let mut paths = std::fs::read_dir(dir)
-                .unwrap()
-                .map(|res| res.map(|e| e.path()))
-                .collect::<Result<Vec<_>, std::io::Error>>()
-                .unwrap();
-
-            paths.sort();
-
-            for path in paths {
-                if path.is_dir() {
-                    visit_dirs(&path, cb);
-                } else {
-                    cb(&path);
-                }
-            }
-        }
-
-        visit_dirs(&d, &mut |path| {
-            let Some(ext) = path.extension() else {
-                return;
-            };
-            if ext.to_string_lossy().to_uppercase() != "LIT" {
-                return;
-            }
-
-            println!("Decoding {:?}", path.file_name().unwrap());
-
-            let file = File::open(path).unwrap();
-            let lights = Decoder::new(file).decode().unwrap();
-
-            let output_path = append_ext("ron", root_output_dir.join(path.file_name().unwrap()));
-            let mut output_file = File::create(output_path).unwrap();
-            ron::ser::to_writer_pretty(&mut output_file, &lights, Default::default()).unwrap();
-        });
-    }
-
-    fn append_ext(ext: impl AsRef<OsStr>, path: PathBuf) -> PathBuf {
-        let mut os_string: OsString = path.into();
-        os_string.push(".");
-        os_string.push(ext.as_ref());
-        os_string.into()
     }
 }
