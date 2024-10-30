@@ -453,7 +453,7 @@ dependencies = [
 
 [[package]]
 name = "darkomen"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "anyhow",
  "bevy_reflect",
