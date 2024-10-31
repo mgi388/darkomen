@@ -12,7 +12,7 @@ The following table shows the game file support in this library:
 
 | Kind                                       | File extension(s) | Read | Write | Known issues?                           |
 | ------------------------------------------ | ----------------- | ---- | ----- | --------------------------------------- |
-| [3D models](src/m3d)                       | .M3D              | ✅   | ❌    |                                         |
+| [3D models](src/m3d)                       | .M3D, .M3X        | ✅   | ❌    |                                         |
 | [Army and save games](src/army)            | .ARM              | ✅   | ✅    | ⚠️ Save games not completely understood |
 | [Battle blueprints](src/battle)            | .BTB              | ✅   | ❌    |                                         |
 | CTL                                        | .CTL              | ❌   | ❌    |                                         |
