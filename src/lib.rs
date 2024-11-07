@@ -1,4 +1,6 @@
 pub mod army;
+#[cfg(feature = "asset")]
+pub mod asset;
 pub mod battle;
 pub mod graphics;
 pub mod light;
