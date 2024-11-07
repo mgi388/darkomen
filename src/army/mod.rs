@@ -4,10 +4,10 @@ mod encoder;
 #[cfg(feature = "bevy_reflect")]
 use bevy_reflect::prelude::*;
 use bitflags::bitflags;
+use derive_more::derive::{Display, Error, From};
 use glam::UVec2;
 use num_enum::{IntoPrimitive, TryFromPrimitive, TryFromPrimitiveError};
 use serde::{Deserialize, Serialize};
-use thiserror::Error;
 
 pub use decoder::{DecodeError, Decoder};
 pub use encoder::{EncodeError, Encoder};
@@ -752,12 +752,12 @@ pub enum Projectile {
     ScreamingSkullCatapult = 17,
 }
 
-#[derive(Error, Debug)]
+#[derive(Debug, Display, Error, From)]
 pub enum DecodeClassError {
-    #[error(transparent)]
-    InvalidType(#[from] TryFromPrimitiveError<RegimentType>),
-    #[error(transparent)]
-    InvalidRace(#[from] TryFromPrimitiveError<RegimentRace>),
+    #[error(ignore)]
+    InvalidType(TryFromPrimitiveError<RegimentType>),
+    #[error(ignore)]
+    InvalidRace(TryFromPrimitiveError<RegimentRace>),
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
