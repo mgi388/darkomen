@@ -8,9 +8,9 @@ use bevy_math::UVec2;
 use bevy_reflect::prelude::*;
 use bevy_render::{prelude::*, render_asset::RenderAssetUsages};
 use bevy_sprite::{TextureAtlasBuilder, TextureAtlasBuilderError, TextureAtlasLayout};
+use derive_more::derive::{Display, Error, From};
 use image::GenericImageView;
 use serde::{Deserialize, Serialize};
-use thiserror::Error;
 
 use crate::graphics::sprite_sheet::{DecodeError, Decoder, SpriteSheet};
 
@@ -119,26 +119,20 @@ pub struct SpriteSheetAssetLoaderSettings {
 
 /// Possible errors that can be produced by [`SpriteSheetAssetLoader`].
 #[non_exhaustive]
-#[derive(Debug, Error)]
+#[derive(Debug, Display, Error, From)]
 pub enum SpriteSheetAssetLoaderError {
     /// An IO error.
-    #[error("could not load asset: {0}")]
-    Io(#[from] std::io::Error),
+    #[display("could not load asset: {_0}")]
+    Io(std::io::Error),
     /// An error caused when the asset path cannot be determined.
-    #[error("could not determine file path of asset")]
+    #[display("could not determine file path of asset")]
     IndeterminateFilePath,
     /// A sprite sheet decoding error.
-    #[error("could not decode sprite sheet: {0}")]
-    DecodeError(#[from] DecodeError),
+    #[display("could not decode sprite sheet: {_0}")]
+    DecodeError(DecodeError),
     /// A texture atlas builder error.
-    #[error("could not build texture atlas: {0}")]
+    #[display("could not build texture atlas: {_0}")]
     TextureAtlasBuilderError(TextureAtlasBuilderError),
-}
-
-impl From<TextureAtlasBuilderError> for SpriteSheetAssetLoaderError {
-    fn from(error: TextureAtlasBuilderError) -> Self {
-        SpriteSheetAssetLoaderError::TextureAtlasBuilderError(error)
-    }
 }
 
 impl AssetLoader for SpriteSheetAssetLoader {
