@@ -26,7 +26,7 @@ impl Plugin for SpriteSheetAssetPlugin {
         .init_asset::<SpriteSheetAsset>()
         .init_asset_loader::<SpriteSheetAssetLoader>()
         .register_asset_reflect::<SpriteSheetAsset>()
-        .register_type::<SpriteSheetHandle>();
+        .register_type::<SpriteSheetAssetHandle>();
     }
 }
 
@@ -81,24 +81,18 @@ impl std::fmt::Display for TextureDescriptorNotFoundError {
 impl std::error::Error for TextureDescriptorNotFoundError {}
 
 /// A [`Handle`] to a [`SpriteSheetAsset`] asset.
-#[derive(Component, Clone, Debug, Default, Deref, DerefMut, Eq, PartialEq, Reflect)]
+#[derive(Component, Clone, Debug, Default, Deref, DerefMut, Eq, From, PartialEq, Reflect)]
 #[reflect(Component, Default)]
-pub struct SpriteSheetHandle(pub Handle<SpriteSheetAsset>);
+pub struct SpriteSheetAssetHandle(pub Handle<SpriteSheetAsset>);
 
-impl From<Handle<SpriteSheetAsset>> for SpriteSheetHandle {
-    fn from(handle: Handle<SpriteSheetAsset>) -> Self {
-        Self(handle)
-    }
-}
-
-impl From<SpriteSheetHandle> for AssetId<SpriteSheetAsset> {
-    fn from(handle: SpriteSheetHandle) -> Self {
+impl From<SpriteSheetAssetHandle> for AssetId<SpriteSheetAsset> {
+    fn from(handle: SpriteSheetAssetHandle) -> Self {
         handle.id()
     }
 }
 
-impl From<&SpriteSheetHandle> for AssetId<SpriteSheetAsset> {
-    fn from(handle: &SpriteSheetHandle) -> Self {
+impl From<&SpriteSheetAssetHandle> for AssetId<SpriteSheetAsset> {
+    fn from(handle: &SpriteSheetAssetHandle) -> Self {
         handle.id()
     }
 }

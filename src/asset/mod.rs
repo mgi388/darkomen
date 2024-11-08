@@ -26,6 +26,12 @@ pub mod prelude {
     #[doc(hidden)]
     pub use crate::asset::lightmap::*;
     #[doc(hidden)]
+    pub use crate::asset::sound::mad::*;
+    #[doc(hidden)]
+    pub use crate::asset::sound::music_script::*;
+    #[doc(hidden)]
+    pub use crate::asset::sound::sad::*;
+    #[doc(hidden)]
     pub use crate::asset::sound::*;
 }
 
