@@ -9,6 +9,7 @@ use bevy_reflect::prelude::*;
 use bevy_render::{prelude::*, render_asset::RenderAssetUsages};
 use bevy_sprite::{TextureAtlasBuilder, TextureAtlasBuilderError, TextureAtlasLayout};
 use derive_more::derive::{Display, Error, From};
+use glam::Vec2;
 use image::GenericImageView;
 use serde::{Deserialize, Serialize};
 
@@ -65,6 +66,13 @@ pub struct TextureDescriptor {
     pub height: u32,
     pub x: i16,
     pub y: i16,
+}
+
+impl TextureDescriptor {
+    #[inline(always)]
+    pub fn anchor(&self) -> Vec2 {
+        self.d.anchor()
+    }
 }
 
 #[derive(Debug)]
