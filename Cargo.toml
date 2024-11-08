@@ -14,9 +14,11 @@ asset = [
     "dep:bevy_asset",
     "dep:bevy_derive",
     "dep:bevy_ecs",
+    "dep:bevy_kira_audio",
     "dep:bevy_math",
     "dep:bevy_render",
     "dep:bevy_sprite",
+    "dep:bevy-kira-components",
 ]
 bevy_reflect = ["dep:bevy_reflect"]
 cli = ["dep:anyhow", "dep:clap", "dep:ron", "dep:serde_json", "dep:tempfile"]
@@ -57,6 +59,17 @@ optional = true
 
 [dependencies.bevy_ecs]
 version = "0.14"
+optional = true
+
+[dependencies.bevy_kira_audio]
+version = "0.20"
+default-features = false
+features = ["wav"]
+optional = true
+
+[dependencies.bevy-kira-components]
+git = "https://github.com/mgi388/bevy-kira-components.git"
+branch = "fixes1"
 optional = true
 
 [dependencies.bevy_math]
