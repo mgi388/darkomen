@@ -25,7 +25,8 @@ impl Plugin for MusicScriptAssetPlugin {
         }
 
         app.init_asset::<MusicScriptAsset>()
-            .init_asset_loader::<MusicScriptAssetLoader>();
+            .init_asset_loader::<MusicScriptAssetLoader>()
+            .register_asset_reflect::<MusicScriptAsset>();
     }
 }
 

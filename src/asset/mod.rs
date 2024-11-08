@@ -8,11 +8,11 @@ use crate::asset::{
 
 mod army;
 mod battle_tabletop;
-mod graphics;
+pub mod graphics;
 mod light;
 mod lightmap;
 mod paths;
-mod sound;
+pub mod sound;
 
 pub mod prelude {
     #[doc(hidden)]
