@@ -39,9 +39,10 @@ pub struct Project {
     pub attributes: Attributes,
     #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
     excl: Excl,
-    /// The background music script file name, including the extension. E.g.
-    /// `battle1.fsm`.
-    pub background_music_script_file_name: String,
+    /// The music script file name, including the extension. E.g. `battle1.fsm`.
+    /// This can be used to play background music during a battle, or on various
+    /// UI screens.
+    pub music_script_file_name: String,
     pub tracks: Vec<Track>,
     #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
     edit: Vec<u8>,
@@ -469,7 +470,7 @@ mod tests {
         assert_eq!(p.terrain.height_in_blocks(), 25);
         assert_eq!(p.attributes.width, 184);
         assert_eq!(p.attributes.height, 200);
-        assert_eq!(p.background_music_script_file_name, "battle1.fsm");
+        assert_eq!(p.music_script_file_name, "battle1.fsm");
         assert_eq!(p.tracks.len(), 2);
         assert_eq!(p.tracks[0].control_points.len(), 6);
         assert_eq!(p.tracks[0].points.len(), 135);

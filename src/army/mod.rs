@@ -48,7 +48,7 @@ impl ScriptState {
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct SaveGameHeader {
-    /// The name displayed when loading the save file.
+    /// The name displayed when loading the save game.
     pub display_name: String,
     /// The original game writes over the existing display name with the new
     /// path but the old bytes are not cleared first. This field is used to

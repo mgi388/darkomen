@@ -261,7 +261,7 @@ impl<W: Write> Encoder<W> {
     fn write_music(&mut self, p: &Project) -> Result<(), EncodeError> {
         self.write_string(MUSIC_BLOCK_ID)?;
 
-        let c_string = self.make_c_string(&p.background_music_script_file_name)?;
+        let c_string = self.make_c_string(&p.music_script_file_name)?;
         self.write_c_string_with_limit(&c_string, MUSIC_BLOCK_DATA_SIZE_BYTES)?;
 
         Ok(())
