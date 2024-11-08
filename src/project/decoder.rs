@@ -106,7 +106,7 @@ impl<R: Read + Seek> Decoder<R> {
         let terrain = self.read_terrain()?;
         let attributes = self.read_attributes()?;
         let excl = self.read_excl()?;
-        let background_music_script_file_name = self.read_music()?;
+        let music_script_file_name = self.read_music()?;
         let tracks = self.read_tracks()?;
         let edit = self.read_edit()?;
 
@@ -118,7 +118,7 @@ impl<R: Read + Seek> Decoder<R> {
             terrain,
             attributes,
             excl,
-            background_music_script_file_name,
+            music_script_file_name,
             tracks,
             edit,
         })
