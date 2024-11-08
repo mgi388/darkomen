@@ -516,51 +516,51 @@ pub enum RegimentClass {
 
 impl RegimentClass {
     pub fn is_infantry(&self) -> bool {
-        Into::<u8>::into(*self) >> 3 == RegimentType::Infantryman.into()
+        Into::<u8>::into(*self) >> 3 == Into::<u8>::into(RegimentType::Infantryman)
     }
 
     pub fn is_cavalry(&self) -> bool {
-        Into::<u8>::into(*self) >> 3 == RegimentType::Cavalryman.into()
+        Into::<u8>::into(*self) >> 3 == Into::<u8>::into(RegimentType::Cavalryman)
     }
 
     pub fn is_archer(&self) -> bool {
-        Into::<u8>::into(*self) >> 3 == RegimentType::Archer.into()
+        Into::<u8>::into(*self) >> 3 == Into::<u8>::into(RegimentType::Archer)
     }
 
     pub fn is_artillery(&self) -> bool {
-        Into::<u8>::into(*self) >> 3 == RegimentType::ArtilleryUnit.into()
+        Into::<u8>::into(*self) >> 3 == Into::<u8>::into(RegimentType::ArtilleryUnit)
     }
 
     pub fn is_mage(&self) -> bool {
-        Into::<u8>::into(*self) >> 3 == RegimentType::Mage.into()
+        Into::<u8>::into(*self) >> 3 == Into::<u8>::into(RegimentType::Mage)
     }
 
     pub fn is_human(&self) -> bool {
-        Into::<u8>::into(*self) & 0x07 == RegimentRace::Human.into()
+        Into::<u8>::into(*self) & 0x07 == Into::<u8>::into(RegimentRace::Human)
     }
 
     pub fn is_wood_elf(&self) -> bool {
-        Into::<u8>::into(*self) & 0x07 == RegimentRace::WoodElf.into()
+        Into::<u8>::into(*self) & 0x07 == Into::<u8>::into(RegimentRace::WoodElf)
     }
 
     pub fn is_dwarf(&self) -> bool {
-        Into::<u8>::into(*self) & 0x07 == RegimentRace::Dwarf.into()
+        Into::<u8>::into(*self) & 0x07 == Into::<u8>::into(RegimentRace::Dwarf)
     }
 
     pub fn is_night_goblin(&self) -> bool {
-        Into::<u8>::into(*self) & 0x07 == RegimentRace::NightGoblin.into()
+        Into::<u8>::into(*self) & 0x07 == Into::<u8>::into(RegimentRace::NightGoblin)
     }
 
     pub fn is_orc(&self) -> bool {
-        Into::<u8>::into(*self) & 0x07 == RegimentRace::Orc.into()
+        Into::<u8>::into(*self) & 0x07 == Into::<u8>::into(RegimentRace::Orc)
     }
 
     pub fn is_undead(&self) -> bool {
-        Into::<u8>::into(*self) & 0x07 == RegimentRace::Undead.into()
+        Into::<u8>::into(*self) & 0x07 == Into::<u8>::into(RegimentRace::Undead)
     }
 
     pub fn is_townsperson(&self) -> bool {
-        Into::<u8>::into(*self) & 0x07 == RegimentRace::Townsfolk.into()
+        Into::<u8>::into(*self) & 0x07 == Into::<u8>::into(RegimentRace::Townsfolk)
     }
 }
 
