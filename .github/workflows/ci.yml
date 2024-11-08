@@ -13,6 +13,10 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+      - name: Install Linux deps
+        run: |
+          sudo apt update
+          sudo apt install -y --no-install-recommends libasound2-dev
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
@@ -39,6 +43,10 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+      - name: Install Linux deps
+        run: |
+          sudo apt update
+          sudo apt install -y --no-install-recommends libasound2-dev
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
@@ -53,6 +61,10 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+      - name: Install Linux deps
+        run: |
+          sudo apt update
+          sudo apt install -y --no-install-recommends libasound2-dev
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
@@ -67,6 +79,10 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+      - name: Install Linux deps
+        run: |
+          sudo apt update
+          sudo apt install -y --no-install-recommends libasound2-dev
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2

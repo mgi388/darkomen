@@ -3,7 +3,7 @@ use bevy_app::prelude::*;
 use crate::asset::{
     army::ArmyAssetPlugin, battle_tabletop::BattleTabletopAssetPlugin,
     graphics::sprite_sheet::SpriteSheetAssetPlugin, light::LightAssetPlugin,
-    lightmap::LightmapAssetPlugin, paths::AssetPathsPlugin,
+    lightmap::LightmapAssetPlugin, paths::AssetPathsPlugin, sound::SoundAssetPlugin,
 };
 
 mod army;
@@ -12,6 +12,7 @@ mod graphics;
 mod light;
 mod lightmap;
 mod paths;
+mod sound;
 
 pub mod prelude {
     #[doc(hidden)]
@@ -24,6 +25,8 @@ pub mod prelude {
     pub use crate::asset::light::*;
     #[doc(hidden)]
     pub use crate::asset::lightmap::*;
+    #[doc(hidden)]
+    pub use crate::asset::sound::*;
 }
 
 pub struct AssetPlugin;
@@ -35,6 +38,9 @@ impl Plugin for AssetPlugin {
         }
         if !app.is_plugin_added::<SpriteSheetAssetPlugin>() {
             app.add_plugins(SpriteSheetAssetPlugin);
+        }
+        if !app.is_plugin_added::<SoundAssetPlugin>() {
+            app.add_plugins(SoundAssetPlugin);
         }
         if !app.is_plugin_added::<LightAssetPlugin>() {
             app.add_plugins(LightAssetPlugin);
