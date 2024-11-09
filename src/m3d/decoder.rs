@@ -99,7 +99,7 @@ impl<R: Read + Seek> Decoder<R> {
     fn read_texture_descriptors(
         &mut self,
         count: u16,
-    ) -> Result<Vec<TextureDescriptor>, DecodeError> {
+    ) -> Result<Vec<M3dTextureDescriptor>, DecodeError> {
         let mut descriptors = Vec::with_capacity(count as usize);
 
         for _ in 0..count {
@@ -109,14 +109,14 @@ impl<R: Read + Seek> Decoder<R> {
         Ok(descriptors)
     }
 
-    fn read_texture_descriptor(&mut self) -> Result<TextureDescriptor, DecodeError> {
+    fn read_texture_descriptor(&mut self) -> Result<M3dTextureDescriptor, DecodeError> {
         let mut buf = [0; TEXTURE_DESCRIPTOR_SIZE_BYTES];
         self.reader.read_exact(&mut buf)?;
 
         let path = self.read_string(&buf[0..64])?;
         let file_name = self.read_string(&buf[64..])?;
 
-        Ok(TextureDescriptor { path, file_name })
+        Ok(M3dTextureDescriptor { path, file_name })
     }
 
     fn read_objects(&mut self, count: u16) -> Result<Vec<Object>, DecodeError> {

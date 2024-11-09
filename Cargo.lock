@@ -728,6 +728,33 @@ dependencies = [
 ]
 
 [[package]]
+name = "bevy_pbr"
+version = "0.14.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4dccaa3c945f19834dcf7cd8eb358236dbf0fc4000dacbc7710564e7856714db"
+dependencies = [
+ "bevy_app",
+ "bevy_asset",
+ "bevy_color",
+ "bevy_core_pipeline",
+ "bevy_derive",
+ "bevy_ecs",
+ "bevy_math",
+ "bevy_reflect",
+ "bevy_render",
+ "bevy_transform",
+ "bevy_utils",
+ "bevy_window",
+ "bitflags 2.6.0",
+ "bytemuck",
+ "fixedbitset 0.5.7",
+ "nonmax",
+ "radsort",
+ "smallvec",
+ "static_assertions",
+]
+
+[[package]]
 name = "bevy_ptr"
 version = "0.14.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1526,13 +1553,16 @@ dependencies = [
  "bevy_ecs",
  "bevy_kira_audio",
  "bevy_math",
+ "bevy_pbr",
  "bevy_reflect",
  "bevy_render",
  "bevy_sprite",
+ "bevy_utils",
  "bitflags 2.6.0",
  "clap",
  "darkomen",
  "derive_more",
+ "dyn-clone",
  "encoding_rs",
  "encoding_rs_io",
  "glam 0.27.0",
@@ -1636,6 +1666,12 @@ name = "dpi"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f25c0e292a7ca6d6498557ff1df68f32c99850012b6ea401cf8daf771f22ff53"
+
+[[package]]
+name = "dyn-clone"
+version = "1.0.17"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0d6ef0072f8a535281e4876be788938b528e9a1d43900b82c2569af7da799125"
 
 [[package]]
 name = "either"

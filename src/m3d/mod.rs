@@ -16,7 +16,7 @@ pub use decoder::{DecodeError, Decoder};
     reflect_value(Debug, Default, Deserialize, Serialize)
 )]
 pub struct M3d {
-    pub texture_descriptors: Vec<TextureDescriptor>,
+    pub texture_descriptors: Vec<M3dTextureDescriptor>,
     pub objects: Vec<Object>,
 }
 
@@ -26,7 +26,7 @@ pub struct M3d {
     feature = "bevy_reflect",
     reflect_value(Debug, Default, Deserialize, Serialize)
 )]
-pub struct TextureDescriptor {
+pub struct M3dTextureDescriptor {
     /// Path appears to be a directory on the original Dark Omen developer's
     /// machine. It does not seem to be used for anything useful and might best
     /// be treated as an Easter Egg.
@@ -41,7 +41,7 @@ pub struct TextureDescriptor {
 /// - `_1` seems like it's possibly just color keying.
 /// - `_2` are all water (and jewel) textures, so must possibly to do with
 ///   transparency, translucency or animation.
-impl TextureDescriptor {
+impl M3dTextureDescriptor {
     /// Returns `true` if the texture descriptor indicates that the texture is
     /// color keyed.
     pub fn is_color_keyed(&self) -> bool {
