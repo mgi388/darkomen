@@ -11,6 +11,7 @@ mod battle_tabletop;
 pub mod graphics;
 mod light;
 mod lightmap;
+pub mod m3d;
 mod paths;
 pub mod sound;
 
@@ -25,6 +26,10 @@ pub mod prelude {
     pub use crate::asset::light::*;
     #[doc(hidden)]
     pub use crate::asset::lightmap::*;
+    #[doc(hidden)]
+    pub use crate::asset::m3d::*;
+    #[doc(hidden)]
+    pub use crate::asset::paths::*;
     #[doc(hidden)]
     pub use crate::asset::sound::mad::*;
     #[doc(hidden)]
