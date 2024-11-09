@@ -13,6 +13,7 @@ mod light;
 mod lightmap;
 pub mod m3d;
 mod paths;
+pub mod project;
 pub mod sound;
 
 pub mod prelude {
@@ -30,6 +31,8 @@ pub mod prelude {
     pub use crate::asset::m3d::*;
     #[doc(hidden)]
     pub use crate::asset::paths::*;
+    #[doc(hidden)]
+    pub use crate::asset::project::*;
     #[doc(hidden)]
     pub use crate::asset::sound::mad::*;
     #[doc(hidden)]
