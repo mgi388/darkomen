@@ -162,14 +162,16 @@ fn normalize(value: f32, min: f32, max: f32) -> f32 {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use image::{DynamicImage, GenericImageView, RgbaImage};
-    use pretty_assertions::assert_eq;
     use std::{
         ffi::{OsStr, OsString},
         fs::File,
         path::{Path, PathBuf},
     };
+
+    use image::{DynamicImage, GenericImageView, RgbaImage};
+    use pretty_assertions::assert_eq;
+
+    use super::*;
 
     macro_rules! test_normalize {
         ($name:ident, $value:expr, $min:expr, $max:expr, $expected:expr) => {
