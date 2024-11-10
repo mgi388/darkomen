@@ -10,7 +10,7 @@ use super::*;
 
 /// The format ID used in all .M3D files. The last part probably stands for "3D
 /// model".
-const FORMAT: &str = "PD3M";
+pub(crate) const FORMAT: &str = "PD3M";
 
 const HEADER_SIZE_BYTES: usize = 24;
 const TEXTURE_DESCRIPTOR_SIZE_BYTES: usize = 96;
@@ -18,15 +18,6 @@ const VECTOR_SIZE_BYTES: usize = 12;
 const OBJECT_HEADER_SIZE_BYTES: usize = 52 + VECTOR_SIZE_BYTES;
 const OBJECT_FACE_SIZE_BYTES: usize = 16 + VECTOR_SIZE_BYTES;
 const OBJECT_VERTEX_SIZE_BYTES: usize = (2 * VECTOR_SIZE_BYTES) + 20;
-
-struct Header {
-    _magic: u32,
-    _version: u32,
-    _crc: u32,
-    _not_crc: u32,
-    texture_count: u16,
-    object_count: u16,
-}
 
 #[derive(Debug)]
 pub enum DecodeError {
@@ -73,6 +64,7 @@ impl<R: Read + Seek> Decoder<R> {
         let objects = self.read_objects(header.object_count)?;
 
         Ok(M3d {
+            header,
             texture_descriptors,
             objects,
         })
@@ -115,10 +107,28 @@ impl<R: Read + Seek> Decoder<R> {
         let mut buf = [0; TEXTURE_DESCRIPTOR_SIZE_BYTES];
         self.reader.read_exact(&mut buf)?;
 
-        let path = self.read_string(&buf[0..64])?;
-        let file_name = self.read_string(&buf[64..])?;
+        let path_buf = &buf[0..64];
+        let (path_buf, path_remainder) = path_buf
+            .iter()
+            .enumerate()
+            .find(|(_, &b)| b == 0)
+            .map(|(i, _)| path_buf.split_at(i + 1))
+            .unwrap_or((path_buf, &[]));
 
-        Ok(M3dTextureDescriptor { path, file_name })
+        let file_name_buf = &buf[64..];
+        let (file_name_buf, file_name_remainder) = file_name_buf
+            .iter()
+            .enumerate()
+            .find(|(_, &b)| b == 0)
+            .map(|(i, _)| file_name_buf.split_at(i + 1))
+            .unwrap_or((file_name_buf, &[]));
+
+        Ok(M3dTextureDescriptor {
+            path: self.read_string(path_buf)?,
+            path_remainder: path_remainder.to_vec(),
+            file_name: self.read_string(file_name_buf)?,
+            file_name_remainder: file_name_remainder.to_vec(),
+        })
     }
 
     fn read_objects(&mut self, count: u16) -> Result<Vec<Object>, DecodeError> {
@@ -135,6 +145,14 @@ impl<R: Read + Seek> Decoder<R> {
         let mut buf = [0; OBJECT_HEADER_SIZE_BYTES];
         self.reader.read_exact(&mut buf)?;
 
+        let name_buf = &buf[0..32];
+        let (name_buf, name_remainder) = name_buf
+            .iter()
+            .enumerate()
+            .find(|(_, &b)| b == 0)
+            .map(|(i, _)| name_buf.split_at(i + 1))
+            .unwrap_or((name_buf, &[]));
+
         let vertex_count = u16::from_le_bytes(buf[48..50].try_into().unwrap());
         let face_count = u16::from_le_bytes(buf[50..52].try_into().unwrap());
 
@@ -149,7 +167,8 @@ impl<R: Read + Seek> Decoder<R> {
         }
 
         Ok(Object {
-            name: self.read_string(&buf[0..32])?,
+            name: self.read_string(name_buf)?,
+            name_remainder: name_remainder.to_vec(),
             parent_index: i16::from_le_bytes(buf[32..34].try_into().unwrap()),
             padding: i16::from_le_bytes(buf[34..36].try_into().unwrap()),
             translation: self.read_vector(&buf[36..48])?,
