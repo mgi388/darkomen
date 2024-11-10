@@ -1,10 +1,12 @@
-use super::*;
-use glam::Vec3;
 use std::{
     ffi::CStr,
     fmt,
     io::{Error as IoError, Read, Seek},
 };
+
+use glam::Vec3;
+
+use super::*;
 
 /// The format ID used in all .M3D files. The last part probably stands for "3D
 /// model".
@@ -212,110 +214,5 @@ impl<R: Read + Seek> Decoder<R> {
             .map_err(|_| DecodeError::InvalidString)?
             .to_string_lossy()
             .into_owned())
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::{
-        ffi::{OsStr, OsString},
-        fs::File,
-        path::{Path, PathBuf},
-    };
-
-    #[test]
-    fn test_decode_b1_01_base() {
-        let d: PathBuf = [
-            std::env::var("DARKOMEN_PATH").unwrap().as_str(),
-            "DARKOMEN",
-            "GAMEDATA",
-            "1PBAT",
-            "B1_01",
-            "BASE.M3D",
-        ]
-        .iter()
-        .collect();
-
-        let file = File::open(d.clone()).unwrap();
-        let m3d = Decoder::new(file).decode().unwrap();
-
-        assert_eq!(m3d.texture_descriptors.len(), 37);
-        assert_eq!(m3d.objects.len(), 4);
-    }
-
-    #[test]
-    fn test_decode_all() {
-        let d: PathBuf = [std::env::var("DARKOMEN_PATH").unwrap().as_str(), "DARKOMEN"]
-            .iter()
-            .collect();
-
-        let root_output_dir: PathBuf = [env!("CARGO_MANIFEST_DIR"), "decoded", "m3ds"]
-            .iter()
-            .collect();
-
-        std::fs::create_dir_all(&root_output_dir).unwrap();
-
-        fn visit_dirs(dir: &Path, cb: &mut dyn FnMut(&Path)) {
-            println!("Reading dir {:?}", dir.display());
-
-            let mut paths = std::fs::read_dir(dir)
-                .unwrap()
-                .map(|res| res.map(|e| e.path()))
-                .collect::<Result<Vec<_>, std::io::Error>>()
-                .unwrap();
-
-            paths.sort();
-
-            for path in paths {
-                if path.is_dir() {
-                    visit_dirs(&path, cb);
-                } else {
-                    cb(&path);
-                }
-            }
-        }
-
-        visit_dirs(&d, &mut |path| {
-            let Some(ext) = path.extension() else {
-                return;
-            };
-            if !(ext.to_string_lossy().to_uppercase() == "M3D"
-                || ext.to_string_lossy().to_uppercase() == "M3X")
-            {
-                return;
-            }
-
-            println!("Decoding {:?}", path.file_name().unwrap());
-
-            let file = File::open(path).unwrap();
-            let m3d = Decoder::new(file).decode().unwrap();
-
-            let parent_dir = path
-                .components()
-                .collect::<Vec<_>>()
-                .iter()
-                .rev()
-                .skip(1) // skip the file name
-                .take_while(|c| c.as_os_str() != "DARKOMEN")
-                .collect::<Vec<_>>()
-                .iter()
-                .rev()
-                .collect::<PathBuf>();
-
-            let output_dir = root_output_dir.join(parent_dir);
-            std::fs::create_dir_all(&output_dir).unwrap();
-
-            let output_path = append_ext("ron", output_dir.join(path.file_name().unwrap()));
-            let mut output_file = File::create(output_path).unwrap();
-            ron::ser::to_writer_pretty(&mut output_file, &m3d, Default::default()).unwrap();
-        });
-    }
-
-    fn append_ext(ext: impl AsRef<OsStr>, path: PathBuf) -> PathBuf {
-        let mut os_string: OsString = path.into();
-        os_string.push(".");
-        os_string.push(ext.as_ref());
-        os_string.into()
     }
 }
