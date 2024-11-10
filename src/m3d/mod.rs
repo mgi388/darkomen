@@ -1,4 +1,5 @@
 mod decoder;
+mod encoder;
 
 #[cfg(feature = "bevy_reflect")]
 use bevy_reflect::prelude::*;
@@ -6,7 +7,8 @@ use bitflags::bitflags;
 use glam::{UVec4, Vec2, Vec3};
 use serde::{Deserialize, Serialize};
 
-pub use decoder::{DecodeError, Decoder};
+pub use decoder::*;
+pub use encoder::*;
 
 /// Dark Omen's format for 3D models.
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -16,8 +18,24 @@ pub use decoder::{DecodeError, Decoder};
     reflect_value(Debug, Default, Deserialize, Serialize)
 )]
 pub struct M3d {
+    header: Header,
     pub texture_descriptors: Vec<M3dTextureDescriptor>,
     pub objects: Vec<Object>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+#[cfg_attr(
+    feature = "bevy_reflect",
+    reflect_value(Debug, Default, Deserialize, Serialize)
+)]
+pub(crate) struct Header {
+    _magic: u32,
+    _version: u32,
+    _crc: u32,
+    _not_crc: u32,
+    texture_count: u16,
+    object_count: u16,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -31,8 +49,14 @@ pub struct M3dTextureDescriptor {
     /// machine. It does not seem to be used for anything useful and might best
     /// be treated as an Easter Egg.
     pub path: String,
+    /// There are some bytes after the null-terminated string. Not sure what
+    /// they are for.
+    path_remainder: Vec<u8>,
     /// The name of the texture image file, e.g. "nflgrs01.bmp".
     pub file_name: String,
+    /// There are some bytes after the null-terminated string. Not sure what
+    /// they are for.
+    file_name_remainder: Vec<u8>,
 }
 
 /// Texture flags embedded in the prefix of the file name, e.g. `_1WOOD8.bmp`,
@@ -70,6 +94,9 @@ bitflags! {
 )]
 pub struct Object {
     pub name: String,
+    /// There are some bytes after the null-terminated string. Not sure what
+    /// they are for.
+    pub name_remainder: Vec<u8>,
     pub parent_index: i16,
     pub padding: i16,
     pub translation: Vec3,
@@ -111,12 +138,46 @@ pub struct Vertex {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::{
         ffi::{OsStr, OsString},
         fs::File,
         path::{Path, PathBuf},
     };
+
+    use pretty_assertions::assert_eq;
+
+    use super::*;
+
+    fn roundtrip_test(original_bytes: &[u8], m: &M3d) {
+        let mut encoded_bytes = Vec::new();
+        Encoder::new(&mut encoded_bytes).encode(m).unwrap();
+
+        let original_bytes = original_bytes
+            .chunks(16)
+            .map(|chunk| {
+                chunk
+                    .iter()
+                    .map(|b| format!("{:02X}", b))
+                    .collect::<Vec<_>>()
+                    .join(" ")
+            })
+            .collect::<Vec<_>>()
+            .join("\n");
+
+        let encoded_bytes = encoded_bytes
+            .chunks(16)
+            .map(|chunk| {
+                chunk
+                    .iter()
+                    .map(|b| format!("{:02X}", b))
+                    .collect::<Vec<_>>()
+                    .join(" ")
+            })
+            .collect::<Vec<_>>()
+            .join("\n");
+
+        assert_eq!(original_bytes, encoded_bytes);
+    }
 
     #[test]
     fn test_decode_b1_01_base() {
@@ -131,11 +192,15 @@ mod tests {
         .iter()
         .collect();
 
+        let original_bytes = std::fs::read(d.clone()).unwrap();
+
         let file = File::open(d.clone()).unwrap();
         let m3d = Decoder::new(file).decode().unwrap();
 
         assert_eq!(m3d.texture_descriptors.len(), 37);
         assert_eq!(m3d.objects.len(), 4);
+
+        roundtrip_test(&original_bytes, &m3d);
     }
 
     #[test]
@@ -182,8 +247,20 @@ mod tests {
 
             println!("Decoding {:?}", path.file_name().unwrap());
 
+            let original_bytes = std::fs::read(path).unwrap();
+
             let file = File::open(path).unwrap();
             let m3d = Decoder::new(file).decode().unwrap();
+
+            roundtrip_test(&original_bytes, &m3d);
+
+            // Check the header values. Not sure if these are correct field
+            // names or what they are used for in-game, but their values are
+            // consistent across all M3D files.
+            assert_eq!(m3d.header._magic, 908342784);
+            assert_eq!(m3d.header._version, 1);
+            assert_eq!(m3d.header._crc, 0);
+            assert_eq!(m3d.header._not_crc, 4294967295);
 
             let parent_dir = path
                 .components()
