@@ -81,17 +81,10 @@ pub struct MusicScriptAssetLoader {
     asset_paths: AssetPaths,
 }
 
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Reflect, Serialize)]
+#[reflect(Debug, Default, Deserialize, Serialize)]
 pub struct MusicScriptAssetLoaderSettings {
     pub music_path: PathBuf,
-}
-
-impl Default for MusicScriptAssetLoaderSettings {
-    fn default() -> Self {
-        Self {
-            music_path: PathBuf::new(),
-        }
-    }
 }
 
 /// Possible errors that can be produced by [`MusicScriptAssetLoader`].

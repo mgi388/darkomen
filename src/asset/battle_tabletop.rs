@@ -61,7 +61,7 @@ impl BattleTabletopAsset {
 #[derive(Clone, Debug, Default)]
 pub struct BattleTabletopAssetLoader;
 
-#[derive(Clone, Debug, Default, Deserialize, Reflect, Serialize)]
+#[derive(Clone, Copy, Debug, Default, Deserialize, Reflect, Serialize)]
 #[reflect(Debug, Default, Deserialize, Serialize)]
 pub struct BattleTabletopAssetLoaderSettings {
     pub load_player_army: bool,
@@ -110,9 +110,10 @@ impl AssetLoader for BattleTabletopAssetLoader {
             source: btb.clone(),
             player_army: if settings.load_player_army {
                 let mut b = load_context.loader();
-                if let Some(s) = settings.player_army_loader_settings.clone() {
+                if let Some(ref s) = settings.player_army_loader_settings {
+                    let s = *s;
                     b = b.with_settings(move |settings| {
-                        *settings = s.clone();
+                        *settings = s;
                     });
                 }
                 Some(b.load(parent_path.join(btb.player_army).with_extension("ARM")))
@@ -121,9 +122,10 @@ impl AssetLoader for BattleTabletopAssetLoader {
             },
             enemy_army: if settings.load_enemy_army {
                 let mut b = load_context.loader();
-                if let Some(s) = settings.enemy_army_loader_settings.clone() {
+                if let Some(ref s) = settings.enemy_army_loader_settings {
+                    let s = *s;
                     b = b.with_settings(move |settings| {
-                        *settings = s.clone();
+                        *settings = s;
                     });
                 }
                 Some(b.load(parent_path.join(btb.enemy_army).with_extension("ARM")))

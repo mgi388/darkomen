@@ -48,7 +48,7 @@ pub struct ArmyAssetLoader {
     paths: AssetPaths,
 }
 
-#[derive(Clone, Debug, Default, Deserialize, Reflect, Serialize)]
+#[derive(Clone, Copy, Debug, Default, Deserialize, Reflect, Serialize)]
 #[reflect(Debug, Default, Deserialize, Serialize)]
 pub struct ArmyAssetLoaderSettings {
     pub load_small_banner: bool,
