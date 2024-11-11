@@ -10,7 +10,9 @@ use serde::{Deserialize, Serialize};
 
 use crate::project::*;
 
-use super::{light::*, m3d::M3dAsset, paths::*, sound::music_script::*};
+use super::{
+    battle_tabletop::*, light::*, lightmap::*, m3d::M3dAsset, paths::*, sound::music_script::*,
+};
 
 #[derive(Debug, Default)]
 pub struct ProjectPlugin<MaterialT: Material + std::fmt::Debug>(PhantomData<MaterialT>);
@@ -20,11 +22,17 @@ impl<MaterialT: Material + std::fmt::Debug> Plugin for ProjectPlugin<MaterialT> 
         if !app.is_plugin_added::<AssetPathsPlugin>() {
             app.add_plugins(AssetPathsPlugin);
         }
+        if !app.is_plugin_added::<MusicScriptAssetPlugin>() {
+            app.add_plugins(MusicScriptAssetPlugin);
+        }
         if !app.is_plugin_added::<LightAssetPlugin>() {
             app.add_plugins(LightAssetPlugin);
         }
-        if !app.is_plugin_added::<MusicScriptAssetPlugin>() {
-            app.add_plugins(MusicScriptAssetPlugin);
+        if !app.is_plugin_added::<LightmapAssetPlugin>() {
+            app.add_plugins(LightmapAssetPlugin);
+        }
+        if !app.is_plugin_added::<BattleTabletopAssetPlugin>() {
+            app.add_plugins(BattleTabletopAssetPlugin);
         }
 
         app.init_asset::<ProjectAsset<MaterialT>>()
@@ -50,6 +58,10 @@ pub struct ProjectAsset<MaterialT: Material + std::fmt::Debug> {
     pub music_script: Handle<MusicScriptAsset>,
     /// The lights for the project.
     pub lights: Handle<LightsAsset>,
+    /// The lightmap for the project.
+    pub lightmap: Handle<LightmapAsset>,
+    /// The battle tabletop for the project.
+    pub battle_tabletop: Handle<BattleTabletopAsset>,
 }
 
 impl<MaterialT: Material + std::fmt::Debug> ProjectAsset<MaterialT> {
@@ -99,17 +111,11 @@ pub struct ProjectAssetLoader<MaterialT: Material + std::fmt::Debug> {
     asset_paths: AssetPaths,
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Reflect, Serialize)]
+#[reflect(Debug, Default, Deserialize, Serialize)]
 pub struct ProjectAssetLoaderSettings {
-    pub script_path: PathBuf,
-}
-
-impl Default for ProjectAssetLoaderSettings {
-    fn default() -> Self {
-        Self {
-            script_path: PathBuf::new(),
-        }
-    }
+    pub music_script_path: PathBuf,
+    pub battle_tabletop_loader_settings: Option<BattleTabletopAssetLoaderSettings>,
 }
 
 /// Possible errors that can be produced by [`ProjectAssetLoader`].
@@ -134,10 +140,10 @@ impl<MaterialT: Material + std::fmt::Debug> AssetLoader for ProjectAssetLoader<M
         settings: &'a ProjectAssetLoaderSettings,
         load_context: &'a mut LoadContext<'_>,
     ) -> Result<Self::Asset, Self::Error> {
-        let script_path = if settings.script_path.to_string_lossy().is_empty() {
-            self.asset_paths.script_path.clone()
+        let music_script_path = if settings.music_script_path.to_string_lossy().is_empty() {
+            self.asset_paths.music_script_path.clone()
         } else {
-            settings.script_path.clone()
+            settings.music_script_path.clone()
         };
 
         let parent_path = load_context
@@ -172,8 +178,19 @@ impl<MaterialT: Material + std::fmt::Debug> AssetLoader for ProjectAssetLoader<M
                 .iter()
                 .map(|file_name| load_context.load(parent_path.join(file_name)))
                 .collect(),
-            music_script: load_context.load(script_path.join(project.music_script_file_name)),
-            lights: load_context.load(parent_path.join(id).with_extension("LIT")),
+            music_script: load_context.load(music_script_path.join(project.music_script_file_name)),
+            lights: load_context.load(parent_path.join(&id).with_extension("LIT")),
+            lightmap: load_context.load(parent_path.join(&id).with_extension("SHD")),
+            battle_tabletop: {
+                let mut b = load_context.loader();
+                if let Some(ref s) = settings.battle_tabletop_loader_settings {
+                    let s = *s;
+                    b = b.with_settings(move |settings| {
+                        *settings = s;
+                    });
+                }
+                b.load(parent_path.join(&id).with_extension("BTB"))
+            },
         })
     }
 

@@ -12,9 +12,9 @@ impl Plugin for AssetPathsPlugin {
             banners_path: PathBuf::from("DARKOMEN/GRAPHICS/BANNERS"),
             books_path: PathBuf::from("DARKOMEN/GRAPHICS/BOOKS"),
             sound_path: PathBuf::from("DARKOMEN/SOUND/SOUND"),
-            script_path: PathBuf::from("DARKOMEN/SOUND/SCRIPT"),
+            music_script_path: PathBuf::from("DARKOMEN/SOUND/SCRIPT"),
             music_path: PathBuf::from("DARKOMEN/SOUND/MUSIC"),
-            sfx_packets_path: PathBuf::from("DARKOMEN/SOUND/H"),
+            sound_effect_packets_path: PathBuf::from("DARKOMEN/SOUND/H"),
         });
         app.register_type::<AssetPaths>();
     }
@@ -26,9 +26,9 @@ pub struct AssetPaths {
     pub banners_path: PathBuf,
     pub books_path: PathBuf,
     pub sound_path: PathBuf,
-    pub script_path: PathBuf,
+    pub music_script_path: PathBuf,
     pub music_path: PathBuf,
-    pub sfx_packets_path: PathBuf,
+    pub sound_effect_packets_path: PathBuf,
 }
 
 impl Default for AssetPaths {
@@ -37,9 +37,9 @@ impl Default for AssetPaths {
             banners_path: PathBuf::from("DARKOMEN/GRAPHICS/BANNERS"),
             books_path: PathBuf::from("DARKOMEN/GRAPHICS/BOOKS"),
             sound_path: PathBuf::from("DARKOMEN/SOUND/SOUND"),
-            script_path: PathBuf::from("DARKOMEN/SOUND/SCRIPT"),
+            music_script_path: PathBuf::from("DARKOMEN/SOUND/SCRIPT"),
             music_path: PathBuf::from("DARKOMEN/SOUND/MUSIC"),
-            sfx_packets_path: PathBuf::from("DARKOMEN/SOUND/H"),
+            sound_effect_packets_path: PathBuf::from("DARKOMEN/SOUND/H"),
         }
     }
 }
@@ -49,7 +49,7 @@ impl AssetPaths {
         let mut placeholders = HashMap::new();
         placeholders.insert("[BOOKS]", &self.books_path);
         placeholders.insert("[BANNERS]", &self.banners_path);
-        placeholders.insert("[SOUND]", &self.sfx_packets_path);
+        placeholders.insert("[SOUND]", &self.sound_effect_packets_path);
 
         // Bevy asset paths are meant to be virtual paths, not OS paths, so we
         // need to replace backslashes with forward slashes.
