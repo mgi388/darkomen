@@ -110,8 +110,8 @@ pub struct SpriteSheetAssetLoader {
     default_settings: SpriteSheetAssetLoaderSettings,
 }
 
-#[derive(Clone, Default, Deserialize, Reflect, Resource, Serialize)]
-#[reflect(Resource)]
+#[derive(Clone, Copy, Default, Deserialize, Reflect, Resource, Serialize)]
+#[reflect(Default, Deserialize, Resource, Serialize)]
 pub struct SpriteSheetAssetLoaderSettings {
     #[serde(default)]
     pub use_fallback_image: bool,
@@ -242,7 +242,7 @@ impl FromWorld for SpriteSheetAssetLoader {
         let settings = world.resource::<SpriteSheetAssetLoaderSettings>();
 
         Self {
-            default_settings: settings.clone(),
+            default_settings: *settings,
         }
     }
 }

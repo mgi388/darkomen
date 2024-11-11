@@ -28,7 +28,8 @@ pub struct LightmapAsset {
 #[derive(Clone, Debug, Default)]
 pub struct LightmapAssetLoader;
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Copy, Debug, Default, Deserialize, Reflect, Serialize)]
+#[reflect(Debug, Default, Deserialize, Serialize)]
 pub struct LightmapAssetLoaderSettings;
 
 /// Possible errors that can be produced by [`LightmapAssetLoader`].

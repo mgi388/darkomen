@@ -24,7 +24,8 @@ pub struct LightsAsset(pub Vec<Light>);
 #[derive(Clone, Default)]
 pub struct LightsAssetLoader;
 
-#[derive(Clone, Default, Deserialize, Serialize)]
+#[derive(Clone, Copy, Debug, Default, Deserialize, Reflect, Serialize)]
+#[reflect(Debug, Default, Deserialize, Serialize)]
 pub struct LightsAssetLoaderSettings;
 
 /// Possible errors that can be produced by [`LightsAssetLoader`].
