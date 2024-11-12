@@ -68,7 +68,7 @@ impl<R: Read + Seek> Decoder<R> {
         Decoder { reader }
     }
 
-    pub fn decode(&mut self) -> Result<Blueprint, DecodeError> {
+    pub fn decode(&mut self) -> Result<BattleTabletop, DecodeError> {
         self.check_btb_file_type();
 
         let (width, height, player_army, enemy_army, ctl) = self.read_battle_header()?;
@@ -77,7 +77,7 @@ impl<R: Read + Seek> Decoder<R> {
         let regions = self.read_regions()?;
         let nodes = self.read_nodes()?;
 
-        Ok(Blueprint {
+        Ok(BattleTabletop {
             width,
             height,
             player_army,
@@ -424,7 +424,7 @@ mod tests {
             let file = File::open(path).unwrap();
             let b = Decoder::new(file).decode().unwrap();
 
-            // The blueprint width and height should be multiples of 8.
+            // The width and height should be multiples of 8.
             assert_eq!(b.width % 8, 0);
             assert_eq!(b.height % 8, 0);
 
@@ -434,13 +434,13 @@ mod tests {
                     .decode()
                     .unwrap();
 
-                // The scaled down blueprint dimensions should always be smaller
-                // than the project dimensions.
+                // The scaled down dimensions should always be smaller than the
+                // project dimensions.
                 assert!(b.width / 8 <= p.attributes.width);
                 assert!(b.height / 8 <= p.attributes.height);
 
-                // Overlay the blueprint on the heightmap image.
-                let img = overlay_blueprint_on_terrain(&p, &b);
+                // Overlay the battle tabletop on the heightmap image.
+                let img = overlay_battle_tabletop_on_terrain(&p, &b);
                 img.save(
                     output_dir
                         .join(path.file_stem().unwrap())
@@ -465,12 +465,12 @@ mod tests {
         });
     }
 
-    /// Note: We know the blueprint always fits within the project dimensions so
-    /// we don't need to expand the base image.
-    fn overlay_blueprint_on_terrain(project: &Project, blueprint: &Blueprint) -> DynamicImage {
+    /// Note: We know the battle tabletop always fits within the project
+    /// dimensions so we don't need to expand the base image.
+    fn overlay_battle_tabletop_on_terrain(p: &Project, b: &BattleTabletop) -> DynamicImage {
         // Doesn't matter which heightmap we use, they all have the same
         // dimensions, but the furniture one has the most detail.
-        let img = project.terrain.furniture_heightmap_image();
+        let img = p.terrain.furniture_heightmap_image();
         let mut img_buffer = img.to_rgba8();
 
         // The image is quite dark, so invert colors just for ease of viewing.
@@ -480,12 +480,12 @@ mod tests {
         }
 
         // Pin the rectangle to the top right which is the terrain origin.
-        let start_x = img_buffer.width() as i32 - (blueprint.width / 8) as i32;
+        let start_x = img_buffer.width() as i32 - (b.width / 8) as i32;
         let start_y = 0; // top edge, so y is 0
 
-        // Draw a hollow rectangle on the base image to show the blueprint
+        // Draw a hollow rectangle on the base image to show the battle tabletop
         // dimensions.
-        let rect = Rect::at(start_x, start_y).of_size(blueprint.width / 8, blueprint.height / 8);
+        let rect = Rect::at(start_x, start_y).of_size(b.width / 8, b.height / 8);
         draw_hollow_rect_mut(&mut img_buffer, rect, Rgba([255, 0, 0, 255]));
 
         // Now rotate the image 180 degrees to make the origin at the bottom

@@ -8,15 +8,15 @@ use serde::{Deserialize, Serialize};
 
 pub use decoder::{DecodeError, Decoder};
 
-/// The scale of the blueprint in the game world.
+/// The scale of the battle tabletop in the game world.
 ///
-/// To get the world coordinates from the blueprint coordinates, divide the
-/// blueprint coordinates by the scale.
+/// To get the world coordinates from the battle tabletop coordinates, divide
+/// the battle tabletop coordinates by the scale.
 pub const SCALE: f32 = 8.;
 
 #[derive(Debug, Clone, Serialize)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
-pub struct Blueprint {
+pub struct BattleTabletop {
     pub width: u32,
     pub height: u32,
     /// The name of the player's army file, without the extension. E.g.
