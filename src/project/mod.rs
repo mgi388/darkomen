@@ -477,7 +477,7 @@ mod tests {
         assert_eq!(p.tracks[1].control_points.len(), 6);
         assert_eq!(p.tracks[1].points.len(), 116);
 
-        use crate::battle::SCALE;
+        use crate::battle_tabletop::SCALE;
         // Line segment 1 of 'Sightedge' region from B1_01.BTB.
         assert_eq!(
             p.terrain

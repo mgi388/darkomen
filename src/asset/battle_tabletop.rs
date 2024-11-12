@@ -4,7 +4,7 @@ use bevy_reflect::prelude::*;
 use derive_more::derive::{Display, Error, From};
 use serde::{Deserialize, Serialize};
 
-use crate::battle::*;
+use crate::battle_tabletop::*;
 
 use super::army::*;
 
@@ -25,7 +25,7 @@ impl Plugin for BattleTabletopAssetPlugin {
 #[derive(Asset, Clone, Debug, Reflect)]
 #[reflect(Debug)]
 pub struct BattleTabletopAsset {
-    source: Blueprint,
+    source: BattleTabletop,
 
     pub player_army: Option<Handle<ArmyAsset>>,
     pub enemy_army: Option<Handle<ArmyAsset>>,
@@ -33,7 +33,7 @@ pub struct BattleTabletopAsset {
 
 impl BattleTabletopAsset {
     #[inline(always)]
-    pub fn get(&self) -> &Blueprint {
+    pub fn get(&self) -> &BattleTabletop {
         &self.source
     }
 
