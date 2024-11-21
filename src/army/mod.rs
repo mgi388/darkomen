@@ -1359,7 +1359,13 @@ mod tests {
         }
 
         visit_dirs(&d, &mut |path| {
-            if path.is_dir() {
+            let Some(ext) = path.extension() else {
+                return;
+            };
+            // Skip unless the extension matches \d{3}.
+            let ext = ext.to_string_lossy();
+            if !(ext.len() == 3 && ext.chars().all(|c| c.is_ascii_digit())) {
+                println!("Skipping {:?}", path.file_name().unwrap());
                 return;
             }
 
