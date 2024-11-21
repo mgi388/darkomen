@@ -121,8 +121,8 @@ impl<R: Read + Seek> Decoder<R> {
 
         let header = self.read_header(start_pos)?;
 
-        let race = ArmyRace::try_from(header.race)
-            .map_err(|_| DecodeError::InvalidArmyRace(header.race))?;
+        let race =
+            ArmyRace::from_bits(header.race).ok_or(DecodeError::InvalidArmyRace(header.race))?;
 
         let regiments = self.read_regiments(&header)?;
 
