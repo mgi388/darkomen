@@ -231,19 +231,21 @@ impl Army {
     }
 }
 
-#[repr(u8)]
-#[derive(
-    Clone, Copy, Debug, Default, Deserialize, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive,
-)]
-#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
-pub enum ArmyRace {
-    #[default]
-    Empire = 0,
-    EmpireMultiplayer = 1,
-    Greenskin = 2,
-    GreenskinMultiplayer = 3,
-    Undead = 4,
-    UndeadMultiplayer = 5,
+bitflags! {
+    #[repr(transparent)]
+    #[derive(Clone, Copy, Debug, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
+    #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+    #[cfg_attr(feature = "bevy_reflect", reflect_value(Debug, Default, Deserialize, Hash, PartialEq, Serialize))]
+    pub struct ArmyRace: u8 {
+        /// Empire army.
+        const EMPIRE = 0;
+        /// Multiplayer army.
+        const MULTIPLAYER = 1 << 0;
+        /// Greenskins army.
+        const GREENSKINS = 1 << 1;
+        /// Undead army.
+        const UNDEAD = 1 << 2;
+    }
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -1020,7 +1022,7 @@ mod tests {
         let file = File::open(d).unwrap();
         let a = Decoder::new(file).decode().unwrap();
 
-        assert_eq!(a.race, ArmyRace::Empire);
+        assert!(a.race.contains(ArmyRace::EMPIRE));
         assert_eq!(a.small_banner_path, "[BOOKS]\\hshield.spr");
         assert_eq!(a.small_banner_disabled_path, "[BOOKS]\\hgban.spr");
         assert_eq!(a.large_banner_path, "[BOOKS]\\hlban.spr");

@@ -275,7 +275,7 @@ impl<W: Write> Encoder<W> {
             .write_all(&(army.regiments.len() as u32).to_le_bytes())?;
         self.writer
             .write_all(&(REGIMENT_SIZE_BYTES as u32).to_le_bytes())?;
-        self.writer.write_all(&[Into::<u8>::into(army.race)])?;
+        self.writer.write_all(&army.race.bits().to_le_bytes())?;
         self.writer.write_all(&army.unknown1)?;
         self.writer
             .write_all(&army.default_name_index.to_le_bytes())?;
