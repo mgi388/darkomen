@@ -15,27 +15,52 @@ pub use encoder::{EncodeError, Encoder};
 #[derive(Debug, Clone, Default, Deserialize, Serialize)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct ScriptState {
-    /// The 4th u32:
+    pub program_counter: u32,
     ///  - 0x13 (19u32) is saved after a cutscene (which could also be just
     ///    before a battle would start).
     ///  - 0x3A (58u32) is saved at the victory screen.
-    unknown0: Vec<u32>,
+    pub unknown0: u32,
     /// The base address in the script where the campaign should start executing
     /// from. In the English version of the game, this is `0x4C3C48`. In the
     /// German version of the game, this is `0x4C3D90`. Combine with
     /// `execution_offset_index
     /// * 4` to get the address to start executing from.
     pub base_execution_address: u32,
-    unknown1: Vec<u8>,
-    unknown1_hex: Vec<String>,  // TODO: Remove, debug only.
-    unknown1_as_u32s: Vec<u32>, // TODO: Remove, debug only.
+    /// In the English version of the game, this is `0x4CCD28`. In the German
+    /// version of the game, this is `0x4CCE70`.
+    pub unknown_address: u32,
+    /// Initialized to 0 on init.
+    pub local_variable: u32,
+    /// Initialized to 1 on init.
+    pub unknown1: u32,
+    /// Initialized to 20 on init.
+    pub stack_pointer: u32,
+    unknown2: Vec<u8>,
+    unknown2_hex: Vec<String>,  // TODO: Remove, debug only.
+    unknown2_as_u32s: Vec<u32>, // TODO: Remove, debug only.
     /// The offset index to add to the base execution address to get the address
     /// to start executing from. To account for alignment, multiply this value
     /// by 4 before adding it to the base address.
     pub execution_offset_index: u32,
-    unknown2: Vec<u8>,
-    unknown2_hex: Vec<String>,  // TODO: Remove, debug only.
-    unknown2_as_u32s: Vec<u32>, // TODO: Remove, debug only.
+    pub unknown3: u32,
+    /// Initialized to 0 on init.
+    pub nest_if: u32,
+    /// Initialized to 0 on init.
+    pub nest_gosub: u32,
+    /// Initialized to 0 on init.
+    pub nest_loop: u32,
+    pub unknown4: u32,
+    /// Initialized to the current tick count on init, which is the number of
+    /// milliseconds since the operating system started. The purpose of this is
+    /// not yet known.
+    pub elapsed_millis: u32,
+    /// Initialized to 0 on init.
+    pub unknown5: u32,
+    /// Initialized to 0 on init.
+    pub unknown6: u32,
+    unknown7: Vec<u8>,
+    unknown7_hex: Vec<String>,  // TODO: Remove, debug only.
+    unknown7_as_u32s: Vec<u32>, // TODO: Remove, debug only.
 }
 
 impl ScriptState {
@@ -66,6 +91,8 @@ pub struct SaveGameHeader {
     /// string. If it's `Some`, then it contains the residual bytes, up to, but
     /// not including, the last nul-terminated string.
     suggested_display_name_residual_bytes: Option<Vec<u8>>,
+    pub unknown_bool1: bool,
+    pub unknown_bool2: bool,
     script_state_hex: Vec<String>,  // TODO: Remove, debug only.
     script_state_as_u32s: Vec<u32>, // TODO: Remove, debug only.
     /// The script state of the save game. Used by the WHMTG scripting engine to
@@ -191,14 +218,18 @@ pub struct Army {
     /// There are some bytes after the null-terminated string. Not sure what
     /// they are for.
     small_banner_path_remainder: Vec<u8>,
-    pub small_banner_disabled_path: String,
+    pub small_disabled_banner_path: String,
     /// There are some bytes after the null-terminated string. Not sure what
     /// they are for.
-    small_banner_disabled_path_remainder: Vec<u8>,
+    small_disabled_banner_path_remainder: Vec<u8>,
+    small_disabled_banner_path_remainder_as_u16s: Vec<u16>, // TODO: Remove, debug only.
+    small_disabled_banner_path_remainder_as_u32s: Vec<u32>, // TODO: Remove, debug only.
     pub large_banner_path: String,
     /// There are some bytes after the null-terminated string. Not sure what
     /// they are for.
     large_banner_path_remainder: Vec<u8>,
+    large_banner_path_remainder_as_u16s: Vec<u16>, // TODO: Remove, debug only.
+    large_banner_path_remainder_as_u32s: Vec<u32>, // TODO: Remove, debug only.
     /// The amount of gold captured from treasures and earned in the last
     /// battle.
     pub last_battle_gold: u16,
@@ -266,12 +297,10 @@ pub struct Regiment {
     /// The profile of the regiment's rank and file units.
     pub unit_profile: UnitProfile,
     unknown4: u8,
-    unknown5: [u8; 4],
     /// The profile of the regiment's leader unit.
     ///
     /// Some of the fields are not used for leader units.
     pub leader_profile: UnitProfile,
-    unknown6: [u8; 4],
     /// The leader's 3D head ID.
     pub leader_head_id: u16,
 
@@ -334,16 +363,61 @@ pub struct Regiment {
 }
 
 impl Regiment {
+    /// The maximum threat rating for a regiment.
+    pub const MAX_THREAT_RATING: u8 = 4;
+
     /// Returns the display name of the regiment.
+    ///
+    /// May be empty. The display name ID is the preferred way to get the
+    /// display name. This is so that the display name can be localized.
     #[inline(always)]
     pub fn display_name(&self) -> &str {
-        self.unit_profile.name.as_str()
+        self.unit_profile.display_name.as_str()
+    }
+
+    /// Returns the display name ID of the regiment.
+    ///
+    /// The display name ID is used to look up the display name string in the
+    /// list of display names found in ENGREL.EXE. This allows the display name
+    /// to be localized.
+    ///
+    /// This is an index into the list of display names found in ENGREL.EXE.
+    #[inline(always)]
+    pub fn display_name_id(&self) -> u16 {
+        self.unit_profile.display_name_id
+    }
+
+    /// Marks the regiment as active.
+    pub fn mark_active(&mut self) {
+        self.flags.insert(RegimentFlags::ACTIVE);
+    }
+
+    /// Forces the regiment to be deployed.
+    pub fn mark_must_deploy(&mut self) {
+        self.flags.insert(RegimentFlags::MUST_DEPLOY);
+    }
+
+    /// Returns `true` if the regiment must be deployed.
+    pub fn must_deploy(&self) -> bool {
+        self.flags.contains(RegimentFlags::MUST_DEPLOY)
+    }
+
+    /// Returns `true` if the regiment is deployable.
+    pub fn is_deployable(&self) -> bool {
+        self.flags.contains(RegimentFlags::ACTIVE)
+            && !self.flags.contains(RegimentFlags::NON_DEPLOYABLE)
     }
 
     /// Returns the number of units in the regiment that are alive.
     #[inline(always)]
     pub fn alive_unit_count(&self) -> usize {
         self.unit_profile.alive_unit_count as usize
+    }
+
+    /// Returns the maximum number of units allowed in the regiment.
+    #[inline(always)]
+    pub fn max_unit_count(&self) -> usize {
+        self.unit_profile.max_unit_count as usize
     }
 
     /// Returns the rank count.
@@ -768,10 +842,15 @@ pub struct UnitProfile {
     /// The index into the list of sprite sheet file names found in ENGREL.EXE
     /// for the unit's sprite sheet.
     pub sprite_sheet_index: u16,
-    /// The name of the regiment, e.g. "Grudgebringer Cavalry", "Zombies #1",
-    /// "Imperial Steam Tank".
-    pub name: String,
-    pub name_id: u16,
+    /// The display name of the regiment, e.g. "Grudgebringer Cavalry", "Zombies
+    /// #1", "Imperial Steam Tank".
+    ///
+    /// May be empty. The display name ID is the preferred way to get the
+    /// display name. This is so that the display name can be localized.
+    pub display_name: String,
+    /// The index into the list of display names found in ENGREL.EXE. This
+    /// allows the display name to be localized.
+    pub display_name_id: u16,
     /// The regiment's alignment to good or evil.
     ///
     /// - 0x00 (decimal 0) is good.
@@ -803,6 +882,10 @@ pub struct UnitProfile {
     /// This is set in the `unit_profile`, but 0 in the `leader_profile`.
     pub point_value: u8,
     pub projectile: Projectile,
+    unknown2: [u8; 4],
+    unknown2_a: u16,      // TODO: Remove, debug only.
+    unknown2_b: u16,      // TODO: Remove, debug only.
+    unknown2_as_u32: u32, // TODO: Remove, debug only.
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
@@ -1001,6 +1084,9 @@ mod tests {
         let file = File::open(d).unwrap();
         let a = Decoder::new(file).decode().unwrap();
 
+        assert_eq!(a.regiments[0].unit_profile.display_name, ""); // not set
+        assert_eq!(a.regiments[0].unit_profile.display_name_id, 4);
+
         roundtrip_test(&original_bytes, &a);
     }
 
@@ -1024,32 +1110,47 @@ mod tests {
 
         assert!(a.race.contains(ArmyRace::EMPIRE));
         assert_eq!(a.small_banner_path, "[BOOKS]\\hshield.spr");
-        assert_eq!(a.small_banner_disabled_path, "[BOOKS]\\hgban.spr");
+        assert_eq!(a.small_disabled_banner_path, "[BOOKS]\\hgban.spr");
         assert_eq!(a.large_banner_path, "[BOOKS]\\hlban.spr");
         assert_eq!(a.regiments.len(), 4);
         assert!(a.regiments[0].flags.contains(RegimentFlags::ACTIVE));
         assert_eq!(a.regiments[0].id, 1);
-        assert_eq!(a.regiments[0].unit_profile.name, "Grudgebringer Cavalry");
+        assert_eq!(
+            a.regiments[0].unit_profile.display_name,
+            "Grudgebringer Cavalry"
+        );
         assert_eq!(
             a.regiments[0].unit_profile.class,
             RegimentClass::HumanCavalryman
         );
         assert_eq!(a.regiments[0].unit_profile.mount, RegimentMount::Horse);
-        assert_eq!(a.regiments[0].leader_profile.name, "Morgan Bernhardt");
+        assert_eq!(
+            a.regiments[0].leader_profile.display_name,
+            "Morgan Bernhardt"
+        );
         assert_eq!(a.regiments[1].id, 2);
-        assert_eq!(a.regiments[1].unit_profile.name, "Grudgebringer Infantry");
+        assert_eq!(
+            a.regiments[1].unit_profile.display_name,
+            "Grudgebringer Infantry"
+        );
         assert_eq!(
             a.regiments[1].unit_profile.class,
             RegimentClass::HumanInfantryman
         );
         assert_eq!(a.regiments[2].id, 3);
-        assert_eq!(a.regiments[2].unit_profile.name, "Grudgebringer Crossbows");
+        assert_eq!(
+            a.regiments[2].unit_profile.display_name,
+            "Grudgebringer Crossbows"
+        );
         assert_eq!(
             a.regiments[2].unit_profile.class,
             RegimentClass::HumanArcher
         );
         assert_eq!(a.regiments[3].id, 4);
-        assert_eq!(a.regiments[3].unit_profile.name, "Grudgebringer Cannon");
+        assert_eq!(
+            a.regiments[3].unit_profile.display_name,
+            "Grudgebringer Cannon"
+        );
         assert_eq!(
             a.regiments[3].unit_profile.class,
             RegimentClass::HumanArtilleryUnit
@@ -1076,7 +1177,7 @@ mod tests {
         let file = File::open(d).unwrap();
         let a = Decoder::new(file).decode().unwrap();
 
-        assert_eq!(a.regiments[4].unit_profile.name, "Bright Wizard");
+        assert_eq!(a.regiments[4].unit_profile.display_name, "Bright Wizard");
         assert_eq!(a.regiments[4].mage_class, MageClass::BaseMage);
         assert_eq!(a.regiments[4].spell_book, SpellBook::BrightBook);
 
