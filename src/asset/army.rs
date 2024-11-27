@@ -1,5 +1,6 @@
 use bevy_app::prelude::*;
 use bevy_asset::{io::Reader, prelude::*, AssetLoader, AsyncReadExt, LoadContext};
+use bevy_derive::{Deref, DerefMut};
 use bevy_ecs::prelude::*;
 use bevy_reflect::prelude::*;
 use derive_more::derive::{Display, Error, From};
@@ -40,6 +41,23 @@ impl ArmyAsset {
     #[inline(always)]
     pub fn get(&self) -> &Army {
         &self.source
+    }
+}
+
+/// A [`Handle`] to an [`ArmyAsset`] asset.
+#[derive(Component, Clone, Debug, Default, Deref, DerefMut, Eq, From, PartialEq, Reflect)]
+#[reflect(Component, Default)]
+pub struct ArmyAssetHandle(pub Handle<ArmyAsset>);
+
+impl From<ArmyAssetHandle> for AssetId<ArmyAsset> {
+    fn from(handle: ArmyAssetHandle) -> Self {
+        handle.id()
+    }
+}
+
+impl From<&ArmyAssetHandle> for AssetId<ArmyAsset> {
+    fn from(handle: &ArmyAssetHandle) -> Self {
+        handle.id()
     }
 }
 
