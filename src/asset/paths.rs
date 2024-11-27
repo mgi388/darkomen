@@ -10,6 +10,7 @@ impl Plugin for AssetPathsPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(AssetPaths {
             banners_path: PathBuf::from("DARKOMEN/GRAPHICS/BANNERS"),
+            sprites_path: PathBuf::from("DARKOMEN/GRAPHICS/SPRITES"),
             books_path: PathBuf::from("DARKOMEN/GRAPHICS/BOOKS"),
             sound_path: PathBuf::from("DARKOMEN/SOUND/SOUND"),
             music_script_path: PathBuf::from("DARKOMEN/SOUND/SCRIPT"),
@@ -24,6 +25,7 @@ impl Plugin for AssetPathsPlugin {
 #[reflect(Debug, Resource)]
 pub struct AssetPaths {
     pub banners_path: PathBuf,
+    pub sprites_path: PathBuf,
     pub books_path: PathBuf,
     pub sound_path: PathBuf,
     pub music_script_path: PathBuf,
@@ -35,6 +37,7 @@ impl Default for AssetPaths {
     fn default() -> Self {
         Self {
             banners_path: PathBuf::from("DARKOMEN/GRAPHICS/BANNERS"),
+            sprites_path: PathBuf::from("DARKOMEN/GRAPHICS/SPRITES"),
             books_path: PathBuf::from("DARKOMEN/GRAPHICS/BOOKS"),
             sound_path: PathBuf::from("DARKOMEN/SOUND/SOUND"),
             music_script_path: PathBuf::from("DARKOMEN/SOUND/SCRIPT"),
