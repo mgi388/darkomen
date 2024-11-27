@@ -7,9 +7,13 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
+    commit-message:
+      prefix: "cargo"
   - package-ecosystem: "github-actions"
     directory: "/"
     # Check for updates every Monday
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
+    commit-message:
+      prefix: ".github"
