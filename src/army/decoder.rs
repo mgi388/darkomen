@@ -66,6 +66,7 @@ pub(crate) const FORMAT: u32 = 0x0000029e;
 pub(crate) const HEADER_SIZE_BYTES: usize = 192;
 const SAVE_GAME_HEADER_SIZE_BYTES: usize = 504;
 pub(crate) const SAVE_GAME_DISPLAY_NAME_SIZE_BYTES: usize = 90;
+const SCRIPT_STATE_SIZE_BYTES: usize = 220;
 pub(crate) const REGIMENT_SIZE_BYTES: usize = 188;
 pub(crate) const SAVE_GAME_FOOTER_UNKNOWN1_SIZE_BYTES: usize = 1976;
 pub(crate) const SAVE_GAME_CUTSCENE_ANIMATION_COUNT: usize = 38;
@@ -90,10 +91,10 @@ pub(crate) struct Header {
     /// There are some bytes after the nul-terminated string. Not sure what they
     /// are for.
     small_banner_path_remainder: Vec<u8>,
-    small_banner_disabled_path: String,
+    small_disabled_banner_path: String,
     /// There are some bytes after the nul-terminated string. Not sure what they
     /// are for.
-    small_banner_disabled_path_remainder: Vec<u8>,
+    small_disabled_banner_path_remainder: Vec<u8>,
     large_banner_path: String,
     /// There are some bytes after the nul-terminated string. Not sure what they
     /// are for.
@@ -137,10 +138,36 @@ impl<R: Read + Seek> Decoder<R> {
             name_remainder: header.name_remainder,
             small_banner_path: header.small_banner_path,
             small_banner_path_remainder: header.small_banner_path_remainder,
-            small_banner_disabled_path: header.small_banner_disabled_path,
-            small_banner_disabled_path_remainder: header.small_banner_disabled_path_remainder,
+            small_disabled_banner_path: header.small_disabled_banner_path,
+            small_disabled_banner_path_remainder: header
+                .small_disabled_banner_path_remainder
+                .clone(),
+            small_disabled_banner_path_remainder_as_u16s: header
+                .small_disabled_banner_path_remainder
+                .clone()
+                .chunks_exact(2)
+                .map(|chunk| u16::from_le_bytes(chunk.try_into().unwrap()))
+                .collect(),
+            small_disabled_banner_path_remainder_as_u32s: header
+                .small_disabled_banner_path_remainder
+                .clone()
+                .chunks_exact(4)
+                .map(|chunk| u32::from_le_bytes(chunk.try_into().unwrap()))
+                .collect(),
             large_banner_path: header.large_banner_path,
-            large_banner_path_remainder: header.large_banner_path_remainder,
+            large_banner_path_remainder: header.large_banner_path_remainder.clone(),
+            large_banner_path_remainder_as_u16s: header
+                .large_banner_path_remainder
+                .clone()
+                .chunks_exact(2)
+                .map(|chunk| u16::from_le_bytes(chunk.try_into().unwrap()))
+                .collect(),
+            large_banner_path_remainder_as_u32s: header
+                .large_banner_path_remainder
+                .clone()
+                .chunks_exact(4)
+                .map(|chunk| u32::from_le_bytes(chunk.try_into().unwrap()))
+                .collect(),
             last_battle_gold: header.last_battle_gold,
             gold_in_coffers: header.gold_in_coffers,
             magic_items: header.magic_items.to_vec(),
@@ -151,32 +178,17 @@ impl<R: Read + Seek> Decoder<R> {
     }
 
     fn read_script_state(&mut self, buf: &[u8]) -> Result<ScriptState, DecodeError> {
-        let unknown0 = buf[0..16].to_vec();
-        let unknown1 = buf[20..108].to_vec();
-        let unknown2 = buf[112..].to_vec();
+        let unknown2 = buf[28..100].to_vec();
+        let unknown7 = buf[136..].to_vec();
 
         Ok(ScriptState {
-            unknown0: unknown0
-                .chunks_exact(4)
-                .map(|chunk| u32::from_le_bytes(chunk.try_into().unwrap()))
-                .collect(),
-            base_execution_address: u32::from_le_bytes(buf[16..20].try_into().unwrap()),
-            unknown1: unknown1.clone(),
-            unknown1_hex: unknown1
-                .chunks(16)
-                .map(|chunk| {
-                    chunk
-                        .iter()
-                        .map(|b| format!("{:02x}", b))
-                        .collect::<Vec<String>>()
-                        .join("")
-                })
-                .collect(),
-            unknown1_as_u32s: unknown1
-                .chunks_exact(4)
-                .map(|chunk| u32::from_le_bytes(chunk.try_into().unwrap()))
-                .collect(),
-            execution_offset_index: u32::from_le_bytes(buf[108..112].try_into().unwrap()),
+            program_counter: u32::from_le_bytes(buf[0..4].try_into().unwrap()),
+            unknown0: u32::from_le_bytes(buf[4..8].try_into().unwrap()),
+            base_execution_address: u32::from_le_bytes(buf[8..12].try_into().unwrap()),
+            unknown_address: u32::from_le_bytes(buf[12..16].try_into().unwrap()),
+            local_variable: u32::from_le_bytes(buf[16..20].try_into().unwrap()),
+            unknown1: u32::from_le_bytes(buf[20..24].try_into().unwrap()),
+            stack_pointer: u32::from_le_bytes(buf[24..28].try_into().unwrap()),
             unknown2: unknown2.clone(),
             unknown2_hex: unknown2
                 .chunks(16)
@@ -189,6 +201,30 @@ impl<R: Read + Seek> Decoder<R> {
                 })
                 .collect(),
             unknown2_as_u32s: unknown2
+                .chunks_exact(4)
+                .map(|chunk| u32::from_le_bytes(chunk.try_into().unwrap()))
+                .collect(),
+            execution_offset_index: u32::from_le_bytes(buf[100..104].try_into().unwrap()),
+            unknown3: u32::from_le_bytes(buf[104..108].try_into().unwrap()),
+            nest_if: u32::from_le_bytes(buf[108..112].try_into().unwrap()),
+            nest_gosub: u32::from_le_bytes(buf[112..116].try_into().unwrap()),
+            nest_loop: u32::from_le_bytes(buf[116..120].try_into().unwrap()),
+            unknown4: u32::from_le_bytes(buf[120..124].try_into().unwrap()),
+            elapsed_millis: u32::from_le_bytes(buf[124..128].try_into().unwrap()),
+            unknown5: u32::from_le_bytes(buf[128..132].try_into().unwrap()),
+            unknown6: u32::from_le_bytes(buf[132..136].try_into().unwrap()),
+            unknown7: unknown7.clone(),
+            unknown7_hex: unknown7
+                .chunks(16)
+                .map(|chunk| {
+                    chunk
+                        .iter()
+                        .map(|b| format!("{:02x}", b))
+                        .collect::<Vec<String>>()
+                        .join("")
+                })
+                .collect(),
+            unknown7_as_u32s: unknown7
                 .chunks_exact(4)
                 .map(|chunk| u32::from_le_bytes(chunk.try_into().unwrap()))
                 .collect(),
@@ -227,9 +263,9 @@ impl<R: Read + Seek> Decoder<R> {
                     .map(|(i, _)| suggested_display_name_buf.split_at(i + 1))
                     .unwrap_or((suggested_display_name_buf, &[]));
 
-            let unknown0 = buf[SAVE_GAME_DISPLAY_NAME_SIZE_BYTES * 2..408].to_vec();
+            let script_state_buf = buf[188..188 + SCRIPT_STATE_SIZE_BYTES].to_vec();
 
-            let script_state = self.read_script_state(&unknown0)?;
+            let script_state = self.read_script_state(&script_state_buf)?;
 
             return Ok((
                 SAVE_GAME_HEADER_SIZE_BYTES as u64,
@@ -266,7 +302,9 @@ impl<R: Read + Seek> Decoder<R> {
                                 .to_vec(),
                         )
                     },
-                    script_state_hex: unknown0
+                    unknown_bool1: buf[180] != 0,
+                    unknown_bool2: buf[184] != 0,
+                    script_state_hex: script_state_buf
                         .clone()
                         .chunks(16)
                         .map(|chunk| {
@@ -277,7 +315,7 @@ impl<R: Read + Seek> Decoder<R> {
                                 .join("")
                         })
                         .collect(),
-                    script_state_as_u32s: unknown0
+                    script_state_as_u32s: script_state_buf
                         .chunks_exact(4)
                         .map(|chunk| u32::from_le_bytes(chunk.try_into().unwrap()))
                         .collect(),
@@ -472,14 +510,14 @@ impl<R: Read + Seek> Decoder<R> {
             .map(|(i, _)| small_banner_path_buf.split_at(i + 1))
             .unwrap_or((small_banner_path_buf, &[]));
 
-        let small_banner_disabled_path_buf = &buf[82..114];
-        let (small_banner_disabled_path_buf, small_banner_disabled_path_remainder) =
-            small_banner_disabled_path_buf
+        let small_disabled_banner_path_buf = &buf[82..114];
+        let (small_disabled_banner_path_buf, small_disabled_banner_path_remainder) =
+            small_disabled_banner_path_buf
                 .iter()
                 .enumerate()
                 .find(|(_, &b)| b == 0)
-                .map(|(i, _)| small_banner_disabled_path_buf.split_at(i + 1))
-                .unwrap_or((small_banner_disabled_path_buf, &[]));
+                .map(|(i, _)| small_disabled_banner_path_buf.split_at(i + 1))
+                .unwrap_or((small_disabled_banner_path_buf, &[]));
 
         let large_banner_path_buf = &buf[114..146];
         let (large_banner_path_buf, large_banner_path_remainder) = large_banner_path_buf
@@ -500,8 +538,8 @@ impl<R: Read + Seek> Decoder<R> {
             name_remainder: army_name_remainder.to_vec(),
             small_banner_path: self.read_string(small_banner_path_buf)?,
             small_banner_path_remainder: small_banner_path_remainder.to_vec(),
-            small_banner_disabled_path: self.read_string(small_banner_disabled_path_buf)?,
-            small_banner_disabled_path_remainder: small_banner_disabled_path_remainder.to_vec(),
+            small_disabled_banner_path: self.read_string(small_disabled_banner_path_buf)?,
+            small_disabled_banner_path_remainder: small_disabled_banner_path_remainder.to_vec(),
             large_banner_path: self.read_string(large_banner_path_buf)?,
             large_banner_path_remainder: large_banner_path_remainder.to_vec(),
             last_battle_gold: u16::from_le_bytes(buf[146..148].try_into().unwrap()),
@@ -568,8 +606,8 @@ impl<R: Read + Seek> Decoder<R> {
             attributes,
             unit_profile: UnitProfile {
                 sprite_sheet_index: u16::from_le_bytes(buf[20..22].try_into().unwrap()),
-                name: self.read_string(&buf[22..54])?,
-                name_id: u16::from_le_bytes(buf[54..56].try_into().unwrap()),
+                display_name: self.read_string(&buf[22..54])?,
+                display_name_id: u16::from_le_bytes(buf[54..56].try_into().unwrap()),
                 alignment: unit_alignment,
                 max_unit_count: buf[57],
                 alive_unit_count: buf[58],
@@ -582,13 +620,16 @@ impl<R: Read + Seek> Decoder<R> {
                 class: unit_class,
                 point_value: buf[77],
                 projectile: unit_projectile,
+                unknown2: buf[79..83].try_into().unwrap(),
+                unknown2_a: u16::from_le_bytes(buf[79..81].try_into().unwrap()),
+                unknown2_b: u16::from_le_bytes(buf[81..83].try_into().unwrap()),
+                unknown2_as_u32: u32::from_le_bytes(buf[79..83].try_into().unwrap()),
             },
-            unknown4: buf[79],
-            unknown5: buf[80..84].try_into().unwrap(),
+            unknown4: buf[83],
             leader_profile: UnitProfile {
                 sprite_sheet_index: u16::from_le_bytes(buf[84..86].try_into().unwrap()),
-                name: self.read_string(&buf[86..118])?,
-                name_id: u16::from_le_bytes(buf[118..120].try_into().unwrap()),
+                display_name: self.read_string(&buf[86..118])?,
+                display_name_id: u16::from_le_bytes(buf[118..120].try_into().unwrap()),
                 alignment: leader_alignment,
                 max_unit_count: buf[121],
                 alive_unit_count: buf[122],
@@ -601,8 +642,11 @@ impl<R: Read + Seek> Decoder<R> {
                 class: leader_class,
                 point_value: buf[140],
                 projectile: leader_projectile,
+                unknown2: buf[142..146].try_into().unwrap(),
+                unknown2_a: u16::from_le_bytes(buf[142..144].try_into().unwrap()),
+                unknown2_b: u16::from_le_bytes(buf[144..146].try_into().unwrap()),
+                unknown2_as_u32: u32::from_le_bytes(buf[142..146].try_into().unwrap()),
             },
-            unknown6: buf[142..146].try_into().unwrap(),
             leader_head_id: u16::from_le_bytes(buf[146..148].try_into().unwrap()),
             last_battle_stats: self.read_last_battle_stats(&buf[148..156])?,
             total_experience: u16::from_le_bytes(buf[156..158].try_into().unwrap()),

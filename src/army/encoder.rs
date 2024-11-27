@@ -57,15 +57,26 @@ impl<W: Write> Encoder<W> {
     }
 
     fn write_script_state(&mut self, s: &ScriptState) -> Result<(), EncodeError> {
-        for v in s.unknown0.iter() {
-            self.writer.write_all(&v.to_le_bytes())?;
-        }
+        self.writer.write_all(&s.program_counter.to_le_bytes())?;
+        self.writer.write_all(&s.unknown0.to_le_bytes())?;
         self.writer
             .write_all(&s.base_execution_address.to_le_bytes())?;
-        self.writer.write_all(&s.unknown1)?;
+        self.writer.write_all(&s.unknown_address.to_le_bytes())?;
+        self.writer.write_all(&s.local_variable.to_le_bytes())?;
+        self.writer.write_all(&s.unknown1.to_le_bytes())?;
+        self.writer.write_all(&s.stack_pointer.to_le_bytes())?;
+        self.writer.write_all(&s.unknown2)?;
         self.writer
             .write_all(&s.execution_offset_index.to_le_bytes())?;
-        self.writer.write_all(&s.unknown2)?;
+        self.writer.write_all(&s.unknown3.to_le_bytes())?;
+        self.writer.write_all(&s.nest_if.to_le_bytes())?;
+        self.writer.write_all(&s.nest_gosub.to_le_bytes())?;
+        self.writer.write_all(&s.nest_loop.to_le_bytes())?;
+        self.writer.write_all(&s.unknown4.to_le_bytes())?;
+        self.writer.write_all(&s.elapsed_millis.to_le_bytes())?;
+        self.writer.write_all(&s.unknown5.to_le_bytes())?;
+        self.writer.write_all(&s.unknown6.to_le_bytes())?;
+        self.writer.write_all(&s.unknown7)?;
 
         Ok(())
     }
@@ -106,6 +117,11 @@ impl<W: Write> Encoder<W> {
             let padding = vec![0; padding_size_bytes];
             self.writer.write_all(&padding)?;
         }
+
+        self.writer
+            .write_all(&(if header.unknown_bool1 { 1u32 } else { 0u32 }).to_le_bytes())?;
+        self.writer
+            .write_all(&(if header.unknown_bool2 { 1u32 } else { 0u32 }).to_le_bytes())?;
 
         self.write_script_state(&header.script_state)?;
 
@@ -283,9 +299,9 @@ impl<W: Write> Encoder<W> {
         self.writer.write_all(&army.name_remainder)?;
         self.write_string(&army.small_banner_path)?;
         self.writer.write_all(&army.small_banner_path_remainder)?;
-        self.write_string(&army.small_banner_disabled_path)?;
+        self.write_string(&army.small_disabled_banner_path)?;
         self.writer
-            .write_all(&army.small_banner_disabled_path_remainder)?;
+            .write_all(&army.small_disabled_banner_path_remainder)?;
         self.write_string(&army.large_banner_path)?;
         self.writer.write_all(&army.large_banner_path_remainder)?;
         self.writer
@@ -320,9 +336,7 @@ impl<W: Write> Encoder<W> {
         self.writer.write_all(&r.attributes.bits().to_le_bytes())?;
         self.write_unit_profile(&r.unit_profile)?;
         self.writer.write_all(&[r.unknown4])?;
-        self.writer.write_all(&r.unknown5)?;
         self.write_unit_profile(&r.leader_profile)?;
-        self.writer.write_all(&r.unknown6)?;
         self.writer.write_all(&r.leader_head_id.to_le_bytes())?;
         self.write_last_battle_stats(&r.last_battle_stats)?;
         self.writer.write_all(&r.total_experience.to_le_bytes())?;
@@ -350,8 +364,8 @@ impl<W: Write> Encoder<W> {
 
     fn write_unit_profile(&mut self, u: &UnitProfile) -> Result<(), EncodeError> {
         self.writer.write_all(&u.sprite_sheet_index.to_le_bytes())?;
-        self.write_string_with_limit(&u.name, 32)?;
-        self.writer.write_all(&u.name_id.to_le_bytes())?;
+        self.write_string_with_limit(&u.display_name, 32)?;
+        self.writer.write_all(&u.display_name_id.to_le_bytes())?;
         self.writer.write_all(&[Into::<u8>::into(u.alignment)])?;
         self.writer.write_all(&[u.max_unit_count])?;
         self.writer.write_all(&[u.alive_unit_count])?;
@@ -372,6 +386,7 @@ impl<W: Write> Encoder<W> {
         self.writer.write_all(&[Into::<u8>::into(u.class)])?;
         self.writer.write_all(&[u.point_value])?;
         self.writer.write_all(&[Into::<u8>::into(u.projectile)])?;
+        self.writer.write_all(&u.unknown2)?;
 
         Ok(())
     }

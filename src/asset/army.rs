@@ -112,7 +112,7 @@ impl AssetLoader for ArmyAssetLoader {
                 None
             },
             small_disabled_banner: if settings.load_small_disabled_banner {
-                Some(load_context.load(self.paths.resolve_path(&army.small_banner_disabled_path)))
+                Some(load_context.load(self.paths.resolve_path(&army.small_disabled_banner_path)))
             } else {
                 None
             },
