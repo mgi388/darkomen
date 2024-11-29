@@ -154,7 +154,7 @@ impl<W: Write> Encoder<W> {
         self.writer.write_all(&i.selected.to_le_bytes())?;
         self.writer
             .write_all(&i.exclude_from_terrain.to_le_bytes())?;
-        self.write_dvec3_from_u32s(&i.position, 1024.0)?;
+        self.write_dvec3_from_i32s(&i.position, 1024.0)?;
         self.write_dvec3_from_u32s(&i.rotation, 4096.0)?;
         self.write_dvec3_from_i32s(&i.aabb_min, 1024.0)?;
         self.write_dvec3_from_i32s(&i.aabb_max, 1024.0)?;

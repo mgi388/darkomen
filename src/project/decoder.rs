@@ -243,7 +243,7 @@ impl<R: Read + Seek> Decoder<R> {
             next: i32::from_le_bytes(buf[4..8].try_into().unwrap()),
             selected: i32::from_le_bytes(buf[8..12].try_into().unwrap()),
             exclude_from_terrain: i32::from_le_bytes(buf[12..16].try_into().unwrap()),
-            position: self.read_dvec3_from_u32s(&buf[16..28], 1024.)?,
+            position: self.read_dvec3_from_i32s(&buf[16..28], 1024.)?,
             rotation: self.read_dvec3_from_u32s(&buf[28..40], 4096.)?,
             aabb_min: self.read_dvec3_from_i32s(&buf[40..52], 1024.)?,
             aabb_max: self.read_dvec3_from_i32s(&buf[52..64], 1024.)?,
