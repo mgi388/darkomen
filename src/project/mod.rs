@@ -506,6 +506,32 @@ mod tests {
     }
 
     #[test]
+    fn test_decode_b2_01() {
+        let d: PathBuf = [
+            std::env::var("DARKOMEN_PATH").unwrap().as_str(),
+            "DARKOMEN",
+            "GAMEDATA",
+            "1PBAT",
+            "B2_01",
+            "B2_01.PRJ",
+        ]
+        .iter()
+        .collect();
+
+        let original_bytes = std::fs::read(d.clone()).unwrap();
+
+        let file = File::open(d.clone()).unwrap();
+        let p = Decoder::new(file).decode().unwrap();
+
+        assert_eq!(
+            p.instances[0].position,
+            DVec3::new(60.953125, -1.9990234375, 57.859375)
+        );
+
+        roundtrip_test(&original_bytes, &p);
+    }
+
+    #[test]
     fn test_decode_mb4_01() {
         let d: PathBuf = [
             std::env::var("DARKOMEN_PATH").unwrap().as_str(),
