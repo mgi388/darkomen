@@ -76,7 +76,7 @@ branch = "fixes1"
 optional = true
 
 [dependencies.bevy_math]
-version = "0.14"
+version = "0.15"
 optional = true
 
 [dependencies.bevy_pbr]
