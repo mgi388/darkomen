@@ -98,7 +98,7 @@ version = "0.14"
 optional = true
 
 [dependencies.bevy_utils]
-version = "0.14"
+version = "0.15"
 optional = true
 
 [dependencies.dyn-clone]
