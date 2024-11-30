@@ -57,7 +57,7 @@ version = "0.14"
 optional = true
 
 [dependencies.bevy_derive]
-version = "0.14"
+version = "0.15"
 optional = true
 
 [dependencies.bevy_ecs]
