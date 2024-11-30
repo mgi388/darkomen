@@ -49,7 +49,7 @@ serde_json = { version = "1", optional = true }
 tempfile = { version = "3", optional = true }
 
 [dependencies.bevy_app]
-version = "0.14"
+version = "0.15"
 optional = true
 
 [dependencies.bevy_asset]
