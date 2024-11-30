@@ -61,7 +61,7 @@ version = "0.14"
 optional = true
 
 [dependencies.bevy_ecs]
-version = "0.14"
+version = "0.15"
 optional = true
 
 [dependencies.bevy_kira_audio]
