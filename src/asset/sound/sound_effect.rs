@@ -1,7 +1,7 @@
 use std::{collections::HashMap, path::PathBuf};
 
 use bevy_app::prelude::*;
-use bevy_asset::{io::Reader, prelude::*, AssetLoader, AsyncReadExt, LoadContext};
+use bevy_asset::{io::Reader, prelude::*, AssetLoader, LoadContext};
 use bevy_derive::{Deref, DerefMut};
 use bevy_ecs::prelude::*;
 use bevy_kira_components::{prelude::*, sources::audio_file::AudioFilePlugin};
@@ -100,11 +100,11 @@ impl AssetLoader for PacketAssetLoader {
     type Asset = PacketAsset;
     type Settings = PacketAssetLoaderSettings;
     type Error = PacketAssetLoaderError;
-    async fn load<'a>(
-        &'a self,
-        reader: &'a mut Reader<'_>,
-        settings: &'a PacketAssetLoaderSettings,
-        load_context: &'a mut LoadContext<'_>,
+    async fn load(
+        &self,
+        reader: &mut dyn Reader,
+        settings: &Self::Settings,
+        load_context: &mut LoadContext<'_>,
     ) -> Result<Self::Asset, Self::Error> {
         let mut bytes = Vec::new();
         reader.read_to_end(&mut bytes).await?;

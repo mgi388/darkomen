@@ -1,12 +1,13 @@
 use std::io::Cursor;
 
 use bevy_app::prelude::*;
-use bevy_asset::{io::Reader, prelude::*, AssetLoader, AsyncReadExt, LoadContext};
+use bevy_asset::{io::Reader, prelude::*, AssetLoader, LoadContext};
 use bevy_derive::{Deref, DerefMut};
 use bevy_ecs::prelude::*;
+use bevy_image::Image;
 use bevy_math::UVec2;
 use bevy_reflect::prelude::*;
-use bevy_render::{prelude::*, render_asset::RenderAssetUsages};
+use bevy_render::render_asset::RenderAssetUsages;
 use bevy_sprite::{TextureAtlasBuilder, TextureAtlasBuilderError, TextureAtlasLayout};
 use derive_more::derive::{Display, Error, From};
 use glam::Vec2;
@@ -141,11 +142,11 @@ impl AssetLoader for SpriteSheetAssetLoader {
     type Asset = SpriteSheetAsset;
     type Settings = SpriteSheetAssetLoaderSettings;
     type Error = SpriteSheetAssetLoaderError;
-    async fn load<'a>(
-        &'a self,
-        reader: &'a mut Reader<'_>,
-        settings: &'a SpriteSheetAssetLoaderSettings,
-        load_context: &'a mut LoadContext<'_>,
+    async fn load(
+        &self,
+        reader: &mut dyn Reader,
+        settings: &Self::Settings,
+        load_context: &mut LoadContext<'_>,
     ) -> Result<Self::Asset, Self::Error> {
         let mut bytes = Vec::new();
         reader.read_to_end(&mut bytes).await?;
@@ -208,7 +209,7 @@ impl AssetLoader for SpriteSheetAssetLoader {
             texture_atlas_builder.add_texture(Some(handle.id()), texture);
         }
 
-        let (texture_atlas_layout, texture) = texture_atlas_builder.build()?;
+        let (texture_atlas_layout, _, texture) = texture_atlas_builder.build()?;
 
         let texture_atlas_layout = load_context
             .labeled_asset_scope("texture_atlas_layout".to_string(), |_| texture_atlas_layout);

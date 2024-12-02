@@ -1,5 +1,5 @@
 use bevy_app::prelude::*;
-use bevy_asset::{io::Reader, prelude::*, AssetLoader, AsyncReadExt, LoadContext};
+use bevy_asset::{io::Reader, prelude::*, AssetLoader, LoadContext};
 use bevy_reflect::prelude::*;
 use derive_more::derive::{Display, Error, From};
 use serde::{Deserialize, Serialize};
@@ -86,11 +86,11 @@ impl AssetLoader for BattleTabletopAssetLoader {
     type Asset = BattleTabletopAsset;
     type Settings = BattleTabletopAssetLoaderSettings;
     type Error = BattleTabletopAssetLoaderError;
-    async fn load<'a>(
-        &'a self,
-        reader: &'a mut Reader<'_>,
-        settings: &'a BattleTabletopAssetLoaderSettings,
-        load_context: &'a mut LoadContext<'_>,
+    async fn load(
+        &self,
+        reader: &mut dyn Reader,
+        settings: &Self::Settings,
+        load_context: &mut LoadContext<'_>,
     ) -> Result<Self::Asset, Self::Error> {
         let parent_path = load_context
             .path()

@@ -7,17 +7,14 @@ use std::{
 };
 
 use bevy_app::prelude::*;
-use bevy_asset::{io::Reader, prelude::*, AssetLoader, AssetPath, AsyncReadExt, LoadContext};
+use bevy_asset::{io::Reader, prelude::*, AssetLoader, AssetPath, LoadContext};
 use bevy_ecs::prelude::*;
+use bevy_image::{
+    prelude::*, ImageAddressMode, ImageFilterMode, ImageSampler, ImageSamplerDescriptor,
+};
 use bevy_pbr::prelude::*;
 use bevy_reflect::prelude::*;
-use bevy_render::{
-    prelude::*,
-    render_asset::RenderAssetUsages,
-    texture::{
-        ImageAddressMode, ImageFilterMode, ImageSampler, ImageSamplerDescriptor, TextureError,
-    },
-};
+use bevy_render::{prelude::*, render_asset::RenderAssetUsages};
 use bevy_utils::tracing::*;
 use derive_more::{Display, Error, From};
 use dyn_clone::DynClone;
@@ -186,11 +183,11 @@ impl<MaterialT: Material + std::fmt::Debug> AssetLoader for M3dAssetLoader<Mater
     type Asset = M3dAsset<MaterialT>;
     type Settings = M3dAssetLoaderSettings<MaterialT>;
     type Error = M3dAssetLoaderError;
-    async fn load<'a>(
-        &'a self,
-        reader: &'a mut Reader<'_>,
-        settings: &'a M3dAssetLoaderSettings<MaterialT>,
-        load_context: &'a mut LoadContext<'_>,
+    async fn load(
+        &self,
+        reader: &mut dyn Reader,
+        settings: &Self::Settings,
+        load_context: &mut LoadContext<'_>,
     ) -> Result<Self::Asset, Self::Error> {
         let mut bytes = Vec::new();
         reader.read_to_end(&mut bytes).await?;
@@ -357,7 +354,7 @@ async fn load_image<'a, 'b, 'c>(
 
     let loaded = load_context
         .loader()
-        .direct()
+        .immediate()
         .load::<Image>(path.clone())
         .await
         .map_err(|_| M3dAssetLoaderError::LoadTextureError {

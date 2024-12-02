@@ -1,5 +1,5 @@
 use bevy_app::prelude::*;
-use bevy_asset::{io::Reader, prelude::*, AssetLoader, AsyncReadExt, LoadContext};
+use bevy_asset::{io::Reader, prelude::*, AssetLoader, LoadContext};
 use bevy_derive::Deref;
 use bevy_reflect::prelude::*;
 use derive_more::derive::{Display, Error, From};
@@ -44,11 +44,11 @@ impl AssetLoader for LightsAssetLoader {
     type Asset = LightsAsset;
     type Settings = LightsAssetLoaderSettings;
     type Error = LightsAssetLoaderError;
-    async fn load<'a>(
-        &'a self,
-        reader: &'a mut Reader<'_>,
-        _settings: &'a LightsAssetLoaderSettings,
-        _load_context: &'a mut LoadContext<'_>,
+    async fn load(
+        &self,
+        reader: &mut dyn Reader,
+        _settings: &Self::Settings,
+        _load_context: &mut LoadContext<'_>,
     ) -> Result<Self::Asset, Self::Error> {
         let mut bytes = Vec::new();
         reader.read_to_end(&mut bytes).await?;
