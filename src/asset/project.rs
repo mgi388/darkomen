@@ -1,7 +1,7 @@
 use std::{marker::PhantomData, path::PathBuf};
 
 use bevy_app::prelude::*;
-use bevy_asset::{io::Reader, prelude::*, AssetLoader, AsyncReadExt, LoadContext};
+use bevy_asset::{io::Reader, prelude::*, AssetLoader, LoadContext};
 use bevy_ecs::prelude::*;
 use bevy_pbr::prelude::*;
 use bevy_reflect::prelude::*;
@@ -134,11 +134,11 @@ impl<MaterialT: Material + std::fmt::Debug> AssetLoader for ProjectAssetLoader<M
     type Asset = ProjectAsset<MaterialT>;
     type Settings = ProjectAssetLoaderSettings;
     type Error = ProjectAssetLoaderError;
-    async fn load<'a>(
-        &'a self,
-        reader: &'a mut Reader<'_>,
-        settings: &'a ProjectAssetLoaderSettings,
-        load_context: &'a mut LoadContext<'_>,
+    async fn load(
+        &self,
+        reader: &mut dyn Reader,
+        settings: &Self::Settings,
+        load_context: &mut LoadContext<'_>,
     ) -> Result<Self::Asset, Self::Error> {
         let music_script_path = if settings.music_script_path.to_string_lossy().is_empty() {
             self.asset_paths.music_script_path.clone()

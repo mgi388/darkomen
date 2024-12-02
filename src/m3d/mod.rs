@@ -13,9 +13,10 @@ pub use encoder::*;
 /// Dark Omen's format for 3D models.
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+#[cfg_attr(feature = "bevy_reflect", reflect(opaque))]
 #[cfg_attr(
     feature = "bevy_reflect",
-    reflect_value(Debug, Default, Deserialize, Serialize)
+    reflect(Debug, Default, Deserialize, Serialize)
 )]
 pub struct M3d {
     header: Header,
@@ -25,9 +26,10 @@ pub struct M3d {
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+#[cfg_attr(feature = "bevy_reflect", reflect(opaque))]
 #[cfg_attr(
     feature = "bevy_reflect",
-    reflect_value(Debug, Default, Deserialize, Serialize)
+    reflect(Debug, Default, Deserialize, Serialize)
 )]
 pub(crate) struct Header {
     _magic: u32,
@@ -40,9 +42,10 @@ pub(crate) struct Header {
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+#[cfg_attr(feature = "bevy_reflect", reflect(opaque))]
 #[cfg_attr(
     feature = "bevy_reflect",
-    reflect_value(Debug, Default, Deserialize, Serialize)
+    reflect(Debug, Default, Deserialize, Serialize)
 )]
 pub struct M3dTextureDescriptor {
     /// Path appears to be a directory on the original Dark Omen developer's
@@ -77,7 +80,8 @@ bitflags! {
     #[repr(transparent)]
     #[derive(Clone, Copy, Debug, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
     #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
-    #[cfg_attr(feature = "bevy_reflect", reflect_value(Debug, Default, Deserialize, Hash, PartialEq, Serialize))]
+    #[cfg_attr(feature = "bevy_reflect", reflect(opaque))]
+    #[cfg_attr(feature = "bevy_reflect", reflect(Debug, Default, Deserialize, Hash, PartialEq, Serialize))]
     pub struct ObjectFlags: u32 {
         const NONE = 0;
         const UNKNOWN_FLAG_1 = 1 << 0;
@@ -88,9 +92,10 @@ bitflags! {
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+#[cfg_attr(feature = "bevy_reflect", reflect(opaque))]
 #[cfg_attr(
     feature = "bevy_reflect",
-    reflect_value(Debug, Default, Deserialize, Serialize)
+    reflect(Debug, Default, Deserialize, Serialize)
 )]
 pub struct Object {
     pub name: String,
@@ -109,9 +114,10 @@ pub struct Object {
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+#[cfg_attr(feature = "bevy_reflect", reflect(opaque))]
 #[cfg_attr(
     feature = "bevy_reflect",
-    reflect_value(Debug, Default, Deserialize, Serialize)
+    reflect(Debug, Default, Deserialize, Serialize)
 )]
 pub struct Face {
     pub indices: [u16; 3],
@@ -123,9 +129,10 @@ pub struct Face {
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+#[cfg_attr(feature = "bevy_reflect", reflect(opaque))]
 #[cfg_attr(
     feature = "bevy_reflect",
-    reflect_value(Debug, Default, Deserialize, Serialize)
+    reflect(Debug, Default, Deserialize, Serialize)
 )]
 pub struct Vertex {
     pub position: Vec3,

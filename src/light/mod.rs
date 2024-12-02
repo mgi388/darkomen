@@ -63,7 +63,8 @@ bitflags! {
     #[repr(transparent)]
     #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
     #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
-    #[cfg_attr(feature = "bevy_reflect", reflect_value(Debug, Deserialize, Hash, PartialEq, Serialize))]
+    #[cfg_attr(feature = "bevy_reflect", reflect(opaque))]
+    #[cfg_attr(feature = "bevy_reflect", reflect(Debug, Deserialize, Hash, PartialEq, Serialize))]
     pub struct LightFlags: u32 {
         const NONE = 0;
         /// Without this flag, the light is labeled as "no shadows".

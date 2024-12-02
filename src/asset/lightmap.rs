@@ -1,7 +1,8 @@
 use bevy_app::prelude::*;
-use bevy_asset::{io::Reader, prelude::*, AssetLoader, AsyncReadExt, LoadContext};
+use bevy_asset::{io::Reader, prelude::*, AssetLoader, LoadContext};
+use bevy_image::Image;
 use bevy_reflect::prelude::*;
-use bevy_render::{render_asset::RenderAssetUsages, texture::Image};
+use bevy_render::render_asset::RenderAssetUsages;
 use derive_more::derive::{Display, Error, From};
 use image::DynamicImage;
 use serde::{Deserialize, Serialize};
@@ -51,11 +52,11 @@ impl AssetLoader for LightmapAssetLoader {
     type Asset = LightmapAsset;
     type Settings = LightmapAssetLoaderSettings;
     type Error = LightmapAssetLoaderError;
-    async fn load<'a>(
-        &'a self,
-        reader: &'a mut Reader<'_>,
-        _settings: &'a LightmapAssetLoaderSettings,
-        load_context: &'a mut LoadContext<'_>,
+    async fn load(
+        &self,
+        reader: &mut dyn Reader,
+        _settings: &Self::Settings,
+        load_context: &mut LoadContext<'_>,
     ) -> Result<Self::Asset, Self::Error> {
         let mut bytes = Vec::new();
         reader.read_to_end(&mut bytes).await?;

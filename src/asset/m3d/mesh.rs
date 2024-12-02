@@ -137,7 +137,7 @@ mod tests {
         attr: MeshVertexAttribute,
         expected: &Vec<[f32; 3]>,
     ) {
-        if let Some(VertexAttributeValues::Float32x3(values)) = mesh.attribute(attr.clone()) {
+        if let Some(VertexAttributeValues::Float32x3(values)) = mesh.attribute(attr) {
             assert_eq!(values, expected);
         } else {
             panic!("Mesh does not have a {} attribute", attr.name);
@@ -149,7 +149,7 @@ mod tests {
         attr: MeshVertexAttribute,
         expected: &Vec<[f32; 2]>,
     ) {
-        if let Some(VertexAttributeValues::Float32x2(values)) = mesh.attribute(attr.clone()) {
+        if let Some(VertexAttributeValues::Float32x2(values)) = mesh.attribute(attr) {
             assert_eq!(values, expected);
         } else {
             panic!("Mesh does not have a {} attribute", attr.name);
@@ -161,7 +161,7 @@ mod tests {
         attr: MeshVertexAttribute,
         expected: &Vec<[f32; 4]>,
     ) {
-        if let Some(VertexAttributeValues::Float32x4(values)) = mesh.attribute(attr.clone()) {
+        if let Some(VertexAttributeValues::Float32x4(values)) = mesh.attribute(attr) {
             assert_eq!(values, expected);
         } else {
             panic!("Mesh does not have a {} attribute", attr.name);
@@ -169,7 +169,7 @@ mod tests {
     }
 
     fn assert_uint32_attribute(mesh: &Mesh, attr: MeshVertexAttribute, expected: &Vec<u32>) {
-        if let Some(VertexAttributeValues::Uint32(values)) = mesh.attribute(attr.clone()) {
+        if let Some(VertexAttributeValues::Uint32(values)) = mesh.attribute(attr) {
             assert_eq!(values, expected);
         } else {
             panic!("Mesh does not have a {} attribute", attr.name);

@@ -1,5 +1,5 @@
 use bevy_app::prelude::*;
-use bevy_asset::{io::Reader, prelude::*, AssetLoader, AsyncReadExt, LoadContext};
+use bevy_asset::{io::Reader, prelude::*, AssetLoader, LoadContext};
 use bevy_derive::{Deref, DerefMut};
 use bevy_ecs::prelude::*;
 use bevy_reflect::prelude::*;
@@ -90,11 +90,11 @@ impl AssetLoader for ArmyAssetLoader {
     type Asset = ArmyAsset;
     type Settings = ArmyAssetLoaderSettings;
     type Error = ArmyAssetLoaderError;
-    async fn load<'a>(
-        &'a self,
-        reader: &'a mut Reader<'_>,
-        settings: &'a ArmyAssetLoaderSettings,
-        load_context: &'a mut LoadContext<'_>,
+    async fn load(
+        &self,
+        reader: &mut dyn Reader,
+        settings: &Self::Settings,
+        load_context: &mut LoadContext<'_>,
     ) -> Result<Self::Asset, Self::Error> {
         let mut bytes = Vec::new();
         reader.read_to_end(&mut bytes).await?;

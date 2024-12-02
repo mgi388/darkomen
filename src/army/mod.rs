@@ -266,7 +266,8 @@ bitflags! {
     #[repr(transparent)]
     #[derive(Clone, Copy, Debug, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
     #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
-    #[cfg_attr(feature = "bevy_reflect", reflect_value(Debug, Default, Deserialize, Hash, PartialEq, Serialize))]
+    #[cfg_attr(feature = "bevy_reflect", reflect(opaque))]
+    #[cfg_attr(feature = "bevy_reflect", reflect(Debug, Default, Deserialize, Hash, PartialEq, Serialize))]
     pub struct ArmyRace: u8 {
         /// Empire army.
         const EMPIRE = 0;
@@ -458,7 +459,8 @@ bitflags! {
     #[repr(transparent)]
     #[derive(Clone, Copy, Debug, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
     #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
-    #[cfg_attr(feature = "bevy_reflect", reflect_value(Debug, Default, Deserialize, Hash, PartialEq, Serialize))]
+    #[cfg_attr(feature = "bevy_reflect", reflect(opaque))]
+    #[cfg_attr(feature = "bevy_reflect", reflect(Debug, Default, Deserialize, Hash, PartialEq, Serialize))]
     pub struct RegimentFlags: u16 {
         /// No flags are set. This is the default state.
         const NONE = 0;
@@ -689,7 +691,8 @@ bitflags! {
     #[repr(transparent)]
     #[derive(Clone, Copy, Debug, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
     #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
-    #[cfg_attr(feature = "bevy_reflect", reflect_value(Debug, Default, Deserialize, Hash, PartialEq, Serialize))]
+    #[cfg_attr(feature = "bevy_reflect", reflect(opaque))]
+    #[cfg_attr(feature = "bevy_reflect", reflect(Debug, Default, Deserialize, Hash, PartialEq, Serialize))]
     pub struct RegimentAttributes: u32 {
         const NONE = 0;
         /// The regiment never retreats from a fight and the retreat button is
