@@ -370,7 +370,7 @@ dependencies = [
 [[package]]
 name = "bevy-kira-components"
 version = "0.2.0-rc.4"
-source = "git+https://github.com/mgi388/bevy-kira-components.git?branch=bevy-0.15-fixes1#25cf4df39a0b7747c727e1244e8bd4c61270b397"
+source = "git+https://github.com/mgi388/bevy-kira-components.git?branch=bevy-0.15-fixes1#415ec541d1b6caaca82feed70a175a9de730dff7"
 dependencies = [
  "bevy",
  "bevy_math",
@@ -3636,7 +3636,7 @@ dependencies = [
  "fastrand",
  "once_cell",
  "rustix",
- "windows-sys 0.59.0",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -4168,7 +4168,7 @@ version = "0.1.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cf221c93e13a30d793f7645a0e7762c55d169dbb0a49671918a2319d289b10bb"
 dependencies = [
- "windows-sys 0.59.0",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
