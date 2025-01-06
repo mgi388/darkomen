@@ -10,26 +10,26 @@ A Rust library designed to work with the classic game **Warhammer: Dark Omen**. 
 
 The following table shows the game file support in this library:
 
-| Kind                                       | File extension(s)      | Read | Write | Known issues?                           |
-| ------------------------------------------ | ---------------------- | ---- | ----- | --------------------------------------- |
-| [3D models](src/m3d)                       | .M3D, .M3X             | ✅   | ✅    |                                         |
-| [Army and save games](src/army)            | .ARM, .AUD, .ARE, .xxx | ✅   | ✅    | ⚠️ Save games not completely understood |
-| [Battle tabletops](src/battle_tabletop)    | .BTB                   | ✅   | ❌    |                                         |
-| CTL                                        | .CTL                   | ❌   | ❌    |                                         |
-| Cursors                                    | .ANI                   | ❌   | ❌    |                                         |
-| Fonts                                      | .FNT                   | ❌   | ❌    |                                         |
-| Game flows                                 | .DOT                   | ❌   | ❌    |                                         |
-| [Lights](src/light)                        | .LIT                   | ✅   | ✅    |                                         |
-| Movies                                     | .TGQ                   | ❌   | ❌    |                                         |
-| Particle effects                           | .PLB, .H               | ❌   | ❌    |                                         |
-| Portrait scripts                           | .KEY, .SEQ             | ❌   | ❌    |                                         |
-| [Projects](src/project)                    | .PRJ                   | ✅   | ✅    |                                         |
-| [Shadows](src/shadow)                      | .SHD                   | ✅   | ✅    |                                         |
-| [Sound effects](src/sound/sfx)             | .H                     | ✅   | ❌    |                                         |
-| [Sound mono audio](src/sound/mad)          | .MAD                   | ✅   | ✅    |                                         |
-| [Sound scripts](src/sound/script)          | .FSM                   | ✅   | ✅    |                                         |
-| [Sound stereo audio](src/sound/sad)        | .SAD                   | ✅   | ✅    |                                         |
-| [Sprite sheets](src/graphics/sprite_sheet) | .SPR                   | ✅   | ❌    |                                         |
+| Kind                                                 | File extension(s)      | Read | Write | Notes                                                                   |
+| ---------------------------------------------------- | ---------------------- | ---- | ----- | ----------------------------------------------------------------------- |
+| [3D models](src/m3d)                                 | .M3D, .M3X             | ✅   | ✅    |                                                                         |
+| [Army and save games](src/army)                      | .ARM, .AUD, .ARE, .xxx | ✅   | ✅    | ⚠️ Save games not completely understood                                 |
+| [Battle tabletops](src/battle_tabletop)              | .BTB                   | ✅   | ❌    |                                                                         |
+| CTL                                                  | .CTL                   | ❌   | ❌    |                                                                         |
+| [Cursors](https://github.com/mgi388/bevy-cursor-kit) | .ANI, .CUR             | ✅   | ❌    | 📦 Read support available for Bevy apps through `bevy_cursor_kit` crate |
+| Fonts                                                | .FNT                   | ❌   | ❌    |                                                                         |
+| Game flows                                           | .DOT                   | ❌   | ❌    |                                                                         |
+| [Lights](src/light)                                  | .LIT                   | ✅   | ✅    |                                                                         |
+| Movies                                               | .TGQ                   | ❌   | ❌    |                                                                         |
+| Particle effects                                     | .PLB, .H               | ❌   | ❌    |                                                                         |
+| Portrait scripts                                     | .KEY, .SEQ             | ❌   | ❌    |                                                                         |
+| [Projects](src/project)                              | .PRJ                   | ✅   | ✅    |                                                                         |
+| [Shadows](src/shadow)                                | .SHD                   | ✅   | ✅    |                                                                         |
+| [Sound effects](src/sound/sfx)                       | .H                     | ✅   | ❌    |                                                                         |
+| [Sound mono audio](src/sound/mad)                    | .MAD                   | ✅   | ✅    |                                                                         |
+| [Sound scripts](src/sound/script)                    | .FSM                   | ✅   | ✅    |                                                                         |
+| [Sound stereo audio](src/sound/sad)                  | .SAD                   | ✅   | ✅    |                                                                         |
+| [Sprite sheets](src/graphics/sprite_sheet)           | .SPR                   | ✅   | ❌    |                                                                         |
 
 ## Installation
 
