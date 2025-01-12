@@ -57,10 +57,7 @@ impl AssetLoader for StereoAudioAssetLoader {
 
         let sad = decoder.decode()?;
 
-        let sound = StaticSoundData::from_cursor(
-            Cursor::new(sad.to_wav()?),
-            StaticSoundSettings::default(),
-        )?;
+        let sound = StaticSoundData::from_cursor(Cursor::new(sad.to_wav()?))?;
 
         Ok(StereoAudioAsset { sound })
     }
