@@ -1,4 +1,5 @@
-use bevy_math::prelude::*;
+use std::collections::HashMap;
+
 use bevy_render::{
     mesh::{Indices, MeshVertexAttribute, PrimitiveTopology},
     prelude::*,
@@ -12,47 +13,58 @@ pub const ATTRIBUTE_TEXTURE_INDEX: MeshVertexAttribute =
     MeshVertexAttribute::new("TextureIndex", 988540918, VertexFormat::Uint32);
 
 pub(super) fn mesh_from_m3d_object(object: &Object) -> Mesh {
-    let mut translation = Vec3::default();
-
-    if object
-        .flags
-        .contains(ObjectFlags::CUSTOM_TRANSLATION_ENABLED)
-    {
-        translation = object.translation;
-    }
-
     let mut positions: Vec<[f32; 3]> = Default::default();
     let mut uv0s: Vec<[f32; 2]> = Default::default();
     let mut normals: Vec<[f32; 3]> = Default::default();
     let mut colors: Vec<[f32; 4]> = Default::default();
     let mut texture_indices: Vec<u32> = Default::default();
     let mut indices: Vec<u32> = Default::default();
+    let mut uv1s: Vec<[f32; 2]> = Default::default();
 
+    let mut vertex_map: HashMap<(u32, u32), u32> = HashMap::new();
     let mut vertex_index = 0;
+
     for face in object.faces.clone().iter_mut() {
         face.indices.reverse();
 
         for index in face.indices.iter() {
-            let vertex = object.vertices.get(*index as usize).unwrap();
+            let key = (*index as u32, face.texture_index as u32);
 
-            positions.push([
-                vertex.position.z + translation.z,
-                vertex.position.y + translation.y,
-                vertex.position.x + translation.x,
-            ]);
+            if let Some(&new_index) = vertex_map.get(&key) {
+                indices.push(new_index);
+            } else {
+                let vertex = object.vertices.get(*index as usize).unwrap();
 
-            uv0s.push([vertex.uv.x, vertex.uv.y]);
+                let position = if object
+                    .flags
+                    .contains(ObjectFlags::CUSTOM_TRANSLATION_ENABLED)
+                {
+                    [
+                        vertex.position.z + object.translation.z,
+                        vertex.position.y + object.translation.y,
+                        vertex.position.x + object.translation.x,
+                    ]
+                } else {
+                    [vertex.position.z, vertex.position.y, vertex.position.x]
+                };
 
-            normals.push([vertex.normal.z, vertex.normal.y, vertex.normal.x]);
+                positions.push(position);
 
-            // When using vertex colors, if they are black, nothing is rendered.
-            colors.push([1.0, 1.0, 1.0, 1.0]);
+                uv0s.push([vertex.uv.x, vertex.uv.y]);
 
-            texture_indices.push(face.texture_index as u32);
+                normals.push([vertex.normal.z, vertex.normal.y, vertex.normal.x]);
 
-            indices.push(vertex_index);
+                // When using vertex colors, if they are black, nothing is
+                // rendered.
+                colors.push([1.0, 1.0, 1.0, 1.0]);
 
-            vertex_index += 1;
+                texture_indices.push(face.texture_index as u32);
+
+                indices.push(vertex_index);
+
+                vertex_map.insert(key, vertex_index);
+                vertex_index += 1;
+            }
         }
     }
 
@@ -66,46 +78,21 @@ pub(super) fn mesh_from_m3d_object(object: &Object) -> Mesh {
     let mut min_z = f32::MAX;
     let mut max_z = f32::MIN;
 
-    for vertex in object.vertices.iter() {
-        // TODO: Not sure if adding translation is necessary here or if it is
-        // pointless due to the UV1s being normalized.
-        let pos = Vec3::new(
-            vertex.position.z + translation.z,
-            vertex.position.y + translation.y,
-            vertex.position.x + translation.x,
-        );
-        min_x = min_x.min(pos.x);
-        max_x = max_x.max(pos.x);
-        min_z = min_z.min(pos.z);
-        max_z = max_z.max(pos.z);
+    for position in &positions {
+        min_x = min_x.min(position[0]);
+        max_x = max_x.max(position[0]);
+        min_z = min_z.min(position[2]);
+        max_z = max_z.max(position[2]);
     }
 
     let size_x = max_x - min_x;
     let size_z = max_z - min_z;
 
     // Calculate UV1s based on the bounds.
-    let mut uv1s: Vec<[f32; 2]> = Default::default();
-    for face in object.faces.clone().iter_mut() {
-        // Not sure why, but the face indices need to be un-reversed for the
-        // UV1s to work for Bevy's lightmap.
-        face.indices.reverse();
-
-        for &index in face.indices.iter() {
-            let vertex = &object.vertices[index as usize];
-
-            // TODO: Not sure if adding translation is necessary here or if it
-            // is pointless due to the UV1s being normalized.
-            let pos = Vec3::new(
-                vertex.position.z + translation.z,
-                vertex.position.y + translation.y,
-                vertex.position.x + translation.x,
-            );
-
-            // Map X and Z to [0, 1] range.
-            let u = (pos.x - min_x) / size_x;
-            let v = (pos.z - min_z) / size_z;
-            uv1s.push([u, v]);
-        }
+    for position in &positions {
+        let u = (position[0] - min_x) / size_x;
+        let v = (position[2] - min_z) / size_z;
+        uv1s.push([u, v]);
     }
 
     Mesh::new(
@@ -123,6 +110,7 @@ pub(super) fn mesh_from_m3d_object(object: &Object) -> Mesh {
 
 #[cfg(test)]
 mod tests {
+    use bevy_math::prelude::*;
     use bevy_render::{
         mesh::{Indices, MeshVertexAttribute, VertexAttributeValues},
         prelude::*,
