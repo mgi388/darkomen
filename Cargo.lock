@@ -1555,7 +1555,6 @@ dependencies = [
  "bevy_reflect",
  "bevy_render",
  "bevy_sprite",
- "bevy_utils",
  "bitflags 2.6.0",
  "clap",
  "darkomen",
@@ -1578,6 +1577,7 @@ dependencies = [
  "serde_json",
  "sha2",
  "tempfile",
+ "tracing",
 ]
 
 [[package]]

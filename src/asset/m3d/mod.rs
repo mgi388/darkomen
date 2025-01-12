@@ -15,11 +15,11 @@ use bevy_image::{
 use bevy_pbr::prelude::*;
 use bevy_reflect::prelude::*;
 use bevy_render::{prelude::*, render_asset::RenderAssetUsages};
-use bevy_utils::tracing::*;
 use derive_more::{Display, Error, From};
 use dyn_clone::DynClone;
 use image::Rgba;
 use serde::{Deserialize, Serialize};
+use tracing::*;
 
 use crate::m3d::*;
 
