@@ -20,9 +20,9 @@ asset = [
     "dep:bevy_pbr",
     "dep:bevy_render",
     "dep:bevy_sprite",
-    "dep:bevy_utils",
     "dep:bevy-kira-components",
     "dep:dyn-clone",
+    "dep:tracing",
 ]
 bevy_reflect = ["dep:bevy_reflect"]
 cli = ["dep:anyhow", "dep:clap", "dep:ron", "dep:serde_json", "dep:tempfile"]
@@ -102,12 +102,12 @@ optional = true
 version = "0.15"
 optional = true
 
-[dependencies.bevy_utils]
-version = "0.15"
-optional = true
-
 [dependencies.dyn-clone]
 version = "1"
+optional = true
+
+[dependencies.tracing]
+version = "0.1"
 optional = true
 
 [dev-dependencies]
