@@ -70,7 +70,7 @@ version = "0.15"
 optional = true
 
 [dependencies.bevy_kira_audio]
-version = "0.21"
+version = "0.22"
 default-features = false
 features = ["wav"]
 optional = true

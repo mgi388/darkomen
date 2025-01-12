@@ -233,9 +233,9 @@ impl<MaterialT: Material + std::fmt::Debug> M3dAssetLoader<MaterialT> {
         }
     }
 
-    async fn load_m3d<'b, 'c, 'd>(
+    async fn load_m3d(
         self: &M3dAssetLoader<MaterialT>,
-        load_context: &'c mut LoadContext<'d>,
+        load_context: &mut LoadContext<'_>,
         textures_path: PathBuf,
         m3d: &M3d,
     ) -> Result<M3dAsset<MaterialT>, M3dAssetLoaderError> {
@@ -345,10 +345,10 @@ async fn load_textures(
 }
 
 /// Loads a texture as a bevy [`Image`] and returns it together with its label.
-async fn load_image<'a, 'b, 'c>(
-    load_context: &'a mut LoadContext<'b>,
+async fn load_image(
+    load_context: &mut LoadContext<'_>,
     texture_descriptor: &crate::m3d::M3dTextureDescriptor,
-    textures_path: &'c Path,
+    textures_path: &Path,
 ) -> Result<LabeledImage, M3dAssetLoaderError> {
     let path = textures_path.join(&texture_descriptor.file_name);
 
