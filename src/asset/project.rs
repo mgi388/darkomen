@@ -115,6 +115,7 @@ pub struct ProjectAssetLoader<MaterialT: Material + std::fmt::Debug> {
 #[reflect(Debug, Default, Deserialize, Serialize)]
 pub struct ProjectAssetLoaderSettings {
     pub music_script_path: PathBuf,
+    pub lightmap_loader_settings: Option<LightmapAssetLoaderSettings>,
     pub battle_tabletop_loader_settings: Option<BattleTabletopAssetLoaderSettings>,
 }
 
@@ -180,7 +181,16 @@ impl<MaterialT: Material + std::fmt::Debug> AssetLoader for ProjectAssetLoader<M
                 .collect(),
             music_script: load_context.load(music_script_path.join(project.music_script_file_name)),
             lights: load_context.load(parent_path.join(&id).with_extension("LIT")),
-            lightmap: load_context.load(parent_path.join(&id).with_extension("SHD")),
+            lightmap: {
+                let mut b = load_context.loader();
+                if let Some(ref s) = settings.lightmap_loader_settings {
+                    let s = *s;
+                    b = b.with_settings(move |settings| {
+                        *settings = s;
+                    });
+                }
+                b.load(parent_path.join(&id).with_extension("SHD"))
+            },
             battle_tabletop: {
                 let mut b = load_context.loader();
                 if let Some(ref s) = settings.battle_tabletop_loader_settings {
