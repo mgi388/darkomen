@@ -457,9 +457,9 @@ dependencies = [
 
 [[package]]
 name = "bevy_color"
-version = "0.15.1"
+version = "0.15.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "87bccacba27db37375eb97ffc86e91a7d95db3f5faa6a834fa7306db02cde327"
+checksum = "f00aa2966c7ca0c7dd39f5ba8f3b1eaa5c2005a93ffdefb7a4090150d8327678"
 dependencies = [
  "bevy_math",
  "bevy_reflect",
@@ -630,9 +630,9 @@ dependencies = [
 
 [[package]]
 name = "bevy_image"
-version = "0.15.0"
+version = "0.15.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "db46fa6a2f9e20435f3231710abbb136d2cc0a376f3f8e6ecfe071e286f5a246"
+checksum = "8c5942a7d681b81aa9723bb1d918135c2f88e7871331f5676119c86c01984759"
 dependencies = [
  "bevy_asset",
  "bevy_color",
