@@ -131,16 +131,26 @@ pub struct Sound {
 impl Sound {
     /// Returns a random playback rate for the sound.
     ///
-    /// The playback rate is a value between 0.0 and 1.0. A playback rate of 1.0
-    /// means the sound is played at its original frequency. A playback rate of
-    /// 0.5 means the sound is played at half its original frequency.
-    pub fn random_playback_rate(&self, rng: &mut impl Rng) -> f64 {
-        let random_frequency_deviation = if self.frequency_deviation == 0 {
-            0
-        } else {
-            rng.gen_range(0..self.frequency_deviation)
-        };
-        self.frequency as f64 / (self.frequency as f64 + random_frequency_deviation as f64)
+    /// The playback rate is calculated dynamically based on the source audio
+    /// file's sample rate, e.g. 44100, and the sound's frequency and frequency
+    /// deviation.
+    ///
+    /// A playback rate of 1.0 means the sound is played at its original
+    /// frequency. A playback rate of 2.0 means the sound is played at twice its
+    /// original frequency.
+    pub fn random_playback_rate(&self, rng: &mut impl Rng, sample_rate: u32) -> f64 {
+        // Calculate the base playback rate from the frequency and sample rate.
+        let base_playback_rate = self.frequency as f64 / sample_rate as f64;
+
+        if self.frequency_deviation == 0 {
+            return base_playback_rate;
+        }
+
+        let random_frequency_deviation = rng.gen_range(0..self.frequency_deviation);
+
+        // Adjust the playback rate by the random frequency deviation.
+        base_playback_rate
+            * (self.frequency as f64 / (self.frequency as f64 + random_frequency_deviation as f64))
     }
 }
 
@@ -155,15 +165,29 @@ mod tests {
     }
 
     #[test]
+    fn test_appear01_playback_rate() {
+        let mut rng = deterministic_rand();
+        let sound = Sound {
+            frequency: 44_100, // 44.1 kHz is from the sound effect packet file
+            frequency_deviation: 0,
+            ..Default::default()
+        };
+
+        let playback_rate = sound.random_playback_rate(&mut rng, 16_000); // 16 kHz is the sample rate of APPEAR01.WAV
+
+        assert_eq!(playback_rate, 2.75625);
+    }
+
+    #[test]
     fn test_random_playback_rate() {
         let mut rng = deterministic_rand();
         let sound = Sound {
-            frequency: 440,
+            frequency: 22_050,
             frequency_deviation: 100,
             ..Default::default()
         };
 
-        let playback_rate = sound.random_playback_rate(&mut rng);
+        let playback_rate = sound.random_playback_rate(&mut rng, 44_100);
 
         assert!(
             (0.0..=1.0).contains(&playback_rate),
