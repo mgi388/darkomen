@@ -4,14 +4,19 @@ mod lexer;
 #[cfg(feature = "bevy_reflect")]
 use bevy_reflect::prelude::*;
 use bitflags::bitflags;
+use num_enum::{IntoPrimitive, TryFromPrimitive};
 use rand::{seq::SliceRandom as _, Rng};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 pub use decoder::{DecodeError, Decoder};
 
-#[derive(Clone, Debug, Default, Serialize)]
-#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[cfg_attr(
+    feature = "bevy_reflect",
+    derive(Reflect),
+    reflect(Debug, Default, Deserialize, Serialize)
+)]
 pub struct Packet {
     /// The name of the packet, e.g. `WaterFallingTears`.
     pub name: String,
@@ -19,8 +24,12 @@ pub struct Packet {
     pub sfxs: HashMap<SfxId, Sfx>,
 }
 
-#[derive(Clone, Debug, Default, Serialize)]
-#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[cfg_attr(
+    feature = "bevy_reflect",
+    derive(Reflect),
+    reflect(Debug, Default, Deserialize, Serialize)
+)]
 pub struct Sfx {
     /// The ID of the SFX.
     pub id: SfxId,
@@ -54,53 +63,96 @@ impl Sfx {
 pub type SfxId = u8;
 
 #[repr(u8)]
-#[derive(Clone, Debug, Default, PartialEq, Serialize)]
-#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+#[derive(
+    Clone, Debug, Default, Deserialize, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive,
+)]
+#[cfg_attr(
+    feature = "bevy_reflect",
+    derive(Reflect),
+    reflect(Debug, Default, Deserialize, PartialEq, Serialize)
+)]
 pub enum SfxType {
-    #[default]
-    One,
-    Two,
-    Three,
-    Four,
-    Five,
-    /// Type 6 seems to be used for SFX that have multiple sounds which are
-    /// randomly picked from.
+    /// A sound effect that plays one sound and does not loop.
     ///
-    /// TODO: For cases where type is 6, none of the individual sounds are
-    /// looped but the SFX as a whole is looped. So, it's possible that "loop
-    /// SFX" is managed in flags. Type 6 has flags either 0 or 2. All of those
-    /// with flags 0 are in MEET.H.
-    Six,
-}
-
-impl From<SfxType> for u8 {
-    fn from(sfx_type: SfxType) -> Self {
-        sfx_type as u8
-    }
-}
-
-impl TryFrom<u8> for SfxType {
-    type Error = ();
-
-    fn try_from(value: u8) -> Result<Self, Self::Error> {
-        match value {
-            1 => Ok(SfxType::One),
-            2 => Ok(SfxType::Two),
-            3 => Ok(SfxType::Three),
-            4 => Ok(SfxType::Four),
-            5 => Ok(SfxType::Five),
-            6 => Ok(SfxType::Six),
-            _ => Err(()),
-        }
-    }
+    /// Only one sound is played for this type of sound effect. If the sound
+    /// effect contains more than one sound, the others are ignored.
+    ///
+    /// Note: In the original game, all sound effects of this type have a single
+    /// sound except `SFX_BLADEWINDHIT` from `BATUND.H`, which has 2 sounds but
+    /// the second sound is always ignored.
+    ///
+    /// Used for the "button down" (`SFX_BUTTONDOWN`) sound effect from
+    /// `INTAFACE.H` in the original game.
+    #[default]
+    OneShot = 1,
+    /// A sound effect that plays multiple sounds simultaneously without
+    /// looping.
+    ///
+    /// Any sound can have its `loop` set to true, and doing so causes that
+    /// sound to be looped indefinitely, even while other sounds are playing.
+    ///
+    /// Used for the "horn of Urgok" (`SFX_HORNURGOK`) sound effect from
+    /// `BATGEN.H` in the original game.
+    SimultaneousOneShot = 2,
+    /// A sound effect that randomly selects one sound from a list to play,
+    /// without looping.
+    ///
+    /// Used for the "arrows being fired" (`SFX_ARROWS`) and "arrows hitting a
+    /// target" (`SFX_ARROWHIT`) sound effects where one sound is randomly
+    /// picked from the list. Note: These sound effects both have `!Null` as
+    /// their middle sound. This is probably used to reduce the number of sounds
+    /// played when a regiment fires a volley of arrows. However, theoretically,
+    /// the sound effect could be skipped entirely if the middle sound is picked
+    /// for every unit firing an arrow in the regiment / every arrow hitting a
+    /// target.
+    ///
+    /// They all have flags equal to 2 except for `SFX_NEXTPAGE` in `GLUE.H`
+    /// which has flags equal to 1. This has two sounds `paper1` and `paper2`
+    /// and so it seems like the game is picking between two paper sounds to
+    /// make the page turning sound less repetitive. This further supports that
+    /// flags equal to 2 means "spatial".
+    RandomOneShot = 3,
+    /// A sound effect that plays a sequence of sounds one after another,
+    /// without looping.
+    ///
+    /// If any sound in the sequence is set to loop, subsequent sounds will not
+    /// play.
+    ///
+    /// Used for the "steam tank" (`SFX_STEAMWHISTLECOOL`) sound effect from
+    /// `BATALL.H` in the original game.
+    SequentialNonLooping = 4,
+    /// A sound effect that plays a sequence of sounds one after another, with
+    /// the sequence looping.
+    ///
+    /// If any sound in the sequence is set to loop, the entire sound effect
+    /// will not play.
+    ///
+    /// Used for the "fireworks" (`SFX_FIREWORKS`) sound effect from
+    /// `FIREWORK.H` in the original game.
+    SequentialLooping = 5,
+    /// A sound effect that randomly selects one sound from a list to play, with
+    /// the selection looping.
+    ///
+    /// Used for the "birds" (`SFX_TWITTERLOOP`) sound effect from `TWITTER.H`
+    /// where one sound is randomly picked from the list, it is played, then the
+    /// sound effect loops and randomly picks another sound from the list, and
+    /// so on.
+    ///
+    /// The sound effects that have this type have flags equal to either 0 or 2.
+    /// All of those with flags equal to 0 are in `MEET.H`. It seems like flags
+    /// equal to 2 could mean "spatial" sound effect, but there are some sounds
+    /// that have this flag that don't seem to be affected by the position of
+    /// the camera, i.e. they don't seem to be spatial. Changing a flag from 2
+    /// to 0 also keeps the sound as spatial, but changing it from 2 to 1 makes
+    /// it global, so it seems like flags equal to 1 means "global" and flags
+    /// equal to 0 or 2 means "spatial".
+    RandomLooping = 6,
 }
 
 bitflags! {
     #[repr(transparent)]
     #[derive(Clone, Copy, Debug, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
-    #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
-    #[cfg_attr(feature = "bevy_reflect", reflect(opaque))]
-    #[cfg_attr(feature = "bevy_reflect", reflect(Debug, Default, Deserialize, Hash, PartialEq, Serialize))]
+    #[cfg_attr(feature = "bevy_reflect", derive(Reflect), reflect(opaque), reflect(Debug, Default, Deserialize, Hash, PartialEq, Serialize))]
     pub struct SfxFlags: u8 {
         const NONE = 0;
         const UNKNOWN_FLAG_1 = 1 << 0;
@@ -108,8 +160,12 @@ bitflags! {
     }
 }
 
-#[derive(Clone, Debug, Default, Serialize)]
-#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[cfg_attr(
+    feature = "bevy_reflect",
+    derive(Reflect),
+    reflect(Debug, Default, Deserialize, Serialize)
+)]
 pub struct Sound {
     /// The file name of the sound excluding the path and extension, i.e. the
     /// stem of the file name, e.g. `watfal02`.
