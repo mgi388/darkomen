@@ -194,9 +194,11 @@ impl Sound {
     /// A playback rate of 1.0 means the sound is played at its original
     /// frequency. A playback rate of 2.0 means the sound is played at twice its
     /// original frequency.
-    pub fn random_playback_rate(&self, rng: &mut impl Rng, sample_rate: u32) -> f64 {
+    pub fn random_playback_rate(&self, rng: &mut impl Rng, sample_rate: u32) -> f32 {
+        let frequency = self.frequency as f32;
+
         // Calculate the base playback rate from the frequency and sample rate.
-        let base_playback_rate = self.frequency as f64 / sample_rate as f64;
+        let base_playback_rate = frequency / sample_rate as f32;
 
         if self.frequency_deviation == 0 {
             return base_playback_rate;
@@ -205,8 +207,7 @@ impl Sound {
         let random_frequency_deviation = rng.gen_range(0..self.frequency_deviation);
 
         // Adjust the playback rate by the random frequency deviation.
-        base_playback_rate
-            * (self.frequency as f64 / (self.frequency as f64 + random_frequency_deviation as f64))
+        base_playback_rate * (frequency / (frequency + random_frequency_deviation as f32))
     }
 }
 
