@@ -174,7 +174,7 @@ pub struct Sound {
     pub frequency: u32,
     /// The frequency deviation of the sound.
     pub frequency_deviation: u32,
-    /// The volume of the sound.
+    /// The volume of the sound from 0 to 255.
     pub volume: u8,
     /// Whether the sound loops.
     pub looped: bool,
@@ -208,6 +208,11 @@ impl Sound {
 
         // Adjust the playback rate by the random frequency deviation.
         base_playback_rate * (frequency / (frequency + random_frequency_deviation as f32))
+    }
+
+    /// Returns the volume as a linear value from 0.0 to 1.0.
+    pub fn linear_volume(&self) -> f32 {
+        self.volume as f32 / 255.0
     }
 }
 
