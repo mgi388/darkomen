@@ -54,6 +54,10 @@ impl From<&PacketAssetHandle> for AssetId<PacketAsset> {
 }
 
 impl PacketAsset {
+    pub fn display_name(&self) -> &str {
+        self.source.name.as_str()
+    }
+
     pub fn sound_effect(&self, sfx_id: SfxId) -> Option<&Sfx> {
         self.source.sfxs.get(&sfx_id)
     }

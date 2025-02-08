@@ -40,6 +40,8 @@ pub mod prelude {
     #[doc(hidden)]
     pub use crate::asset::sound::sad::*;
     #[doc(hidden)]
+    pub use crate::asset::sound::sound_effect::*;
+    #[doc(hidden)]
     pub use crate::asset::sound::*;
 }
 
