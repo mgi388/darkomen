@@ -10,6 +10,7 @@ impl Plugin for AssetPathsPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(AssetPaths {
             banners_path: PathBuf::from("DARKOMEN/GRAPHICS/BANNERS"),
+            pictures_path: PathBuf::from("DARKOMEN/GRAPHICS/PICTURES"),
             sprites_path: PathBuf::from("DARKOMEN/GRAPHICS/SPRITES"),
             books_path: PathBuf::from("DARKOMEN/GRAPHICS/BOOKS"),
             sound_path: PathBuf::from("DARKOMEN/SOUND/SOUND"),
@@ -25,6 +26,7 @@ impl Plugin for AssetPathsPlugin {
 #[reflect(Debug, Resource)]
 pub struct AssetPaths {
     pub banners_path: PathBuf,
+    pub pictures_path: PathBuf,
     pub sprites_path: PathBuf,
     pub books_path: PathBuf,
     pub sound_path: PathBuf,
@@ -37,6 +39,7 @@ impl Default for AssetPaths {
     fn default() -> Self {
         Self {
             banners_path: PathBuf::from("DARKOMEN/GRAPHICS/BANNERS"),
+            pictures_path: PathBuf::from("DARKOMEN/GRAPHICS/PICTURES"),
             sprites_path: PathBuf::from("DARKOMEN/GRAPHICS/SPRITES"),
             books_path: PathBuf::from("DARKOMEN/GRAPHICS/BOOKS"),
             sound_path: PathBuf::from("DARKOMEN/SOUND/SOUND"),
@@ -52,6 +55,7 @@ impl AssetPaths {
         let mut placeholders = HashMap::new();
         placeholders.insert("[BOOKS]", &self.books_path);
         placeholders.insert("[BANNERS]", &self.banners_path);
+        placeholders.insert("[PICTURES]", &self.pictures_path);
         placeholders.insert("[SOUND]", &self.sound_effect_packets_path);
 
         // Bevy asset paths are meant to be virtual paths, not OS paths, so we
