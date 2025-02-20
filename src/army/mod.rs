@@ -398,9 +398,19 @@ impl Regiment {
         self.flags.insert(RegimentFlags::MUST_DEPLOY);
     }
 
+    /// Marks the regiment as temporary.
+    pub fn mark_temporary(&mut self) {
+        self.flags.insert(RegimentFlags::TEMPORARY);
+    }
+
     /// Returns `true` if the regiment must be deployed.
     pub fn must_deploy(&self) -> bool {
         self.flags.contains(RegimentFlags::MUST_DEPLOY)
+    }
+
+    /// Returns `true` if the regiment is temporary.
+    pub fn is_temporary(&self) -> bool {
+        self.flags.contains(RegimentFlags::TEMPORARY)
     }
 
     /// Returns `true` if the regiment is deployable.
