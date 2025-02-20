@@ -90,8 +90,8 @@ impl std::fmt::Display for TextureDescriptorNotFoundError {
 impl std::error::Error for TextureDescriptorNotFoundError {}
 
 /// A [`Handle`] to a [`SpriteSheetAsset`] asset.
-#[derive(Component, Clone, Debug, Default, Deref, DerefMut, Eq, From, PartialEq, Reflect)]
-#[reflect(Component, Default)]
+#[derive(Clone, Component, Debug, Default, Deref, DerefMut, Eq, From, PartialEq, Reflect)]
+#[reflect(Component, Debug, Default, PartialEq)]
 pub struct SpriteSheetAssetHandle(pub Handle<SpriteSheetAsset>);
 
 impl From<SpriteSheetAssetHandle> for AssetId<SpriteSheetAsset> {

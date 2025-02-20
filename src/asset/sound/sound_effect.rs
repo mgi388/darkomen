@@ -37,8 +37,8 @@ pub struct PacketAsset {
 }
 
 /// A [`Handle`] to a [`PacketAsset`] asset.
-#[derive(Component, Clone, Debug, Default, Deref, DerefMut, Eq, From, PartialEq, Reflect)]
-#[reflect(Component, Default)]
+#[derive(Clone, Component, Debug, Default, Deref, DerefMut, Eq, From, PartialEq, Reflect)]
+#[reflect(Component, Debug, Default, PartialEq)]
 pub struct PacketAssetHandle(pub Handle<PacketAsset>);
 
 impl From<PacketAssetHandle> for AssetId<PacketAsset> {

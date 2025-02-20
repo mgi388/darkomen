@@ -45,8 +45,8 @@ impl ArmyAsset {
 }
 
 /// A [`Handle`] to an [`ArmyAsset`] asset.
-#[derive(Component, Clone, Debug, Default, Deref, DerefMut, Eq, From, PartialEq, Reflect)]
-#[reflect(Component, Debug, Default, PartialEq)]
+#[derive(Clone, Component, Debug, Default, Deref, DerefMut, Eq, From, Hash, PartialEq, Reflect)]
+#[reflect(Component, Debug, Default, Hash, PartialEq)]
 pub struct ArmyAssetHandle(pub Handle<ArmyAsset>);
 
 impl From<ArmyAssetHandle> for AssetId<ArmyAsset> {
