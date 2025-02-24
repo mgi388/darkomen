@@ -130,7 +130,7 @@ optional = true
 darkomen = { path = ".", features = ["bevy_reflect"] }
 imageproc = "0.25"
 pretty_assertions = "1.4"
-rand_chacha = "0.3"
+rand_chacha = "0.9"
 regex = "1.11"
 ron = "0.8"
 sha2 = "0.10"
