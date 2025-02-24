@@ -1,10 +1,9 @@
-use std::{collections::HashMap, path::PathBuf};
+use std::path::PathBuf;
 
 use bevy_app::prelude::*;
 use bevy_asset::{io::Reader, prelude::*, AssetLoader, LoadContext};
 use bevy_derive::{Deref, DerefMut};
 use bevy_ecs::prelude::*;
-use bevy_kira_components::{prelude::*, sources::audio_file::AudioFilePlugin};
 use bevy_reflect::prelude::*;
 use derive_more::derive::{Display, Error, From};
 use serde::{Deserialize, Serialize};
@@ -18,8 +17,17 @@ impl Plugin for SoundEffectAssetPlugin {
         if !app.is_plugin_added::<AssetPathsPlugin>() {
             app.add_plugins(AssetPathsPlugin);
         }
-        if !app.is_plugin_added::<AudioFilePlugin>() {
-            app.add_plugins(AudioFilePlugin);
+        #[cfg(feature = "bevy_audio")]
+        if !app.is_plugin_added::<bevy_audio::AudioPlugin>() {
+            app.add_plugins(bevy_audio::AudioPlugin::default());
+        }
+        #[cfg(feature = "bevy_kira_audio")]
+        if !app.is_plugin_added::<bevy_kira_audio::AudioPlugin>() {
+            app.add_plugins(bevy_kira_audio::AudioPlugin);
+        }
+        #[cfg(feature = "bevy-kira-components")]
+        if !app.is_plugin_added::<bevy_kira_components::sources::audio_file::AudioFilePlugin>() {
+            app.add_plugins(bevy_kira_components::sources::audio_file::AudioFilePlugin);
         }
 
         app.init_asset::<PacketAsset>()
@@ -33,7 +41,15 @@ impl Plugin for SoundEffectAssetPlugin {
 #[reflect(Debug)]
 pub struct PacketAsset {
     source: Packet,
-    audio_files: HashMap<String, Handle<AudioFile>>,
+    #[cfg(feature = "bevy_audio")]
+    audio_sources: bevy_utils::HashMap<String, Handle<bevy_audio::AudioSource>>,
+    #[cfg(feature = "bevy_kira_audio")]
+    kira_audio_sources: bevy_utils::HashMap<String, Handle<bevy_kira_audio::AudioSource>>,
+    #[cfg(feature = "bevy-kira-components")]
+    audio_files: bevy_utils::HashMap<
+        String,
+        Handle<bevy_kira_components::sources::audio_file::source::AudioFile>,
+    >,
 }
 
 /// A [`Handle`] to a [`PacketAsset`] asset.
@@ -66,7 +82,36 @@ impl PacketAsset {
         sound_effect.sounds.get(sound_index).cloned()
     }
 
-    pub fn audio_file_handle(&self, sound: &Sound) -> Option<Handle<AudioFile>> {
+    #[cfg(feature = "bevy_audio")]
+    pub fn audio_source_handle(&self, sound: &Sound) -> Option<Handle<bevy_audio::AudioSource>> {
+        self.audio_sources
+            .get(if sound.file_stem == "!Null" {
+                "null250"
+            } else {
+                sound.file_stem.as_str()
+            })
+            .cloned()
+    }
+
+    #[cfg(feature = "bevy_kira_audio")]
+    pub fn kira_audio_source_handle(
+        &self,
+        sound: &Sound,
+    ) -> Option<Handle<bevy_kira_audio::AudioSource>> {
+        self.kira_audio_sources
+            .get(if sound.file_stem == "!Null" {
+                "null250"
+            } else {
+                sound.file_stem.as_str()
+            })
+            .cloned()
+    }
+
+    #[cfg(feature = "bevy-kira-components")]
+    pub fn audio_file_handle(
+        &self,
+        sound: &Sound,
+    ) -> Option<Handle<bevy_kira_components::sources::audio_file::source::AudioFile>> {
         self.audio_files
             .get(if sound.file_stem == "!Null" {
                 "null250"
@@ -104,6 +149,7 @@ impl AssetLoader for PacketAssetLoader {
     type Asset = PacketAsset;
     type Settings = PacketAssetLoaderSettings;
     type Error = PacketAssetLoaderError;
+
     async fn load(
         &self,
         reader: &mut dyn Reader,
@@ -146,15 +192,36 @@ impl AssetLoader for PacketAssetLoader {
             })
             .collect::<Vec<_>>();
 
-        let mut audio_files = HashMap::new();
+        #[cfg(feature = "bevy_audio")]
+        let mut audio_sources = bevy_utils::HashMap::new();
+        #[cfg(feature = "bevy_kira_audio")]
+        let mut kira_audio_sources = bevy_utils::HashMap::new();
+        #[cfg(feature = "bevy-kira-components")]
+        let mut audio_files = bevy_utils::HashMap::new();
 
         for file_name in file_names {
             let sample_path = sound_path.join(file_name).with_extension("wav");
+            #[cfg(feature = "bevy_audio")]
+            audio_sources.insert(
+                file_name.to_string(),
+                load_context.load(sample_path.clone()),
+            );
+            #[cfg(feature = "bevy_kira_audio")]
+            kira_audio_sources.insert(
+                file_name.to_string(),
+                load_context.load(sample_path.clone()),
+            );
+            #[cfg(feature = "bevy-kira-components")]
             audio_files.insert(file_name.to_string(), load_context.load(sample_path));
         }
 
         Ok(PacketAsset {
             source: packet,
+            #[cfg(feature = "bevy_audio")]
+            audio_sources,
+            #[cfg(feature = "bevy_kira_audio")]
+            kira_audio_sources,
+            #[cfg(feature = "bevy-kira-components")]
             audio_files,
         })
     }
