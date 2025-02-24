@@ -9,10 +9,13 @@ pub struct AssetPathsPlugin;
 impl Plugin for AssetPathsPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(AssetPaths {
+            game_flow_path: PathBuf::from("DARKOMEN/GAMEDATA/GAMEFLOW"),
             banners_path: PathBuf::from("DARKOMEN/GRAPHICS/BANNERS"),
+            maps_path: PathBuf::from("DARKOMEN/GRAPHICS/MAPS"),
             pictures_path: PathBuf::from("DARKOMEN/GRAPHICS/PICTURES"),
             sprites_path: PathBuf::from("DARKOMEN/GRAPHICS/SPRITES"),
             books_path: PathBuf::from("DARKOMEN/GRAPHICS/BOOKS"),
+            movies_path: PathBuf::from("DARKOMEN/MOVIES"),
             sound_path: PathBuf::from("DARKOMEN/SOUND/SOUND"),
             music_script_path: PathBuf::from("DARKOMEN/SOUND/SCRIPT"),
             music_path: PathBuf::from("DARKOMEN/SOUND/MUSIC"),
@@ -25,10 +28,13 @@ impl Plugin for AssetPathsPlugin {
 #[derive(Clone, Debug, Reflect, Resource)]
 #[reflect(Debug, Resource)]
 pub struct AssetPaths {
+    pub game_flow_path: PathBuf,
     pub banners_path: PathBuf,
+    pub maps_path: PathBuf,
     pub pictures_path: PathBuf,
     pub sprites_path: PathBuf,
     pub books_path: PathBuf,
+    pub movies_path: PathBuf,
     pub sound_path: PathBuf,
     pub music_script_path: PathBuf,
     pub music_path: PathBuf,
@@ -38,10 +44,13 @@ pub struct AssetPaths {
 impl Default for AssetPaths {
     fn default() -> Self {
         Self {
+            game_flow_path: PathBuf::from("DARKOMEN/GAMEDATA/GAMEFLOW"),
             banners_path: PathBuf::from("DARKOMEN/GRAPHICS/BANNERS"),
+            maps_path: PathBuf::from("DARKOMEN/GRAPHICS/MAPS"),
             pictures_path: PathBuf::from("DARKOMEN/GRAPHICS/PICTURES"),
             sprites_path: PathBuf::from("DARKOMEN/GRAPHICS/SPRITES"),
             books_path: PathBuf::from("DARKOMEN/GRAPHICS/BOOKS"),
+            movies_path: PathBuf::from("DARKOMEN/MOVIES"),
             sound_path: PathBuf::from("DARKOMEN/SOUND/SOUND"),
             music_script_path: PathBuf::from("DARKOMEN/SOUND/SCRIPT"),
             music_path: PathBuf::from("DARKOMEN/SOUND/MUSIC"),
@@ -55,6 +64,9 @@ impl AssetPaths {
         let mut placeholders = HashMap::new();
         placeholders.insert("[BOOKS]", &self.books_path);
         placeholders.insert("[BANNERS]", &self.banners_path);
+        placeholders.insert("[GAMEFLOW]", &self.game_flow_path);
+        placeholders.insert("[MAPS]", &self.maps_path);
+        placeholders.insert("[MOVIES]", &self.movies_path);
         placeholders.insert("[PICTURES]", &self.pictures_path);
         placeholders.insert("[SOUND]", &self.sound_effect_packets_path);
 
