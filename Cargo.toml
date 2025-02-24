@@ -24,6 +24,9 @@ asset = [
     "dep:dyn-clone",
     "dep:tracing",
 ]
+bevy_audio = ["dep:bevy_audio", "dep:bevy_utils"]
+bevy_kira_audio = ["dep:bevy_kira_audio", "dep:bevy_utils"]
+bevy-kira-components = ["dep:bevy-kira-components", "dep:bevy_utils"]
 bevy_reflect = ["dep:bevy_reflect"]
 cli = ["dep:anyhow", "dep:clap", "dep:ron", "dep:serde_json", "dep:tempfile"]
 
@@ -57,6 +60,12 @@ optional = true
 version = "0.15"
 optional = true
 
+[dependencies.bevy_audio]
+version = "0.15"
+default-features = false
+features = ["wav"]
+optional = true
+
 [dependencies.bevy_derive]
 version = "0.15"
 optional = true
@@ -78,6 +87,7 @@ optional = true
 [dependencies.bevy-kira-components]
 git = "https://github.com/mgi388/bevy-kira-components.git"
 branch = "bevy-0.15-fixes1"
+default-features = false
 optional = true
 
 [dependencies.bevy_math]
@@ -100,6 +110,11 @@ optional = true
 
 [dependencies.bevy_sprite]
 version = "0.15"
+optional = true
+
+[dependencies.bevy_utils]
+version = "0.15"
+default-features = false
 optional = true
 
 [dependencies.dyn-clone]
