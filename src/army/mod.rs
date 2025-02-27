@@ -303,7 +303,7 @@ pub struct Regiment {
     /// Some of the fields are not used for leader units.
     pub leader_profile: UnitProfile,
     /// The leader's 3D head ID.
-    pub leader_head_id: u16,
+    pub leader_head_id: i16,
 
     /// The stats of the regiment's last battle.
     pub last_battle_stats: LastBattleStats,
