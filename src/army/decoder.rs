@@ -647,7 +647,7 @@ impl<R: Read + Seek> Decoder<R> {
                 unknown2_b: u16::from_le_bytes(buf[144..146].try_into().unwrap()),
                 unknown2_as_u32: u32::from_le_bytes(buf[142..146].try_into().unwrap()),
             },
-            leader_head_id: u16::from_le_bytes(buf[146..148].try_into().unwrap()),
+            leader_head_id: i16::from_le_bytes(buf[146..148].try_into().unwrap()),
             last_battle_stats: self.read_last_battle_stats(&buf[148..156])?,
             total_experience: u16::from_le_bytes(buf[156..158].try_into().unwrap()),
             duplicate_id: buf[158],
