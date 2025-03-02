@@ -162,7 +162,7 @@ impl<R: Read + Seek> Decoder<R> {
                 }
 
                 // If R, G and B are each exactly 8, then the pixel is full
-                // black. I.e. "black" hack.
+                // black, i.e., "black" hack.
                 if color.0[0] == 8 && color.0[1] == 8 && color.0[2] == 8 {
                     color = Rgba([0, 0, 0, 255]);
                 }

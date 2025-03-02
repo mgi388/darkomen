@@ -149,7 +149,7 @@ pub struct CutsceneAnimation {
     unknown1: u32,
     /// The initial position of the animation within the background image.
     pub position: UVec2,
-    /// The path to the sprite sheet file, e.g. "[SPRITES]\m_empbi1.spr".
+    /// The path to the sprite sheet file, e.g., "[SPRITES]\m_empbi1.spr".
     pub path: String,
     unknown2: u32,
     unknown3: u32,
@@ -166,7 +166,7 @@ pub struct SaveGameFooter {
     unknown1: Vec<u8>,
     unknown1_as_u16s: Vec<u16>, // TODO: Remove, debug only.
     unknown1_as_u32s: Vec<u32>, // TODO: Remove, debug only.
-    /// The path to the background image file, e.g. "[PICTURES]\m_empn.bmp".
+    /// The path to the background image file, e.g., "[PICTURES]\m_empn.bmp".
     pub background_image_path: Option<String>,
     /// The original game writes over the existing background image path with
     /// the new path but the old bytes are not cleared first. This field is used
@@ -175,7 +175,7 @@ pub struct SaveGameFooter {
     /// string. If it's `Some`, then it contains the residual bytes, up to, but
     /// not including, the last nul-terminated string.
     background_image_path_residual_bytes: Option<Vec<u8>>,
-    // 4 u32s. First is always 0. Third is always one more than second, e.g. we
+    // 4 u32s. First is always 0. Third is always one more than second, e.g., we
     // see pairs like [0, 1] and [52, 53]. Fourth is always some big number, so
     // may not be a u32, but around the first level (as in save games where I
     // saved frequently) it seems to be `1551335452` in the English save games,
@@ -493,7 +493,7 @@ bitflags! {
         /// TODO: Not sure what this flag is yet. This is used by almost every
         /// regiment across .ARM and save games. Removed this from a regiment
         /// and they battled fine and then the flag stayed off after the battle
-        /// was finished (i.e. it wasn't reinstated after the battle).
+        /// was finished (i.e., it wasn't reinstated after the battle).
         const UNKNOWN_REGIMENT_FLAG_4 = 1 << 4;
         /// Set if the regiment is heavily damaged. Heavily damaged regiments
         /// result in the leader's portrait being shown in the campaign with
@@ -855,8 +855,8 @@ pub struct UnitProfile {
     /// The index into the list of sprite sheet file names found in ENGREL.EXE
     /// for the unit's sprite sheet.
     pub sprite_sheet_index: u16,
-    /// The display name of the regiment, e.g. "Grudgebringer Cavalry", "Zombies
-    /// #1", "Imperial Steam Tank".
+    /// The display name of the regiment, e.g., "Grudgebringer Cavalry",
+    /// "Zombies #1", "Imperial Steam Tank".
     ///
     /// May be empty. The display name ID is the preferred way to get the
     /// display name. This is so that the display name can be localized.
