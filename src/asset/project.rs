@@ -45,7 +45,7 @@ impl<MaterialT: Material + std::fmt::Debug> Plugin for ProjectPlugin<MaterialT> 
 #[reflect(Debug)]
 pub struct ProjectAsset<MaterialT: Material + std::fmt::Debug> {
     source: Project,
-    /// The ID of the project, e.g. `B1_01`. This is the same as the directory
+    /// The ID of the project, e.g., `B1_01`. This is the same as the directory
     /// that the project file is in.
     pub id: String,
     /// The base model. This is always the chunked M3X version.

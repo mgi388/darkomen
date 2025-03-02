@@ -19,13 +19,13 @@ pub const SCALE: f32 = 8.;
 pub struct BattleTabletop {
     pub width: u32,
     pub height: u32,
-    /// The name of the player's army file, without the extension. E.g.
+    /// The name of the player's army file, without the extension, e.g.,
     /// `b101mrc`.
     pub player_army: String,
-    /// The name of the enemy's army file, without the extension. E.g.
+    /// The name of the enemy's army file, without the extension, e.g.,
     /// `b101nme`.
     pub enemy_army: String,
-    /// The name of the CTL file, without the extension. E.g. `B101`.
+    /// The name of the CTL file, without the extension, e.g., `B101`.
     pub ctl: String,
     pub objectives: Vec<Objective>,
     pub obstacles: Vec<Obstacle>,
@@ -218,9 +218,9 @@ bitflags! {
         const IS_BATTLE_BOUNDARY = 1 << 5;
         const UNKNOWN_FLAG_3 = 1 << 6;
         const IS_BOUNDARY = 1 << 7;
-        /// The region is a deployment zone for player 1, i.e. the main player.
+        /// The region is a deployment zone for player 1, i.e., the main player.
         const IS_PLAYER1_DEPLOYMENT_ZONE = 1 << 8;
-        /// The region is a deployment zone for player 2, i.e. the enemy.
+        /// The region is a deployment zone for player 2, i.e., the enemy.
         const IS_PLAYER2_DEPLOYMENT_ZONE = 1 << 9;
         const IS_VISIBLE_AREA = 1 << 10;
         const UNKNOWN_FLAG_4 = 1 << 11;

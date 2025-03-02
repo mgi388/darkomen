@@ -20,7 +20,7 @@ pub enum ArmySubcommands {
 
 #[derive(Debug, Args)]
 pub struct EditArmyArgs {
-    /// The path to the army file to edit, e.g. ".../B1_01/B101MRC.ARM".
+    /// The path to the army file to edit, e.g., ".../B1_01/B101MRC.ARM".
     #[arg(index = 1)]
     pub army_file: String,
 

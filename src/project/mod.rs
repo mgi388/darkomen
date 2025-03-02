@@ -14,19 +14,20 @@ pub use encoder::{EncodeError, Encoder};
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 pub struct Project {
-    /// The base model file name, including the extension. E.g. `base.M3D`.
+    /// The base model file name, including the extension e.g., `base.M3D`.
     ///
     /// The file name is relative to the directory where the project file is
     /// located.
     pub base_model_file_name: String,
-    /// The water model file name, including the extension. E.g. `_7water.M3D`.
+    /// The water model file name, including the extension, e.g., `_7water.M3D`.
     /// If not present, the project has no water model.
     ///
     /// The file name is relative to the directory where the project file is
     /// located.
     ///
-    /// Note: Some projects overload this field for other non-water models. E.g.
-    /// in B1_07 this field is `_4tower.m3d` to render a tower instead of water.
+    /// Note: Some projects overload this field for other non-water models,
+    /// e.g., in B1_07 this field is `_4tower.m3d` to render a tower instead of
+    /// water.
     pub water_model_file_name: Option<String>,
     /// A list of furniture model file names, including the extension. This is
     /// used by instances to look up the model they use.
@@ -39,9 +40,9 @@ pub struct Project {
     pub attributes: Attributes,
     #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
     excl: Excl,
-    /// The music script file name, including the extension. E.g. `battle1.fsm`.
-    /// This can be used to play background music during a battle, or on various
-    /// UI screens.
+    /// The music script file name, including the extension, e.g.,
+    /// `battle1.fsm`. This can be used to play background music during a
+    /// battle, or on various UI screens.
     pub music_script_file_name: String,
     pub tracks: Vec<Track>,
     #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
@@ -95,7 +96,7 @@ pub struct Instance {
     owner_unit_index: i32,
     burnable: i32,
     pub sfx_code: u32,
-    /// Instances with a model can have a GFX code set, e.g. for the windmill
+    /// Instances with a model can have a GFX code set, e.g., for the windmill
     /// model, it has animated sails and for some building models they have an
     /// animated flag or sign.
     pub gfx_code: u32,
@@ -670,7 +671,7 @@ mod tests {
             }
 
             // Each instance with a GFX code should have a furniture model slot,
-            // i.e. instances with GFX always have an associated furniture
+            // i.e., instances with GFX always have an associated furniture
             // model.
             for instance in &project.instances {
                 assert!(

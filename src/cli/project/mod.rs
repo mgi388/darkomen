@@ -20,7 +20,7 @@ pub enum ProjectSubcommands {
 
 #[derive(Debug, Args)]
 pub struct EditProjectArgs {
-    /// The path to the project file to edit, e.g. ".../B1_01/B1_01.PRJ".
+    /// The path to the project file to edit, e.g., ".../B1_01/B1_01.PRJ".
     #[arg(index = 1)]
     pub project_file: String,
 

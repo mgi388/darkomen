@@ -18,7 +18,7 @@ pub use decoder::{DecodeError, Decoder};
     reflect(Debug, Default, Deserialize, Serialize)
 )]
 pub struct Packet {
-    /// The name of the packet, e.g. `WaterFallingTears`.
+    /// The name of the packet, e.g., `WaterFallingTears`.
     pub name: String,
     /// A map of SFX IDs to SFX.
     pub sfxs: HashMap<SfxId, Sfx>,
@@ -33,7 +33,7 @@ pub struct Packet {
 pub struct Sfx {
     /// The ID of the SFX.
     pub id: SfxId,
-    /// The name of the SFX, e.g. `Waterfall`.
+    /// The name of the SFX, e.g., `Waterfall`.
     pub name: String,
     /// The priority of the SFX.
     pub priority: u8,
@@ -59,7 +59,8 @@ impl Sfx {
 ///
 /// SFX IDs are unique within a packet.
 ///
-/// SFX IDs are not unique across packets, e.g. SFX ID 0 exists in every packet.
+/// SFX IDs are not unique across packets, e.g., SFX ID 0 exists in every
+/// packet.
 pub type SfxId = u8;
 
 #[repr(u8)]
@@ -142,7 +143,7 @@ pub enum SfxType {
     /// All of those with flags equal to 0 are in `MEET.H`. It seems like flags
     /// equal to 2 could mean "spatial" sound effect, but there are some sounds
     /// that have this flag that don't seem to be affected by the position of
-    /// the camera, i.e. they don't seem to be spatial. Changing a flag from 2
+    /// the camera, i.e., they don't seem to be spatial. Changing a flag from 2
     /// to 0 also keeps the sound as spatial, but changing it from 2 to 1 makes
     /// it global, so it seems like flags equal to 1 means "global" and flags
     /// equal to 0 or 2 means "spatial".
@@ -167,8 +168,8 @@ bitflags! {
     reflect(Debug, Default, Deserialize, Serialize)
 )]
 pub struct Sound {
-    /// The file name of the sound excluding the path and extension, i.e. the
-    /// stem of the file name, e.g. `watfal02`.
+    /// The file name of the sound excluding the path and extension, i.e., the
+    /// stem of the file name, e.g., `watfal02`.
     pub file_stem: String,
     /// The frequency of the sound.
     pub frequency: u32,
@@ -188,7 +189,7 @@ impl Sound {
     /// Returns a random playback rate for the sound.
     ///
     /// The playback rate is calculated dynamically based on the source audio
-    /// file's sample rate, e.g. 44100, and the sound's frequency and frequency
+    /// file's sample rate, e.g., 44100, and the sound's frequency and frequency
     /// deviation.
     ///
     /// A playback rate of 1.0 means the sound is played at its original

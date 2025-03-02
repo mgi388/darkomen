@@ -55,14 +55,14 @@ pub struct M3dTextureDescriptor {
     /// There are some bytes after the null-terminated string. Not sure what
     /// they are for.
     path_remainder: Vec<u8>,
-    /// The name of the texture image file, e.g. "nflgrs01.bmp".
+    /// The name of the texture image file, e.g., "nflgrs01.bmp".
     pub file_name: String,
     /// There are some bytes after the null-terminated string. Not sure what
     /// they are for.
     file_name_remainder: Vec<u8>,
 }
 
-/// Texture flags embedded in the prefix of the file name, e.g. `_1WOOD8.bmp`,
+/// Texture flags embedded in the prefix of the file name, e.g., `_1WOOD8.bmp`,
 /// `_2wtpool.bmp`. The prefix is either: `_1`, `_2`, or no prefix.
 ///
 /// - `_1` seems like it's possibly just color keying.
