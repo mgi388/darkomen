@@ -578,7 +578,7 @@ pub enum RegimentClass {
     NightGoblinInfantryman = 11,
     OrcInfantryman = 12,
     UndeadInfantryman = 13,
-    Townsperson = 14,
+    Townsfolk = 14,
     Ogre = 15,
     HumanCavalryman = 16,
     OrcCavalryman = 20,
@@ -647,7 +647,7 @@ impl RegimentClass {
         Into::<u8>::into(*self) & 0x07 == Into::<u8>::into(RegimentRace::Undead)
     }
 
-    pub fn is_townsperson(&self) -> bool {
+    pub fn is_townsfolk(&self) -> bool {
         Into::<u8>::into(*self) & 0x07 == Into::<u8>::into(RegimentRace::Townsfolk)
     }
 }
@@ -1043,10 +1043,10 @@ mod tests {
     }
 
     #[test]
-    fn test_regiment_class_is_townsperson() {
-        assert!(!RegimentClass::HumanInfantryman.is_townsperson());
-        assert!(!RegimentClass::HumanCavalryman.is_townsperson());
-        assert!(RegimentClass::Townsperson.is_townsperson());
+    fn test_regiment_class_is_townsfolk() {
+        assert!(!RegimentClass::HumanInfantryman.is_townsfolk());
+        assert!(!RegimentClass::HumanCavalryman.is_townsfolk());
+        assert!(RegimentClass::Townsfolk.is_townsfolk());
     }
 
     fn roundtrip_test(original_bytes: &[u8], army: &Army) {
