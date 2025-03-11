@@ -12,7 +12,11 @@ pub use decoder::{DecodeError, Decoder};
 pub use encoder::{EncodeError, Encoder};
 
 #[derive(Clone, Debug, PartialEq, Serialize)]
-#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+#[cfg_attr(
+    feature = "bevy_reflect",
+    derive(Reflect),
+    reflect(Debug, PartialEq, Serialize)
+)]
 pub struct Script {
     /// A map of state IDs to number. The purpose of the number is unknown and
     /// does not appear to be required to play a script.
@@ -42,7 +46,11 @@ pub struct Script {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize)]
-#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+#[cfg_attr(
+    feature = "bevy_reflect",
+    derive(Reflect),
+    reflect(Debug, PartialEq, Serialize)
+)]
 pub struct Pattern {
     /// A list of sequences to choose from when playing the pattern. Patterns
     /// support multiple sequences to make the music more dynamic. Callers can
@@ -64,7 +72,11 @@ pub fn default_state_id() -> StateId {
 }
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq, Serialize)]
-#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+#[cfg_attr(
+    feature = "bevy_reflect",
+    derive(Reflect),
+    reflect(Debug, Hash, PartialEq, Serialize)
+)]
 pub struct PatternId(String);
 
 impl PatternId {
@@ -91,7 +103,11 @@ pub type SampleId = String;
 
 /// A sequence of samples to play in order.
 #[derive(Clone, Debug, PartialEq, Serialize)]
-#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+#[cfg_attr(
+    feature = "bevy_reflect",
+    derive(Reflect),
+    reflect(Debug, PartialEq, Serialize)
+)]
 pub struct Sequence(pub(crate) Vec<SampleId>);
 
 impl Index<usize> for Sequence {
