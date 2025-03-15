@@ -16,6 +16,8 @@ pub mod prelude {
     #[doc(hidden)]
     pub use crate::battle_tabletop::BattleTabletop;
     #[doc(hidden)]
+    pub use crate::gameflow::Gameflow;
+    #[doc(hidden)]
     pub use crate::project::{Heightmap, Instance, Project};
     #[doc(hidden)]
     pub use crate::sound::sfx::{Packet, Sfx, SfxFlags, SfxId, SfxType, Sound};
