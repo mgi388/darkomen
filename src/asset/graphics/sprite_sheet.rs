@@ -70,6 +70,12 @@ pub struct TextureDescriptor {
 }
 
 impl TextureDescriptor {
+    /// Returns the size of the texture as u32s.
+    #[inline(always)]
+    pub fn size(&self) -> UVec2 {
+        UVec2::new(self.width, self.height)
+    }
+
     #[inline(always)]
     pub fn anchor(&self) -> Vec2 {
         self.d.anchor()
