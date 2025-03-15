@@ -18,7 +18,7 @@ The following table shows the game file support in this library:
 | CTL                                                  | .CTL                   | ❌   | ❌    |                                                                         |
 | [Cursors](https://github.com/mgi388/bevy-cursor-kit) | .ANI, .CUR             | ✅   | ❌    | 📦 Read support available for Bevy apps through `bevy_cursor_kit` crate |
 | Fonts                                                | .FNT                   | ❌   | ❌    |                                                                         |
-| Gameflows                                            | .DOT                   | ✅   | ✅    |                                                                         |
+| [Gameflows](src/gameflow)                            | .DOT                   | ✅   | ✅    |                                                                         |
 | [Lights](src/light)                                  | .LIT                   | ✅   | ✅    |                                                                         |
 | Movies                                               | .TGQ                   | ❌   | ❌    |                                                                         |
 | Particle effects                                     | .PLB, .H               | ❌   | ❌    |                                                                         |
