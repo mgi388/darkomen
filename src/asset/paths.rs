@@ -9,7 +9,7 @@ pub struct AssetPathsPlugin;
 impl Plugin for AssetPathsPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(AssetPaths {
-            game_flow_path: PathBuf::from("DARKOMEN/GAMEDATA/GAMEFLOW"),
+            gameflow_path: PathBuf::from("DARKOMEN/GAMEDATA/GAMEFLOW"),
             banners_path: PathBuf::from("DARKOMEN/GRAPHICS/BANNERS"),
             maps_path: PathBuf::from("DARKOMEN/GRAPHICS/MAPS"),
             pictures_path: PathBuf::from("DARKOMEN/GRAPHICS/PICTURES"),
@@ -28,7 +28,7 @@ impl Plugin for AssetPathsPlugin {
 #[derive(Clone, Debug, Reflect, Resource)]
 #[reflect(Debug, Resource)]
 pub struct AssetPaths {
-    pub game_flow_path: PathBuf,
+    pub gameflow_path: PathBuf,
     pub banners_path: PathBuf,
     pub maps_path: PathBuf,
     pub pictures_path: PathBuf,
@@ -44,7 +44,7 @@ pub struct AssetPaths {
 impl Default for AssetPaths {
     fn default() -> Self {
         Self {
-            game_flow_path: PathBuf::from("DARKOMEN/GAMEDATA/GAMEFLOW"),
+            gameflow_path: PathBuf::from("DARKOMEN/GAMEDATA/GAMEFLOW"),
             banners_path: PathBuf::from("DARKOMEN/GRAPHICS/BANNERS"),
             maps_path: PathBuf::from("DARKOMEN/GRAPHICS/MAPS"),
             pictures_path: PathBuf::from("DARKOMEN/GRAPHICS/PICTURES"),
@@ -64,7 +64,7 @@ impl AssetPaths {
         let mut placeholders = HashMap::new();
         placeholders.insert("[BOOKS]", &self.books_path);
         placeholders.insert("[BANNERS]", &self.banners_path);
-        placeholders.insert("[GAMEFLOW]", &self.game_flow_path);
+        placeholders.insert("[GAMEFLOW]", &self.gameflow_path);
         placeholders.insert("[MAPS]", &self.maps_path);
         placeholders.insert("[MOVIES]", &self.movies_path);
         placeholders.insert("[PICTURES]", &self.pictures_path);
