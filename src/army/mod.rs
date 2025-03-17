@@ -166,6 +166,11 @@ pub struct SaveGameFooter {
     unknown1: Vec<u8>,
     unknown1_as_u16s: Vec<u16>, // TODO: Remove, debug only.
     unknown1_as_u32s: Vec<u32>, // TODO: Remove, debug only.
+    /// A history of path indices the player has traveled, accumulated across
+    /// travel map screens to display the full journey, e.g., from Altdorf, over
+    /// the Black Mountains, through Teufelbad and to the current location.
+    /// Reset by game scripts on events like map changes or new chapters.
+    travel_path_history: Vec<i32>,
     /// The path to the background image file, e.g., "[PICTURES]\m_empn.bmp".
     pub background_image_path: Option<String>,
     /// The original game writes over the existing background image path with
@@ -1223,6 +1228,9 @@ mod tests {
             0x4C3D90
         );
 
+        let save_game_footer = a.save_game_footer.as_ref().unwrap();
+        assert_eq!(save_game_footer.travel_path_history, vec![]);
+
         assert!(a.regiments[0].flags.contains(RegimentFlags::MUST_DEPLOY));
         assert_eq!(a.regiments[0].last_battle_stats.kill_count, 10);
         assert_eq!(a.regiments[0].last_battle_stats.experience, 46);
@@ -1259,6 +1267,9 @@ mod tests {
             save_game_header.script_state.base_execution_address,
             0x4C3D90
         );
+
+        let save_game_footer = a.save_game_footer.as_ref().unwrap();
+        assert_eq!(save_game_footer.travel_path_history, vec![0, 1]);
 
         assert_eq!(a.regiments[0].last_battle_stats.unit_killed_count, 3);
         assert_eq!(a.regiments[0].last_battle_stats.kill_count, 19);

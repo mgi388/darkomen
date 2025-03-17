@@ -1,4 +1,5 @@
 use std::{
+    array::TryFromSliceError,
     fmt,
     io::{Error as IoError, Read, Seek, SeekFrom},
     mem::size_of,
@@ -13,6 +14,7 @@ use super::*;
 pub enum DecodeError {
     IoError(IoError),
     InvalidFormat(u32),
+    TryFromSliceError(TryFromSliceError),
     InvalidString,
     InvalidArmyRace(u8),
     InvalidRegimentFlags(u16),
@@ -39,6 +41,9 @@ impl fmt::Display for DecodeError {
         match self {
             DecodeError::IoError(e) => write!(f, "IO error: {}", e),
             DecodeError::InvalidFormat(format) => write!(f, "invalid format: {}", format),
+            DecodeError::TryFromSliceError(e) => {
+                write!(f, "could not convert slice to array: {}", e)
+            }
             DecodeError::InvalidString => write!(f, "invalid string"),
             DecodeError::InvalidArmyRace(v) => write!(f, "invalid army race: {}", v),
             DecodeError::InvalidRegimentFlags(v) => write!(f, "invalid regiment flags: {}", v),
@@ -68,7 +73,13 @@ const SAVE_GAME_HEADER_SIZE_BYTES: usize = 504;
 pub(crate) const SAVE_GAME_DISPLAY_NAME_SIZE_BYTES: usize = 90;
 const SCRIPT_STATE_SIZE_BYTES: usize = 220;
 pub(crate) const REGIMENT_SIZE_BYTES: usize = 188;
-pub(crate) const SAVE_GAME_FOOTER_UNKNOWN1_SIZE_BYTES: usize = 1976;
+
+pub(crate) const SAVE_GAME_FOOTER_UNKNOWN1_SIZE_BYTES: usize = 1776;
+
+/// Maximum number of path indices that can be stored in the save game footer's
+/// travel path history, limiting the accumulated journey to 50 entries.
+pub(crate) const TRAVEL_PATH_HISTORY_CAPACITY: usize = 50;
+
 pub(crate) const SAVE_GAME_CUTSCENE_ANIMATION_COUNT: usize = 38;
 pub(crate) const SAVE_GAME_CUTSCENE_SIZE_BYTES: usize = 288;
 pub(crate) const SAVE_GAME_ASSET_PATH_SIZE_BYTES: usize = 256;
@@ -361,10 +372,26 @@ impl<R: Read + Seek> Decoder<R> {
 
         let unknown1 = buf[0..SAVE_GAME_FOOTER_UNKNOWN1_SIZE_BYTES].to_vec();
 
-        let background_image_path_offset_end =
-            SAVE_GAME_FOOTER_UNKNOWN1_SIZE_BYTES + SAVE_GAME_ASSET_PATH_SIZE_BYTES;
+        const TRAVEL_PATH_HISTORY_SIZE_BYTES: usize = TRAVEL_PATH_HISTORY_CAPACITY * 4;
+        const TRAVEL_PATH_HISTORY_OFFSET_END: usize =
+            SAVE_GAME_FOOTER_UNKNOWN1_SIZE_BYTES + TRAVEL_PATH_HISTORY_SIZE_BYTES;
+
+        let travel_path_history = buf
+            [SAVE_GAME_FOOTER_UNKNOWN1_SIZE_BYTES..TRAVEL_PATH_HISTORY_OFFSET_END]
+            .chunks_exact(4)
+            .map(|chunk| {
+                let bytes: [u8; 4] = chunk.try_into().map_err(DecodeError::TryFromSliceError)?;
+                Ok(i32::from_le_bytes(bytes))
+            })
+            .collect::<Result<Vec<i32>, DecodeError>>()?
+            .into_iter()
+            .filter(|&index| index != -1) // filter out -1 values
+            .collect::<Vec<i32>>();
+
+        const BACKGROUND_IMAGE_PATH_OFFSET_END: usize =
+            TRAVEL_PATH_HISTORY_OFFSET_END + SAVE_GAME_ASSET_PATH_SIZE_BYTES;
         let background_image_path_buf =
-            &buf[SAVE_GAME_FOOTER_UNKNOWN1_SIZE_BYTES..background_image_path_offset_end];
+            &buf[TRAVEL_PATH_HISTORY_OFFSET_END..BACKGROUND_IMAGE_PATH_OFFSET_END];
         let (background_image_path_buf, background_image_path_residual_bytes) =
             background_image_path_buf
                 .iter()
@@ -374,14 +401,14 @@ impl<R: Read + Seek> Decoder<R> {
                 .unwrap_or((background_image_path_buf, &[]));
         let background_image_path = self.read_string(background_image_path_buf)?;
 
-        let unknown2_offset_end = background_image_path_offset_end + 16;
-        let unknown2 = buf[background_image_path_offset_end..unknown2_offset_end].to_vec();
+        const UNKNOWN2_OFFSET_END: usize = BACKGROUND_IMAGE_PATH_OFFSET_END + 16;
+        let unknown2 = buf[BACKGROUND_IMAGE_PATH_OFFSET_END..UNKNOWN2_OFFSET_END].to_vec();
 
-        let animations_offset_end = unknown2_offset_end
+        const ANIMATIONS_OFFSET_END: usize = UNKNOWN2_OFFSET_END
             + SAVE_GAME_CUTSCENE_ANIMATION_COUNT * SAVE_GAME_CUTSCENE_SIZE_BYTES;
         let mut animations_buf =
             [0; SAVE_GAME_CUTSCENE_ANIMATION_COUNT * SAVE_GAME_CUTSCENE_SIZE_BYTES];
-        animations_buf.copy_from_slice(&buf[unknown2_offset_end..animations_offset_end]);
+        animations_buf.copy_from_slice(&buf[UNKNOWN2_OFFSET_END..ANIMATIONS_OFFSET_END]);
         let mut animations = Vec::with_capacity(SAVE_GAME_CUTSCENE_ANIMATION_COUNT);
         for i in 0..SAVE_GAME_CUTSCENE_ANIMATION_COUNT {
             animations.push(self.read_cutscene_animation(
@@ -390,7 +417,7 @@ impl<R: Read + Seek> Decoder<R> {
             )?);
         }
 
-        let unknown3 = buf[animations_offset_end..].to_vec();
+        let unknown3 = buf[ANIMATIONS_OFFSET_END..].to_vec();
 
         let hex: Vec<String> = buf
             .chunks(16)
@@ -414,6 +441,7 @@ impl<R: Read + Seek> Decoder<R> {
                 .chunks_exact(4)
                 .map(|chunk| u32::from_le_bytes(chunk.try_into().unwrap()))
                 .collect(),
+            travel_path_history,
             background_image_path: if background_image_path.is_empty() {
                 None
             } else {
