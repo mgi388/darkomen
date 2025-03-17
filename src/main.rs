@@ -13,6 +13,7 @@ pub struct Cli {
 #[derive(Subcommand)]
 pub enum Subcommands {
     Army(cli::army::ArmyArgs),
+    Gameflow(cli::gameflow::GameflowArgs),
     Project(cli::project::ProjectArgs),
 }
 
@@ -21,6 +22,7 @@ fn main() -> Result<()> {
 
     match cli.subcommand {
         Subcommands::Army(args) => cli::army::run(&args)?,
+        Subcommands::Gameflow(args) => cli::gameflow::run(&args)?,
         Subcommands::Project(args) => cli::project::run(&args)?,
     }
 
