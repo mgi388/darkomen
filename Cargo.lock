@@ -1567,7 +1567,7 @@ dependencies = [
 
 [[package]]
 name = "darkomen"
-version = "0.3.7"
+version = "0.3.8"
 dependencies = [
  "anyhow",
  "bevy-kira-components",
