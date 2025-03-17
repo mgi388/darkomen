@@ -5,9 +5,7 @@ use std::{
 
 use encoding_rs::WINDOWS_1252;
 
-use crate::army::decoder::{
-    FORMAT, REGIMENT_SIZE_BYTES, SAVE_GAME_ASSET_PATH_SIZE_BYTES, SAVE_GAME_DISPLAY_NAME_SIZE_BYTES,
-};
+use crate::army::decoder::*;
 
 use super::*;
 
@@ -236,6 +234,13 @@ impl<W: Write> Encoder<W> {
         };
 
         self.writer.write_all(&footer.unknown1)?;
+
+        for v in footer.travel_path_history.iter() {
+            self.writer.write_all(&v.to_le_bytes())?;
+        }
+        self.writer.write_all(&u32::MAX.to_le_bytes().repeat(
+            TRAVEL_PATH_HISTORY_CAPACITY.saturating_sub(footer.travel_path_history.len()),
+        ))?;
 
         let background_image_path = footer.background_image_path.as_ref().map_or("", |s| s);
         let background_image_path_bytes_written = self.write_string(background_image_path)?;
