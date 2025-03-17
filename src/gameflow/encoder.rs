@@ -64,9 +64,9 @@ impl<W: Write> Encoder<W> {
     fn write_paths(&mut self, paths: &[Path]) -> Result<(), EncodeError> {
         for path in paths {
             self.writer
-                .write_all(&(path.points.len() as u32).to_le_bytes())?;
+                .write_all(&(path.control_points.len() as u32).to_le_bytes())?;
 
-            for point in &path.points {
+            for point in &path.control_points {
                 self.writer.write_all(&point.x.to_le_bytes())?;
                 self.writer.write_all(&point.y.to_le_bytes())?;
                 self.writer.write_all(&point.unknown1.to_le_bytes())?;
@@ -75,7 +75,13 @@ impl<W: Write> Encoder<W> {
 
             self.writer.write_all(&path.unknown1.to_le_bytes())?;
             self.writer.write_all(&path.unknown2.to_le_bytes())?;
-            self.writer.write_all(&path.unknown3)?;
+            self.writer.write_all(&path.unknown3.to_le_bytes())?;
+            self.writer.write_all(&path.unknown4.to_le_bytes())?;
+            self.writer
+                .write_all(&path.previous_path_index.to_le_bytes())?;
+            self.writer.write_all(&path.next_path_index.to_le_bytes())?;
+            self.writer.write_all(&path.unknown7.to_le_bytes())?;
+            self.writer.write_all(&path.unknown8)?;
         }
         Ok(())
     }

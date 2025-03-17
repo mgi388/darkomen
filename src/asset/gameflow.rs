@@ -18,18 +18,17 @@ impl Plugin for GameflowAssetPlugin {
     }
 }
 
-#[derive(Clone, Debug, Deserialize, Reflect, Serialize)]
-#[reflect(Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Reflect, Serialize)]
+#[reflect(Debug, Default, Deserialize, Serialize)]
 pub struct GameflowPath {
-    /// The points that the gameflow path follows in order.
-    pub points: Vec<UVec2>,
+    /// The control points used to make a curve that represents the path.
+    pub control_points: Vec<UVec2>,
 }
 
 #[derive(Asset, Clone, Debug, Deref, Reflect)]
 #[reflect(Debug)]
 pub struct GameflowAsset {
-    /// The paths that the gameflow follows. Each path is a series of points
-    /// that the gameflow follows in order.
+    /// The paths that the gameflow follows.
     pub paths: Vec<GameflowPath>,
 }
 
@@ -75,7 +74,11 @@ impl AssetLoader for GameflowAssetLoader {
                 .paths
                 .into_iter()
                 .map(|p| GameflowPath {
-                    points: p.points.into_iter().map(|p| UVec2::new(p.x, p.y)).collect(),
+                    control_points: p
+                        .control_points
+                        .into_iter()
+                        .map(|p| UVec2::new(p.x, p.y))
+                        .collect(),
                 })
                 .collect(),
         })
