@@ -15,10 +15,10 @@ pub use encoder::{EncodeError, Encoder};
     reflect(Debug, Deserialize, Serialize)
 )]
 pub struct Gameflow {
-    /// The paths that the gameflow follows. Each path is a series of points
-    /// that the gameflow follows in order.
+    /// The paths that the gameflow follows.
     pub paths: Vec<Path>,
     pub(crate) unknown1: u32,
+    /// Always 40. Possibly an animation duration.
     pub(crate) unknown2: u16,
     pub(crate) unknown3: u16,
     /// Notes is probably a relic from the gameflow editor. In `CH1_ALL.DOT.ron`
@@ -39,10 +39,39 @@ pub struct Gameflow {
     reflect(Debug, Deserialize, Serialize)
 )]
 pub struct Path {
-    pub points: Vec<Point>,
-    pub unknown1: u32,
-    pub unknown2: u32,
-    pub unknown3: Vec<u8>,
+    /// The control points used to make a curve that represents the path.
+    pub control_points: Vec<Point>,
+    /// Always 5.
+    pub unknown1: i32,
+    /// Always 10.
+    pub unknown2: i32,
+    /// Always 0.
+    pub unknown3: i32,
+    /// Always 1.
+    pub unknown4: i32,
+    /// Optional index of the previous path in the gameflow. Set to -1 if there
+    /// is no previous path.
+    ///
+    /// This is used to link paths together in the gameflow. The first path in
+    /// the gameflow has a previous path index of -1. The last path in the
+    /// gameflow has a next path index of -1.
+    ///
+    /// This doesn't seem to be used in the original game, but is probably used
+    /// by the gameflow editor.
+    pub previous_path_index: i32,
+    /// Optional index of the next path in the gameflow. Set to -1 if there is
+    /// no next path.
+    ///
+    /// This is used to link paths together in the gameflow. The first path in
+    /// the gameflow has a previous path index of -1. The last path in the
+    /// gameflow has a next path index of -1.
+    ///
+    /// This doesn't seem to be used in the original game, but is probably used
+    /// by the gameflow editor.
+    pub next_path_index: i32,
+    /// Always 0.
+    pub unknown7: i32,
+    pub unknown8: Vec<u8>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -134,13 +163,27 @@ mod tests {
             ]
         );
         assert_eq!(gameflow.map_file_name, "M1_ENG.bmp".to_string());
-        assert_eq!(gameflow.paths.first().unwrap().points.len(), 5);
+        assert_eq!(gameflow.paths.first().unwrap().control_points.len(), 5);
         assert_eq!(
-            gameflow.paths.first().unwrap().points.first().unwrap().x,
+            gameflow
+                .paths
+                .first()
+                .unwrap()
+                .control_points
+                .first()
+                .unwrap()
+                .x,
             89
         );
         assert_eq!(
-            gameflow.paths.first().unwrap().points.first().unwrap().y,
+            gameflow
+                .paths
+                .first()
+                .unwrap()
+                .control_points
+                .first()
+                .unwrap()
+                .y,
             71
         );
 
