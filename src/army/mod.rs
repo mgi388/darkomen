@@ -180,14 +180,19 @@ pub struct SaveGameFooter {
     /// string. If it's `Some`, then it contains the residual bytes, up to, but
     /// not including, the last nul-terminated string.
     background_image_path_residual_bytes: Option<Vec<u8>>,
-    // 4 u32s. First is always 0. Third is always one more than second, e.g., we
-    // see pairs like [0, 1] and [52, 53]. Fourth is always some big number, so
-    // may not be a u32, but around the first level (as in save games where I
-    // saved frequently) it seems to be `1551335452` in the English save games,
-    // but `3011451320` in the German save game, so could be some language
-    // specific data. It may be u8s and could make up 4 portraits / tracks that
-    // need to load for the current cutscene.
-    unknown2: Vec<u32>,
+    /// Always 0.
+    unknown2: u32,
+    /// The index into the list of battle debrief messages found in ENGREL.EXE
+    /// for the case where the player wins the battle.
+    ///
+    /// This is used to display a message to the player after winning a battle.
+    victory_message_index: u32,
+    /// The index into the list of battle debrief messages found in ENGREL.EXE
+    /// for the case where the player loses the battle.
+    ///
+    /// This is used to display a message to the player after losing a battle.
+    defeat_message_index: u32,
+    rng_seed: u32,
     /// A list of animations used on the cutscene screens shown in between
     /// battles.
     pub cutscene_animations: Vec<CutsceneAnimation>,
@@ -1230,6 +1235,9 @@ mod tests {
 
         let save_game_footer = a.save_game_footer.as_ref().unwrap();
         assert_eq!(save_game_footer.travel_path_history, vec![]);
+        assert_eq!(save_game_footer.victory_message_index, 0);
+        assert_eq!(save_game_footer.defeat_message_index, 1);
+        assert_eq!(save_game_footer.rng_seed, 3011451320);
 
         assert!(a.regiments[0].flags.contains(RegimentFlags::MUST_DEPLOY));
         assert_eq!(a.regiments[0].last_battle_stats.kill_count, 10);
