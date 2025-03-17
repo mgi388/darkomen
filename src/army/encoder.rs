@@ -261,9 +261,12 @@ impl<W: Write> Encoder<W> {
             self.writer.write_all(&padding)?;
         }
 
-        for v in footer.unknown2.iter() {
-            self.writer.write_all(&v.to_le_bytes())?;
-        }
+        self.writer.write_all(&footer.unknown2.to_le_bytes())?;
+        self.writer
+            .write_all(&footer.victory_message_index.to_le_bytes())?;
+        self.writer
+            .write_all(&footer.defeat_message_index.to_le_bytes())?;
+        self.writer.write_all(&footer.rng_seed.to_le_bytes())?;
 
         for a in &footer.cutscene_animations {
             self.write_cutscene_animation(a)?;

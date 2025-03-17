@@ -36,6 +36,12 @@ impl From<IoError> for DecodeError {
     }
 }
 
+impl From<std::array::TryFromSliceError> for DecodeError {
+    fn from(error: TryFromSliceError) -> Self {
+        DecodeError::TryFromSliceError(error)
+    }
+}
+
 impl fmt::Display for DecodeError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -401,14 +407,30 @@ impl<R: Read + Seek> Decoder<R> {
                 .unwrap_or((background_image_path_buf, &[]));
         let background_image_path = self.read_string(background_image_path_buf)?;
 
-        const UNKNOWN2_OFFSET_END: usize = BACKGROUND_IMAGE_PATH_OFFSET_END + 16;
-        let unknown2 = buf[BACKGROUND_IMAGE_PATH_OFFSET_END..UNKNOWN2_OFFSET_END].to_vec();
+        let unknown2 = u32::from_le_bytes(
+            buf[BACKGROUND_IMAGE_PATH_OFFSET_END..BACKGROUND_IMAGE_PATH_OFFSET_END + 4]
+                .try_into()?,
+        );
+        let victory_message_index = u32::from_le_bytes(
+            buf[BACKGROUND_IMAGE_PATH_OFFSET_END + 4..BACKGROUND_IMAGE_PATH_OFFSET_END + 8]
+                .try_into()?,
+        );
+        let defeat_message_index = u32::from_le_bytes(
+            buf[BACKGROUND_IMAGE_PATH_OFFSET_END + 8..BACKGROUND_IMAGE_PATH_OFFSET_END + 12]
+                .try_into()?,
+        );
+        let rng_seed = u32::from_le_bytes(
+            buf[BACKGROUND_IMAGE_PATH_OFFSET_END + 12..BACKGROUND_IMAGE_PATH_OFFSET_END + 16]
+                .try_into()?,
+        );
 
-        const ANIMATIONS_OFFSET_END: usize = UNKNOWN2_OFFSET_END
+        const ANIMATIONS_OFFSET_START: usize = BACKGROUND_IMAGE_PATH_OFFSET_END + 16; // 4 u32s
+
+        const ANIMATIONS_OFFSET_END: usize = ANIMATIONS_OFFSET_START
             + SAVE_GAME_CUTSCENE_ANIMATION_COUNT * SAVE_GAME_CUTSCENE_SIZE_BYTES;
         let mut animations_buf =
             [0; SAVE_GAME_CUTSCENE_ANIMATION_COUNT * SAVE_GAME_CUTSCENE_SIZE_BYTES];
-        animations_buf.copy_from_slice(&buf[UNKNOWN2_OFFSET_END..ANIMATIONS_OFFSET_END]);
+        animations_buf.copy_from_slice(&buf[ANIMATIONS_OFFSET_START..ANIMATIONS_OFFSET_END]);
         let mut animations = Vec::with_capacity(SAVE_GAME_CUTSCENE_ANIMATION_COUNT);
         for i in 0..SAVE_GAME_CUTSCENE_ANIMATION_COUNT {
             animations.push(self.read_cutscene_animation(
@@ -462,10 +484,10 @@ impl<R: Read + Seek> Decoder<R> {
                         .to_vec(),
                 )
             },
-            unknown2: unknown2
-                .chunks_exact(4)
-                .map(|chunk| u32::from_le_bytes(chunk.try_into().unwrap()))
-                .collect(),
+            unknown2,
+            victory_message_index,
+            defeat_message_index,
+            rng_seed,
             cutscene_animations: animations,
             unknown3: unknown3.clone(),
             unknown3_as_u16s: unknown3
