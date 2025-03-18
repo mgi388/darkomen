@@ -43,8 +43,13 @@ pub struct Path {
     pub control_points: Vec<Point>,
     /// Always 5.
     pub unknown1: i32,
-    /// Always 10.
-    pub unknown2: i32,
+    /// Distance in pixels between interpolated points along the path's curve.
+    ///
+    /// Used by the curve generation algorithm to determine rendering
+    /// granularity.
+    ///
+    /// Always 10 in the original game.
+    pub curve_point_spacing: i32,
     /// Always 0.
     pub unknown3: i32,
     /// Always 1.

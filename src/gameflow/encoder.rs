@@ -74,7 +74,8 @@ impl<W: Write> Encoder<W> {
             }
 
             self.writer.write_all(&path.unknown1.to_le_bytes())?;
-            self.writer.write_all(&path.unknown2.to_le_bytes())?;
+            self.writer
+                .write_all(&path.curve_point_spacing.to_le_bytes())?;
             self.writer.write_all(&path.unknown3.to_le_bytes())?;
             self.writer.write_all(&path.unknown4.to_le_bytes())?;
             self.writer

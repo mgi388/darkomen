@@ -117,7 +117,7 @@ impl<R: Read + Seek> Decoder<R> {
             let mut tail_buf = [0; 44];
             self.reader.read_exact(&mut tail_buf)?;
             let unknown1 = i32::from_le_bytes(tail_buf[0..4].try_into()?);
-            let unknown2 = i32::from_le_bytes(tail_buf[4..8].try_into()?);
+            let curve_point_spacing = i32::from_le_bytes(tail_buf[4..8].try_into()?);
             let unknown3 = i32::from_le_bytes(tail_buf[8..12].try_into()?);
             let unknown4 = i32::from_le_bytes(tail_buf[12..16].try_into()?);
             let previous_path_index = i32::from_le_bytes(tail_buf[16..20].try_into()?);
@@ -129,7 +129,7 @@ impl<R: Read + Seek> Decoder<R> {
             paths.push(Path {
                 control_points,
                 unknown1,
-                unknown2,
+                curve_point_spacing,
                 unknown3,
                 unknown4,
                 previous_path_index,
