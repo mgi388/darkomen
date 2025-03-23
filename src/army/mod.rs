@@ -257,6 +257,28 @@ pub struct Army {
 }
 
 impl Army {
+    /// Returns the total amount of gold earned by the army in the last battle.
+    ///
+    /// The amount of gold earned is calculated by summing the experience of
+    /// each regiment in the army and multiplying it by 1.5.
+    ///
+    /// The total amount is rounded down to the nearest integer.
+    pub fn last_battle_earned_gold(&self) -> u32 {
+        self.regiments
+            .iter()
+            .map(|regiment| regiment.last_battle_stats.experience as f32 * 1.5)
+            .sum::<f32>() as u32
+    }
+
+    /// Returns the total amount of gold captured by the army in the last
+    /// battle.
+    pub fn last_battle_captured_gold(&self) -> u32 {
+        self.regiments
+            .iter()
+            .map(|regiment| regiment.last_battle_captured_gold)
+            .sum::<u16>() as u32
+    }
+
     /// Returns true if the army has any magic items in its inventory.
     pub fn any_magic_items(&self) -> bool {
         self.magic_items.iter().any(|&item| item != 0)
@@ -365,7 +387,7 @@ pub struct Regiment {
     /// The amount of gold captured by the regiment in the last battle. The
     /// total amount of gold captured by the army can be calculated by summing
     /// the gold captured by each regiment.
-    pub gold_captured: u16,
+    pub last_battle_captured_gold: u16,
     pub purchased_armor: u8,
     pub max_purchasable_armor: u8,
     pub repurchased_unit_count: u8,
@@ -1317,11 +1339,14 @@ mod tests {
         );
         assert_eq!(save_game_header.script_state.execution_offset_index, 370);
 
+        assert_eq!(a.last_battle_earned_gold(), 316); // (48 + 89 + 74) * 1.5 = 316.5 = 316 (rounded down)
+        assert_eq!(a.last_battle_captured_gold(), 150);
+
         assert!(a.regiments[0].flags.contains(RegimentFlags::MUST_DEPLOY));
         assert_eq!(a.regiments[0].last_battle_stats.kill_count, 10);
         assert_eq!(a.regiments[0].last_battle_stats.experience, 48);
         assert_eq!(a.regiments[0].total_experience, 48);
-        assert_eq!(a.regiments[0].gold_captured, 150);
+        assert_eq!(a.regiments[0].last_battle_captured_gold, 150);
 
         roundtrip_test(&original_bytes, &a);
     }
