@@ -360,7 +360,8 @@ impl<W: Write> Encoder<W> {
         self.writer.write_all(&r.spells[2].to_le_bytes())?;
         self.writer.write_all(&r.spells[3].to_le_bytes())?;
         self.writer.write_all(&r.spells[4].to_le_bytes())?;
-        self.writer.write_all(&r.gold_captured.to_le_bytes())?;
+        self.writer
+            .write_all(&r.last_battle_captured_gold.to_le_bytes())?;
         self.writer.write_all(&[r.purchased_armor])?;
         self.writer.write_all(&[r.max_purchasable_armor])?;
         self.writer.write_all(&[r.repurchased_unit_count])?;

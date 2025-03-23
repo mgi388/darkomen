@@ -715,7 +715,7 @@ impl<R: Read + Seek> Decoder<R> {
                 u16::from_le_bytes(buf[174..176].try_into().unwrap()),
                 u16::from_le_bytes(buf[176..178].try_into().unwrap()),
             ],
-            gold_captured: u16::from_le_bytes(buf[178..180].try_into().unwrap()),
+            last_battle_captured_gold: u16::from_le_bytes(buf[178..180].try_into().unwrap()),
             purchased_armor: buf[180],
             max_purchasable_armor: buf[181],
             repurchased_unit_count: buf[182],
