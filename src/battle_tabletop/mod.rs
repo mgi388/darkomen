@@ -14,8 +14,12 @@ pub use decoder::{DecodeError, Decoder};
 /// the battle tabletop coordinates by the scale.
 pub const SCALE: f32 = 8.;
 
-#[derive(Debug, Clone, Serialize)]
-#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[cfg_attr(
+    feature = "bevy_reflect",
+    derive(Reflect),
+    reflect(Debug, Deserialize, Serialize)
+)]
 pub struct BattleTabletop {
     pub width: u32,
     pub height: u32,
@@ -27,22 +31,31 @@ pub struct BattleTabletop {
     pub enemy_army: String,
     /// The name of the CTL file, without the extension, e.g., `B101`.
     pub ctl: String,
+    /// A list of objectives relevant to the battle.
     pub objectives: Vec<Objective>,
     pub obstacles: Vec<Obstacle>,
     pub regions: Vec<Region>,
     pub nodes: Vec<Node>,
 }
 
-#[derive(Clone, Debug, Serialize)]
-#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+#[derive(Clone, Debug, Deserialize, Serialize)]
+#[cfg_attr(
+    feature = "bevy_reflect",
+    derive(Reflect),
+    reflect(Debug, Deserialize, Serialize)
+)]
 pub struct Objective {
-    pub typ: i32,
+    pub id: i32,
     pub val1: i32,
     pub val2: i32,
 }
 
-#[derive(Clone, Debug, Default, Serialize)]
-#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[cfg_attr(
+    feature = "bevy_reflect",
+    derive(Reflect),
+    reflect(Debug, Deserialize, Serialize)
+)]
 pub struct Obstacle {
     pub flags: ObstacleFlags,
     /// The position of the obstacle in the horizontal plane.
@@ -73,9 +86,7 @@ impl Obstacle {
 bitflags! {
     #[repr(transparent)]
     #[derive(Clone, Copy, Debug, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
-    #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
-    #[cfg_attr(feature = "bevy_reflect", reflect(opaque))]
-    #[cfg_attr(feature = "bevy_reflect", reflect(Debug, Default, Deserialize, Hash, PartialEq, Serialize))]
+    #[cfg_attr(feature = "bevy_reflect", derive(Reflect), reflect(opaque), reflect(Debug, Default, Deserialize, Hash, PartialEq, Serialize))]
     pub struct ObstacleFlags: u32 {
         const NONE = 0;
         const IS_ENABLED = 1 << 0;
@@ -97,8 +108,12 @@ bitflags! {
     }
 }
 
-#[derive(Clone, Debug, Default, Serialize)]
-#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[cfg_attr(
+    feature = "bevy_reflect",
+    derive(Reflect),
+    reflect(Debug, Default, Deserialize, Serialize)
+)]
 pub struct LineSegment {
     /// The start position of the line segment in the horizontal plane.
     pub start: IVec2,
@@ -165,8 +180,12 @@ impl LineSegment {
     }
 }
 
-#[derive(Clone, Debug, Default, Serialize)]
-#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[cfg_attr(
+    feature = "bevy_reflect",
+    derive(Reflect),
+    reflect(Debug, Default, Deserialize, Serialize)
+)]
 pub struct Region {
     pub name: String,
     pub flags: RegionFlags,
@@ -203,9 +222,7 @@ impl Region {
 bitflags! {
     #[repr(transparent)]
     #[derive(Clone, Copy, Debug, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
-    #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
-    #[cfg_attr(feature = "bevy_reflect", reflect(opaque))]
-    #[cfg_attr(feature = "bevy_reflect", reflect(Debug, Default, Deserialize, Hash, PartialEq, Serialize))]
+    #[cfg_attr(feature = "bevy_reflect", derive(Reflect), reflect(opaque), reflect(Debug, Default, Deserialize, Hash, PartialEq, Serialize))]
     pub struct RegionFlags: u32 {
         const NONE = 0;
         const UNKNOWN_FLAG_1 = 1 << 0;
@@ -231,8 +248,12 @@ bitflags! {
     }
 }
 
-#[derive(Clone, Debug, Default, Serialize)]
-#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[cfg_attr(
+    feature = "bevy_reflect",
+    derive(Reflect),
+    reflect(Debug, Default, Deserialize, Serialize)
+)]
 pub struct Node {
     pub flags: NodeFlags,
     /// The position of the node in the horizontal plane.
@@ -304,9 +325,7 @@ impl Node {
 bitflags! {
     #[repr(transparent)]
     #[derive(Clone, Copy, Debug, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
-    #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
-    #[cfg_attr(feature = "bevy_reflect", reflect(opaque))]
-    #[cfg_attr(feature = "bevy_reflect", reflect(Debug, Default, Deserialize, Hash, PartialEq, Serialize))]
+    #[cfg_attr(feature = "bevy_reflect", derive(Reflect), reflect(opaque), reflect(Debug, Default, Deserialize, Hash, PartialEq, Serialize))]
     pub struct NodeFlags: u32 {
         const NONE = 0;
         const IS_CENTERED_POINT = 1 << 0;
