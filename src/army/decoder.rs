@@ -473,7 +473,7 @@ impl<R: Read + Seek> Decoder<R> {
                     unknown1: values[0],
                     id: values[1],
                     unknown2: values[2],
-                    unknown3: values[3],
+                    result: values[3],
                     unknown4: values[4],
                     unknown5: values[5],
                 })
