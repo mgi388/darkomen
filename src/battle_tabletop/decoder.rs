@@ -119,7 +119,7 @@ impl<R: Read + Seek> Decoder<R> {
             let tuple = self.read_int_tuple_property::<i32>(3, 3)?;
 
             objectives.push(Objective {
-                typ: tuple[0],
+                id: tuple[0],
                 val1: tuple[1],
                 val2: tuple[2],
             });
