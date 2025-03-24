@@ -180,9 +180,16 @@ pub struct CutsceneAnimation {
 )]
 pub struct Objective {
     pub unknown1: i32,
+    /// The ID of the objective.
+    ///
+    /// Interesting IDs:
+    ///
+    /// - 1: Indicates if the enemy was victorious. When `result` is 1, the
+    ///   enemy won the battle. When `result` is 0, the player won the battle.
     pub id: i32,
     pub unknown2: i32,
-    pub unknown3: i32,
+    /// The result of the objective.
+    pub result: i32,
     pub unknown4: i32,
     pub unknown5: i32,
 }
@@ -548,8 +555,8 @@ bitflags! {
         /// army reserve. Also known as "available for hire".
         const ACTIVE = 1 << 0;
         /// Set if the regiment was deployed in the last battle. This is used
-        /// when deciding if the regiment should be shown on the victory screen
-        /// battle stats roster.
+        /// when deciding if the regiment should be shown on the debrief screen
+        /// battle roster.
         const DEPLOYED_LAST_BATTLE = 1 << 1;
         /// The flag seems to be unused in any .ARM or save games. It's possible
         /// it's only set during battle.
