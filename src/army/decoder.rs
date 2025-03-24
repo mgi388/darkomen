@@ -80,7 +80,9 @@ pub(crate) const SAVE_GAME_DISPLAY_NAME_SIZE_BYTES: usize = 90;
 const SCRIPT_STATE_SIZE_BYTES: usize = 220;
 pub(crate) const REGIMENT_SIZE_BYTES: usize = 188;
 
-pub(crate) const SAVE_GAME_FOOTER_UNKNOWN1_SIZE_BYTES: usize = 1776;
+pub(crate) const SAVE_GAME_FOOTER_UNKNOWN1_SIZE_BYTES: usize = 1128;
+
+pub(crate) const OBJECTIVES_SIZE_BYTES: usize = 648; // 27 objectives * 24 bytes each
 
 /// Maximum number of path indices that can be stored in the save game footer's
 /// travel path history, limiting the accumulated journey to 50 entries.
@@ -378,12 +380,16 @@ impl<R: Read + Seek> Decoder<R> {
 
         let unknown1 = buf[0..SAVE_GAME_FOOTER_UNKNOWN1_SIZE_BYTES].to_vec();
 
+        const OBJECTIVES_OFFSET_END: usize =
+            SAVE_GAME_FOOTER_UNKNOWN1_SIZE_BYTES + OBJECTIVES_SIZE_BYTES;
+
+        let objectives = buf[SAVE_GAME_FOOTER_UNKNOWN1_SIZE_BYTES..OBJECTIVES_OFFSET_END].to_vec();
+
         const TRAVEL_PATH_HISTORY_SIZE_BYTES: usize = TRAVEL_PATH_HISTORY_CAPACITY * 4;
         const TRAVEL_PATH_HISTORY_OFFSET_END: usize =
-            SAVE_GAME_FOOTER_UNKNOWN1_SIZE_BYTES + TRAVEL_PATH_HISTORY_SIZE_BYTES;
+            OBJECTIVES_OFFSET_END + TRAVEL_PATH_HISTORY_SIZE_BYTES;
 
-        let travel_path_history = buf
-            [SAVE_GAME_FOOTER_UNKNOWN1_SIZE_BYTES..TRAVEL_PATH_HISTORY_OFFSET_END]
+        let travel_path_history = buf[OBJECTIVES_OFFSET_END..TRAVEL_PATH_HISTORY_OFFSET_END]
             .chunks_exact(4)
             .map(|chunk| {
                 let bytes: [u8; 4] = chunk.try_into().map_err(DecodeError::TryFromSliceError)?;
@@ -452,6 +458,28 @@ impl<R: Read + Seek> Decoder<R> {
             })
             .collect();
 
+        let objectives: Vec<Objective> = objectives
+            .chunks_exact(24) // 6 integers * 4 bytes each = 24 bytes per objective
+            .map(|chunk| {
+                // Convert raw bytes to array of 6 i32 values.
+                let mut values = [0i32; 6];
+                for (i, bytes) in chunk.chunks_exact(4).enumerate().take(6) {
+                    let bytes_array: [u8; 4] =
+                        bytes.try_into().map_err(DecodeError::TryFromSliceError)?;
+                    values[i] = i32::from_le_bytes(bytes_array);
+                }
+
+                Ok(Objective {
+                    unknown1: values[0],
+                    id: values[1],
+                    unknown2: values[2],
+                    unknown3: values[3],
+                    unknown4: values[4],
+                    unknown5: values[5],
+                })
+            })
+            .collect::<Result<Vec<Objective>, DecodeError>>()?;
+
         Ok(Some(SaveGameFooter {
             unknown1: unknown1.clone(),
             unknown1_as_u16s: unknown1
@@ -463,6 +491,7 @@ impl<R: Read + Seek> Decoder<R> {
                 .chunks_exact(4)
                 .map(|chunk| u32::from_le_bytes(chunk.try_into().unwrap()))
                 .collect(),
+            objectives,
             travel_path_history,
             background_image_path: if background_image_path.is_empty() {
                 None
