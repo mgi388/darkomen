@@ -235,6 +235,15 @@ impl<W: Write> Encoder<W> {
 
         self.writer.write_all(&footer.unknown1)?;
 
+        for o in &footer.objectives {
+            self.writer.write_all(&o.unknown1.to_le_bytes())?;
+            self.writer.write_all(&o.id.to_le_bytes())?;
+            self.writer.write_all(&o.unknown2.to_le_bytes())?;
+            self.writer.write_all(&o.unknown3.to_le_bytes())?;
+            self.writer.write_all(&o.unknown4.to_le_bytes())?;
+            self.writer.write_all(&o.unknown5.to_le_bytes())?;
+        }
+
         for v in footer.travel_path_history.iter() {
             self.writer.write_all(&v.to_le_bytes())?;
         }
