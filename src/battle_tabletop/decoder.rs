@@ -1,10 +1,13 @@
-use super::*;
 use std::{
-    ffi::CStr,
     fmt,
     io::{Error as IoError, Read, Seek},
     mem::size_of,
 };
+
+use encoding_rs::WINDOWS_1252;
+use encoding_rs_io::DecodeReaderBytesBuilder;
+
+use super::*;
 
 trait Int: Copy + Sized {
     const SIZE: usize;
@@ -56,6 +59,8 @@ impl fmt::Display for DecodeError {
     }
 }
 
+pub(crate) const MAX_STRING_SIZE_BYTES: usize = 32;
+
 pub struct Decoder<R>
 where
     R: Read + Seek,
@@ -69,13 +74,14 @@ impl<R: Read + Seek> Decoder<R> {
     }
 
     pub fn decode(&mut self) -> Result<BattleTabletop, DecodeError> {
-        self.check_btb_file_type();
-
-        let (width, height, player_army, enemy_army, ctl) = self.read_battle_header()?;
+        self.read_btb_file_type()?;
+        let (width, height, player_army, enemy_army, ctl, unknown1, unknown2, unknown3) =
+            self.read_battle_header()?;
         let objectives = self.read_objectives()?;
-        let obstacles = self.read_obstacles()?;
+        let (obstacles, obstacles_unknown1) = self.read_obstacles()?;
         let regions = self.read_regions()?;
         let nodes = self.read_nodes()?;
+        self.read_btb_file_type()?;
 
         Ok(BattleTabletop {
             width,
@@ -83,30 +89,47 @@ impl<R: Read + Seek> Decoder<R> {
             player_army,
             enemy_army,
             ctl,
+            unknown1,
+            unknown2,
+            unknown3,
             objectives,
             obstacles,
+            obstacles_unknown1,
             regions,
             nodes,
         })
     }
 
-    fn check_btb_file_type(&mut self) {
-        let _ = self.read_object_header(0xbeafeed0);
+    fn read_btb_file_type(&mut self) -> Result<(), DecodeError> {
+        let _ = self.read_object_header(0xbeafeed0)?;
+        Ok(())
     }
 
-    fn read_battle_header(&mut self) -> Result<(u32, u32, String, String, String), DecodeError> {
+    #[allow(clippy::type_complexity)]
+    fn read_battle_header(
+        &mut self,
+    ) -> Result<(u32, u32, String, String, String, String, String, Vec<i32>), DecodeError> {
         let _ = self.read_object_header(1)?;
 
         let width = self.read_int_tuple_property::<i32>(1, 1)?[0] as u32;
         let height = self.read_int_tuple_property::<i32>(2, 1)?[0] as u32;
-        let player_army = self.read_string_property(1001)?;
-        let enemy_army = self.read_string_property(1002)?;
-        let ctl = self.read_string_property(1003)?;
-        let _ = self.read_string_property(1004)?;
-        let _ = self.read_string_property(1005)?;
-        let _ = self.read_int_tuple_property::<i32>(9, 2)?;
+        let (player_army, _) = self.read_string_property(1001)?;
+        let (enemy_army, _) = self.read_string_property(1002)?;
+        let (ctl, _) = self.read_string_property(1003)?;
+        let (unknown1, _) = self.read_string_property(1004)?;
+        let (unknown2, _) = self.read_string_property(1005)?;
+        let unknown3 = self.read_int_tuple_property::<i32>(9, 2)?;
 
-        Ok((width, height, player_army, enemy_army, ctl))
+        Ok((
+            width,
+            height,
+            player_army,
+            enemy_army,
+            ctl,
+            unknown1,
+            unknown2,
+            unknown3,
+        ))
     }
 
     fn read_objectives(&mut self) -> Result<Vec<Objective>, DecodeError> {
@@ -130,10 +153,10 @@ impl<R: Read + Seek> Decoder<R> {
         Ok(objectives)
     }
 
-    fn read_obstacles(&mut self) -> Result<Vec<Obstacle>, DecodeError> {
+    fn read_obstacles(&mut self) -> Result<(Vec<Obstacle>, i32), DecodeError> {
         let size = self.read_object_header(3)?;
 
-        let _unknown = self.read_int_tuple_property::<i32>(8, 1)?[0];
+        let unknown1 = self.read_int_tuple_property::<i32>(8, 1)?[0];
 
         let obstactle_count = (size - 12) / 80;
 
@@ -158,7 +181,7 @@ impl<R: Read + Seek> Decoder<R> {
             });
         }
 
-        Ok(obstacles)
+        Ok((obstacles, unknown1))
     }
 
     fn read_regions(&mut self) -> Result<Vec<Region>, DecodeError> {
@@ -166,9 +189,9 @@ impl<R: Read + Seek> Decoder<R> {
 
         while self.peek_u32()? == 4 {
             let _ = self.read_object_header(4)?;
-            let name = self.read_string_property(1006)?;
+            let (display_name, display_name_residual_bytes) = self.read_string_property(1006)?;
             let flags = self.read_int_tuple_property::<u32>(5, 1)?[0];
-            let _pos = self.read_int_tuple_property::<i32>(10, 2)?;
+            let position = self.read_int_tuple_property::<i32>(10, 2)?;
 
             let mut line_segments = Vec::new();
 
@@ -182,8 +205,10 @@ impl<R: Read + Seek> Decoder<R> {
             }
 
             regions.push(Region {
-                name,
+                display_name,
+                display_name_residual_bytes,
                 flags: RegionFlags::from_bits(flags).expect("region flags should be valid"),
+                position: IVec2::new(position[0], position[1]),
                 line_segments,
             });
         }
@@ -282,17 +307,38 @@ impl<R: Read + Seek> Decoder<R> {
         Ok(())
     }
 
-    fn read_string_property(&mut self, expected_id: u32) -> Result<String, DecodeError> {
-        const MAX_STRING_SIZE_BYTES: usize = 32;
+    fn read_string_property(
+        &mut self,
+        expected_id: u32,
+    ) -> Result<(String, Option<Vec<u8>>), DecodeError> {
         self.read_property_header(expected_id, MAX_STRING_SIZE_BYTES)?;
 
         let mut buf = vec![0; MAX_STRING_SIZE_BYTES];
         self.reader.read_exact(&mut buf)?;
 
-        Ok(
-            String::from_utf8_lossy(CStr::from_bytes_until_nul(&buf).unwrap().to_bytes())
-                .to_string(),
-        )
+        let str_buf = &buf[0..MAX_STRING_SIZE_BYTES];
+        let (str_buf, str_residual_bytes) = str_buf
+            .iter()
+            .enumerate()
+            .find(|(_, &b)| b == 0)
+            .map(|(i, _)| str_buf.split_at(i + 1))
+            .unwrap_or((str_buf, &[]));
+
+        let str = self.read_string(str_buf)?;
+        let str_residual_bytes = if str_residual_bytes.iter().all(|&b| b == 0) {
+            None
+        } else {
+            Some(
+                str_residual_bytes
+                    .iter()
+                    .rposition(|&b| b != 0) // find the last non-zero byte
+                    .map(|pos| &str_residual_bytes[..=pos]) // include the last non-zero byte
+                    .unwrap_or(str_residual_bytes)
+                    .to_vec(),
+            )
+        };
+
+        Ok((str, str_residual_bytes))
     }
 
     fn peek_u32(&mut self) -> Result<u32, DecodeError> {
@@ -306,199 +352,16 @@ impl<R: Read + Seek> Decoder<R> {
 
         Ok(value)
     }
-}
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::project::{self, Project};
-    use image::{DynamicImage, Rgba};
-    use imageproc::{drawing::draw_hollow_rect_mut, rect::Rect};
-    use std::{
-        ffi::{OsStr, OsString},
-        fs::File,
-        path::{Path, PathBuf},
-    };
+    fn read_string(&mut self, buf: &[u8]) -> Result<String, DecodeError> {
+        let nul_pos = buf.iter().position(|&b| b == 0).unwrap_or(buf.len());
+        let mut decoder = DecodeReaderBytesBuilder::new()
+            .encoding(Some(WINDOWS_1252))
+            .build(&buf[..nul_pos]);
+        let mut dest = String::new();
 
-    #[test]
-    fn test_decode_b1_01() {
-        let d: PathBuf = [
-            std::env::var("DARKOMEN_PATH").unwrap().as_str(),
-            "DARKOMEN",
-            "GAMEDATA",
-            "1PBAT",
-            "B1_01",
-            "B1_01.BTB",
-        ]
-        .iter()
-        .collect();
+        decoder.read_to_string(&mut dest)?;
 
-        let file = File::open(d.clone()).unwrap();
-        let b = Decoder::new(file).decode().unwrap();
-
-        assert_eq!(b.width, 1440);
-        assert_eq!(b.height, 1600);
-        assert_eq!(b.player_army, "B101mrc");
-        assert_eq!(b.enemy_army, "B101nme");
-        assert_eq!(b.ctl, "B101");
-
-        const EPSILON: f32 = 0.0001;
-
-        assert!(b.obstacles[0]
-            .world_position()
-            .abs_diff_eq(Vec2::new(138.625, 47.5), EPSILON));
-        assert!((b.obstacles[0].world_radius() - 7.875).abs() < EPSILON);
-        assert!(b.obstacles[5]
-            .world_position()
-            .abs_diff_eq(Vec2::new(-0.75, 161.0), EPSILON));
-
-        // Night Goblins#1
-        assert!(b.nodes[0]
-            .world_position()
-            .abs_diff_eq(Vec2::new(151.25, 119.625), EPSILON));
-        assert!((b.nodes[0].world_radius() - 6.0).abs() < EPSILON);
-        assert!((b.nodes[0].rotation_degrees() - 182.10938).abs() < EPSILON);
-        assert_eq!(b.nodes[0].regiment_id, 131);
-    }
-
-    #[test]
-    fn test_decode_all() {
-        let d: PathBuf = [
-            std::env::var("DARKOMEN_PATH").unwrap().as_str(),
-            "DARKOMEN",
-            "GAMEDATA",
-        ]
-        .iter()
-        .collect();
-
-        let root_output_dir: PathBuf = [env!("CARGO_MANIFEST_DIR"), "decoded", "btbs"]
-            .iter()
-            .collect();
-
-        std::fs::create_dir_all(&root_output_dir).unwrap();
-
-        fn visit_dirs(dir: &Path, cb: &mut dyn FnMut(&Path)) {
-            println!("Reading dir {:?}", dir.display());
-
-            let mut paths = std::fs::read_dir(dir)
-                .unwrap()
-                .map(|res| res.map(|e| e.path()))
-                .collect::<Result<Vec<_>, std::io::Error>>()
-                .unwrap();
-
-            paths.sort();
-
-            for path in paths {
-                if path.is_dir() {
-                    visit_dirs(&path, cb);
-                } else {
-                    cb(&path);
-                }
-            }
-        }
-
-        visit_dirs(&d, &mut |path| {
-            let Some(ext) = path.extension() else {
-                return;
-            };
-            if ext.to_string_lossy().to_uppercase() != "BTB" {
-                return;
-            }
-
-            println!("Decoding {:?}", path.file_name().unwrap());
-
-            let parent_dir = path
-                .components()
-                .collect::<Vec<_>>()
-                .iter()
-                .rev()
-                .skip(1) // skip the file name
-                .take_while(|c| c.as_os_str() != "DARKOMEN")
-                .collect::<Vec<_>>()
-                .iter()
-                .rev()
-                .collect::<PathBuf>();
-            let output_dir = root_output_dir.join(parent_dir);
-            std::fs::create_dir_all(&output_dir).unwrap();
-
-            let file = File::open(path).unwrap();
-            let b = Decoder::new(file).decode().unwrap();
-
-            // The width and height should be multiples of 8.
-            assert_eq!(b.width % 8, 0);
-            assert_eq!(b.height % 8, 0);
-
-            let project_file = File::open(path.with_extension("PRJ"));
-            if project_file.is_ok() {
-                let p = project::Decoder::new(project_file.unwrap())
-                    .decode()
-                    .unwrap();
-
-                // The scaled down dimensions should always be smaller than the
-                // project dimensions.
-                assert!(b.width / 8 <= p.attributes.width);
-                assert!(b.height / 8 <= p.attributes.height);
-
-                // Overlay the battle tabletop on the heightmap image.
-                let img = overlay_battle_tabletop_on_terrain(&p, &b);
-                img.save(
-                    output_dir
-                        .join(path.file_stem().unwrap())
-                        .with_extension("overlay.png"),
-                )
-                .unwrap();
-            }
-
-            for o in &b.obstacles {
-                // Should either block movement or projectiles.
-                assert!(
-                    o.flags.contains(ObstacleFlags::BLOCKS_MOVEMENT)
-                        || o.flags.contains(ObstacleFlags::BLOCKS_PROJECTILES)
-                );
-                // Should not be any disabled obstacles.
-                assert!(o.flags.contains(ObstacleFlags::IS_ENABLED));
-            }
-
-            let output_path = append_ext("ron", output_dir.join(path.file_name().unwrap()));
-            let mut output_file = File::create(output_path).unwrap();
-            ron::ser::to_writer_pretty(&mut output_file, &b, Default::default()).unwrap();
-        });
-    }
-
-    /// Note: We know the battle tabletop always fits within the project
-    /// dimensions so we don't need to expand the base image.
-    fn overlay_battle_tabletop_on_terrain(p: &Project, b: &BattleTabletop) -> DynamicImage {
-        // Doesn't matter which heightmap we use, they all have the same
-        // dimensions, but the furniture one has the most detail.
-        let img = p.terrain.furniture_heightmap_image();
-        let mut img_buffer = img.to_rgba8();
-
-        // The image is quite dark, so invert colors just for ease of viewing.
-        for pixel in img_buffer.pixels_mut() {
-            let (r, g, b, a) = (255 - pixel[0], 255 - pixel[1], 255 - pixel[2], pixel[3]); // invert RGB, keep alpha the same
-            *pixel = Rgba([r, g, b, a]);
-        }
-
-        // Pin the rectangle to the top right which is the terrain origin.
-        let start_x = img_buffer.width() as i32 - (b.width / 8) as i32;
-        let start_y = 0; // top edge, so y is 0
-
-        // Draw a hollow rectangle on the base image to show the battle tabletop
-        // dimensions.
-        let rect = Rect::at(start_x, start_y).of_size(b.width / 8, b.height / 8);
-        draw_hollow_rect_mut(&mut img_buffer, rect, Rgba([255, 0, 0, 255]));
-
-        // Now rotate the image 180 degrees to make the origin at the bottom
-        // left which matches the in-game aeiral map view.
-        let img_buffer = image::imageops::rotate180(&img_buffer);
-
-        DynamicImage::ImageRgba8(img_buffer)
-    }
-
-    fn append_ext(ext: impl AsRef<OsStr>, path: PathBuf) -> PathBuf {
-        let mut os_string: OsString = path.into();
-        os_string.push(".");
-        os_string.push(ext.as_ref());
-        os_string.into()
+        Ok(dest)
     }
 }
