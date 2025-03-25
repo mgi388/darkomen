@@ -14,7 +14,7 @@ The following table shows the game file support in this library:
 | ---------------------------------------------------- | ---------------------- | ---- | ----- | ----------------------------------------------------------------------- |
 | [3D models](src/m3d)                                 | .M3D, .M3X             | ✅   | ✅    |                                                                         |
 | [Army and save games](src/army)                      | .ARM, .AUD, .ARE, .xxx | ✅   | ✅    | ⚠️ Save games not completely understood                                 |
-| [Battle tabletops](src/battle_tabletop)              | .BTB                   | ✅   | ❌    |                                                                         |
+| [Battle tabletops](src/battle_tabletop)              | .BTB                   | ✅   | ✅    |                                                                         |
 | CTL                                                  | .CTL                   | ❌   | ❌    |                                                                         |
 | [Cursors](https://github.com/mgi388/bevy-cursor-kit) | .ANI, .CUR             | ✅   | ❌    | 📦 Read support available for Bevy apps through `bevy_cursor_kit` crate |
 | Fonts                                                | .FNT                   | ❌   | ❌    |                                                                         |
