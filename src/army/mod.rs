@@ -485,6 +485,11 @@ impl Regiment {
         self.flags.contains(RegimentFlags::MUST_DEPLOY)
     }
 
+    /// Returns `true` if the regiment is active.
+    pub fn is_active(&self) -> bool {
+        self.flags.contains(RegimentFlags::ACTIVE)
+    }
+
     /// Returns `true` if the regiment is temporary.
     pub fn is_temporary(&self) -> bool {
         self.flags.contains(RegimentFlags::TEMPORARY)
