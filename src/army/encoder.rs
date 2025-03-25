@@ -84,37 +84,17 @@ impl<W: Write> Encoder<W> {
             return Ok(());
         };
 
-        let display_name_bytes_written = self.write_string(&header.display_name)?;
-        if let Some(display_name_residual_bytes) = header.display_name_residual_bytes.as_ref() {
-            let padding_size_bytes = SAVE_GAME_DISPLAY_NAME_SIZE_BYTES
-                - (display_name_bytes_written + display_name_residual_bytes.len());
-            let padding = vec![0; padding_size_bytes];
-            self.writer.write_all(display_name_residual_bytes)?;
-            self.writer.write_all(&padding)?;
-        } else {
-            let padding_size_bytes = SAVE_GAME_DISPLAY_NAME_SIZE_BYTES - display_name_bytes_written;
-            let padding = vec![0; padding_size_bytes];
-            self.writer.write_all(&padding)?;
-        }
+        self.write_padded_string(
+            &header.display_name,
+            header.display_name_residual_bytes.as_ref(),
+            SAVE_GAME_DISPLAY_NAME_SIZE_BYTES,
+        )?;
 
-        let suggested_display_name_bytes_written =
-            self.write_string(&header.suggested_display_name)?;
-        if let Some(suggested_display_name_residual_bytes) =
-            header.suggested_display_name_residual_bytes.as_ref()
-        {
-            let padding_size_bytes = SAVE_GAME_DISPLAY_NAME_SIZE_BYTES
-                - (suggested_display_name_bytes_written
-                    + suggested_display_name_residual_bytes.len());
-            let padding = vec![0; padding_size_bytes];
-            self.writer
-                .write_all(suggested_display_name_residual_bytes)?;
-            self.writer.write_all(&padding)?;
-        } else {
-            let padding_size_bytes =
-                SAVE_GAME_DISPLAY_NAME_SIZE_BYTES - suggested_display_name_bytes_written;
-            let padding = vec![0; padding_size_bytes];
-            self.writer.write_all(&padding)?;
-        }
+        self.write_padded_string(
+            &header.suggested_display_name,
+            header.suggested_display_name_residual_bytes.as_ref(),
+            SAVE_GAME_DISPLAY_NAME_SIZE_BYTES,
+        )?;
 
         self.writer
             .write_all(&(if header.unknown_bool1 { 1u32 } else { 0u32 }).to_le_bytes())?;
@@ -252,23 +232,11 @@ impl<W: Write> Encoder<W> {
         ))?;
 
         let background_image_path = footer.background_image_path.as_ref().map_or("", |s| s);
-        let background_image_path_bytes_written = self.write_string(background_image_path)?;
-        if let Some(background_image_path_residual_bytes) =
-            footer.background_image_path_residual_bytes.as_ref()
-        {
-            let padding_size_bytes = SAVE_GAME_ASSET_PATH_SIZE_BYTES
-                - (background_image_path_bytes_written
-                    + background_image_path_residual_bytes.len());
-            let padding = vec![0; padding_size_bytes];
-            self.writer
-                .write_all(background_image_path_residual_bytes)?;
-            self.writer.write_all(&padding)?;
-        } else {
-            let padding_size_bytes =
-                SAVE_GAME_ASSET_PATH_SIZE_BYTES - background_image_path_bytes_written;
-            let padding = vec![0; padding_size_bytes];
-            self.writer.write_all(&padding)?;
-        }
+        self.write_padded_string(
+            background_image_path,
+            footer.background_image_path_residual_bytes.as_ref(),
+            SAVE_GAME_ASSET_PATH_SIZE_BYTES,
+        )?;
 
         self.writer.write_all(&footer.unknown2.to_le_bytes())?;
         self.writer
@@ -414,6 +382,28 @@ impl<W: Write> Encoder<W> {
         self.writer.write_all(&s.unknown1.to_le_bytes())?;
         self.writer.write_all(&s.kill_count.to_le_bytes())?;
         self.writer.write_all(&s.experience.to_le_bytes())?;
+
+        Ok(())
+    }
+
+    fn write_padded_string(
+        &mut self,
+        s: &str,
+        residual_bytes: Option<&Vec<u8>>,
+        total_size: usize,
+    ) -> Result<(), EncodeError> {
+        let bytes_written = self.write_string(s)?;
+
+        if let Some(residual) = residual_bytes {
+            let padding_size = total_size - (bytes_written + residual.len());
+            let padding = vec![0; padding_size];
+            self.writer.write_all(residual)?;
+            self.writer.write_all(&padding)?;
+        } else {
+            let padding_size = total_size - bytes_written;
+            let padding = vec![0; padding_size];
+            self.writer.write_all(&padding)?;
+        }
 
         Ok(())
     }
