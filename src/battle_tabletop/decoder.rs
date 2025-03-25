@@ -120,8 +120,8 @@ impl<R: Read + Seek> Decoder<R> {
 
             objectives.push(Objective {
                 id: tuple[0],
-                val1: tuple[1],
-                val2: tuple[2],
+                value1: tuple[1],
+                value2: tuple[2],
             });
 
             i += 20;

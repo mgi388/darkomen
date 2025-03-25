@@ -45,9 +45,18 @@ pub struct BattleTabletop {
     reflect(Debug, Deserialize, Serialize)
 )]
 pub struct Objective {
+    /// The ID of the objective.
+    ///
+    /// Interesting IDs:
+    ///
+    /// - 1: Defines critical regiment lose condition. `value1` is the regiment
+    ///   ID of the player regiment and `value2` is unknown.
+    /// - 7: Defines initial regiment orientation on the battlefield. `value1`
+    ///   is the orientation of player regiments and `value2` is the orientation
+    ///   of enemy regiments.
     pub id: i32,
-    pub val1: i32,
-    pub val2: i32,
+    pub value1: i32,
+    pub value2: i32,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
