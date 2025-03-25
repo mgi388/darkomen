@@ -44,11 +44,17 @@ pub struct BattleTabletop {
     pub nodes: Vec<Node>,
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+/// The ID of the critical regiment lose condition objective.
+pub const CRITICAL_REGIMENT_LOSE_CONDITION_ID: i32 = 1;
+
+/// The ID of the initial regiment orientation objective.
+pub const INITIAL_REGIMENT_ORIENTATION_ID: i32 = 7;
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
 #[cfg_attr(
     feature = "bevy_reflect",
     derive(Reflect),
-    reflect(Debug, Deserialize, Serialize)
+    reflect(Debug, Default, Deserialize, Serialize)
 )]
 pub struct Objective {
     /// The ID of the objective.
@@ -63,6 +69,15 @@ pub struct Objective {
     pub id: i32,
     pub value1: i32,
     pub value2: i32,
+}
+
+impl Objective {
+    /// Returns the rotation in radians. 0 is north (up), π/2 is east (right), π
+    /// is south (down), and 3π/2 is west (left).
+    #[inline]
+    pub fn rotation_radians(value: i32) -> f32 {
+        (value as f32 / 512.0) * std::f32::consts::TAU
+    }
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
