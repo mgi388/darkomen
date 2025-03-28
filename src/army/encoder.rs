@@ -282,13 +282,13 @@ impl<W: Write> Encoder<W> {
             .write_all(&army.default_name_index.to_le_bytes())?;
         self.write_string(&army.name)?;
         self.writer.write_all(&army.name_remainder)?;
-        self.write_string(&army.small_banner_path)?;
-        self.writer.write_all(&army.small_banner_path_remainder)?;
-        self.write_string(&army.small_disabled_banner_path)?;
+        self.write_string(&army.small_banners_path)?;
+        self.writer.write_all(&army.small_banners_path_remainder)?;
+        self.write_string(&army.disabled_small_banners_path)?;
         self.writer
-            .write_all(&army.small_disabled_banner_path_remainder)?;
-        self.write_string(&army.large_banner_path)?;
-        self.writer.write_all(&army.large_banner_path_remainder)?;
+            .write_all(&army.disabled_small_banners_path_remainder)?;
+        self.write_string(&army.large_banners_path)?;
+        self.writer.write_all(&army.large_banners_path_remainder)?;
         self.writer
             .write_all(&army.last_battle_gold.to_le_bytes())?;
         self.writer.write_all(&army.gold_in_coffers.to_le_bytes())?;
@@ -343,7 +343,7 @@ impl<W: Write> Encoder<W> {
         self.writer.write_all(&[r.max_purchasable_armor])?;
         self.writer.write_all(&[r.repurchased_unit_count])?;
         self.writer.write_all(&[r.max_purchasable_unit_count])?;
-        self.writer.write_all(&r.book_profile)?;
+        self.writer.write_all(&r.book_profile_index.to_le_bytes())?;
 
         Ok(())
     }
@@ -351,7 +351,7 @@ impl<W: Write> Encoder<W> {
     fn write_unit_profile(&mut self, u: &UnitProfile) -> Result<(), EncodeError> {
         self.writer.write_all(&u.sprite_sheet_index.to_le_bytes())?;
         self.write_string_with_limit(&u.display_name, 32)?;
-        self.writer.write_all(&u.display_name_id.to_le_bytes())?;
+        self.writer.write_all(&u.display_name_index.to_le_bytes())?;
         self.writer.write_all(&[Into::<u8>::into(u.alignment)])?;
         self.writer.write_all(&[u.max_unit_count])?;
         self.writer.write_all(&[u.alive_unit_count])?;

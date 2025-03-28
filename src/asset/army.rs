@@ -32,9 +32,9 @@ impl Plugin for ArmyAssetPlugin {
 pub struct ArmyAsset {
     source: Army,
 
-    pub small_banner: Option<Handle<SpriteSheetAsset>>,
-    pub small_disabled_banner: Option<Handle<SpriteSheetAsset>>,
-    pub large_banner: Option<Handle<SpriteSheetAsset>>,
+    pub small_banners: Option<Handle<SpriteSheetAsset>>,
+    pub disabled_small_banners: Option<Handle<SpriteSheetAsset>>,
+    pub large_banners: Option<Handle<SpriteSheetAsset>>,
 }
 
 impl ArmyAsset {
@@ -69,9 +69,9 @@ pub struct ArmyAssetLoader {
 #[derive(Clone, Copy, Debug, Default, Deserialize, Reflect, Serialize)]
 #[reflect(Debug, Default, Deserialize, Serialize)]
 pub struct ArmyAssetLoaderSettings {
-    pub load_small_banner: bool,
-    pub load_small_disabled_banner: bool,
-    pub load_large_banner: bool,
+    pub load_small_banners: bool,
+    pub load_disabled_small_banners: bool,
+    pub load_large_banners: bool,
 }
 
 /// Possible errors that can be produced by [`ArmyAssetLoader`].
@@ -106,18 +106,18 @@ impl AssetLoader for ArmyAssetLoader {
 
         Ok(ArmyAsset {
             source: army.clone(),
-            small_banner: if settings.load_small_banner {
-                Some(load_context.load(self.paths.resolve_path(&army.small_banner_path)))
+            small_banners: if settings.load_small_banners {
+                Some(load_context.load(self.paths.resolve_path(&army.small_banners_path)))
             } else {
                 None
             },
-            small_disabled_banner: if settings.load_small_disabled_banner {
-                Some(load_context.load(self.paths.resolve_path(&army.small_disabled_banner_path)))
+            disabled_small_banners: if settings.load_disabled_small_banners {
+                Some(load_context.load(self.paths.resolve_path(&army.disabled_small_banners_path)))
             } else {
                 None
             },
-            large_banner: if settings.load_large_banner {
-                Some(load_context.load(self.paths.resolve_path(&army.large_banner_path)))
+            large_banners: if settings.load_large_banners {
+                Some(load_context.load(self.paths.resolve_path(&army.large_banners_path)))
             } else {
                 None
             },
