@@ -267,22 +267,22 @@ pub struct Army {
     /// There are some bytes after the null-terminated string. Not sure what
     /// they are for.
     name_remainder: Vec<u8>,
-    pub small_banner_path: String,
+    pub small_banners_path: String,
     /// There are some bytes after the null-terminated string. Not sure what
     /// they are for.
-    small_banner_path_remainder: Vec<u8>,
-    pub small_disabled_banner_path: String,
+    small_banners_path_remainder: Vec<u8>,
+    pub disabled_small_banners_path: String,
     /// There are some bytes after the null-terminated string. Not sure what
     /// they are for.
-    small_disabled_banner_path_remainder: Vec<u8>,
-    small_disabled_banner_path_remainder_as_u16s: Vec<u16>, // TODO: Remove, debug only.
-    small_disabled_banner_path_remainder_as_u32s: Vec<u32>, // TODO: Remove, debug only.
-    pub large_banner_path: String,
+    disabled_small_banners_path_remainder: Vec<u8>,
+    disabled_small_banners_path_remainder_as_u16s: Vec<u16>, // TODO: Remove, debug only.
+    disabled_small_banners_path_remainder_as_u32s: Vec<u32>, // TODO: Remove, debug only.
+    pub large_banners_path: String,
     /// There are some bytes after the null-terminated string. Not sure what
     /// they are for.
-    large_banner_path_remainder: Vec<u8>,
-    large_banner_path_remainder_as_u16s: Vec<u16>, // TODO: Remove, debug only.
-    large_banner_path_remainder_as_u32s: Vec<u32>, // TODO: Remove, debug only.
+    large_banners_path_remainder: Vec<u8>,
+    large_banners_path_remainder_as_u16s: Vec<u16>, // TODO: Remove, debug only.
+    large_banners_path_remainder_as_u32s: Vec<u32>, // TODO: Remove, debug only.
     /// The amount of gold captured from treasures and earned in the last
     /// battle.
     pub last_battle_gold: u16,
@@ -437,7 +437,7 @@ pub struct Regiment {
     pub max_purchasable_armor: u8,
     pub repurchased_unit_count: u8,
     pub max_purchasable_unit_count: u8,
-    pub book_profile: [u8; 4],
+    pub book_profile_index: u32,
 }
 
 impl Regiment {
@@ -446,23 +446,23 @@ impl Regiment {
 
     /// Returns the display name of the regiment.
     ///
-    /// May be empty. The display name ID is the preferred way to get the
+    /// May be empty. The display name index is the preferred way to get the
     /// display name. This is so that the display name can be localized.
     #[inline(always)]
     pub fn display_name(&self) -> &str {
         self.unit_profile.display_name.as_str()
     }
 
-    /// Returns the display name ID of the regiment.
+    /// Returns the display name index of the regiment.
     ///
-    /// The display name ID is used to look up the display name string in the
+    /// The display name index is used to look up the display name string in the
     /// list of display names found in ENGREL.EXE. This allows the display name
     /// to be localized.
     ///
     /// This is an index into the list of display names found in ENGREL.EXE.
     #[inline(always)]
-    pub fn display_name_id(&self) -> u16 {
-        self.unit_profile.display_name_id
+    pub fn display_name_index(&self) -> u16 {
+        self.unit_profile.display_name_index
     }
 
     /// Marks the regiment as active.
@@ -503,20 +503,20 @@ impl Regiment {
 
     /// Returns the number of units in the regiment that are alive.
     #[inline(always)]
-    pub fn alive_unit_count(&self) -> usize {
-        self.unit_profile.alive_unit_count as usize
+    pub fn alive_unit_count(&self) -> u8 {
+        self.unit_profile.alive_unit_count
     }
 
     /// Returns the maximum number of units allowed in the regiment.
     #[inline(always)]
-    pub fn max_unit_count(&self) -> usize {
-        self.unit_profile.max_unit_count as usize
+    pub fn max_unit_count(&self) -> u8 {
+        self.unit_profile.max_unit_count
     }
 
     /// Returns the rank count.
     #[inline(always)]
-    pub fn rank_count(&self) -> usize {
-        self.unit_profile.rank_count as usize
+    pub fn rank_count(&self) -> u8 {
+        self.unit_profile.rank_count
     }
 
     /// A value from 1 to 4, inclusive, that indicates the regiment's threat
@@ -980,12 +980,12 @@ pub struct UnitProfile {
     /// The display name of the regiment, e.g., "Grudgebringer Cavalry",
     /// "Zombies #1", "Imperial Steam Tank".
     ///
-    /// May be empty. The display name ID is the preferred way to get the
+    /// May be empty. The display name index is the preferred way to get the
     /// display name. This is so that the display name can be localized.
     pub display_name: String,
     /// The index into the list of display names found in ENGREL.EXE. This
     /// allows the display name to be localized.
-    pub display_name_id: u16,
+    pub display_name_index: u16,
     /// The regiment's alignment to good or evil.
     ///
     /// - 0x00 (decimal 0) is good.
@@ -1224,7 +1224,8 @@ mod tests {
         let a = Decoder::new(file).decode().unwrap();
 
         assert_eq!(a.regiments[0].unit_profile.display_name, ""); // not set
-        assert_eq!(a.regiments[0].unit_profile.display_name_id, 4);
+        assert_eq!(a.regiments[0].unit_profile.display_name_index, 4);
+        assert_eq!(a.regiments[0].book_profile_index, 4);
 
         roundtrip_test(&original_bytes, &a);
     }
@@ -1248,9 +1249,9 @@ mod tests {
         let a = Decoder::new(file).decode().unwrap();
 
         assert!(a.race.contains(ArmyRace::EMPIRE));
-        assert_eq!(a.small_banner_path, "[BOOKS]\\hshield.spr");
-        assert_eq!(a.small_disabled_banner_path, "[BOOKS]\\hgban.spr");
-        assert_eq!(a.large_banner_path, "[BOOKS]\\hlban.spr");
+        assert_eq!(a.small_banners_path, "[BOOKS]\\hshield.spr");
+        assert_eq!(a.disabled_small_banners_path, "[BOOKS]\\hgban.spr");
+        assert_eq!(a.large_banners_path, "[BOOKS]\\hlban.spr");
         assert_eq!(a.regiments.len(), 4);
         assert!(a.regiments[0].flags.contains(RegimentFlags::ACTIVE));
         assert_eq!(a.regiments[0].id, 1);

@@ -106,18 +106,18 @@ pub(crate) struct Header {
     /// There are some bytes after the nul-terminated string. Not sure what they
     /// are for.
     name_remainder: Vec<u8>,
-    small_banner_path: String,
+    small_banners_path: String,
     /// There are some bytes after the nul-terminated string. Not sure what they
     /// are for.
-    small_banner_path_remainder: Vec<u8>,
-    small_disabled_banner_path: String,
+    small_banners_path_remainder: Vec<u8>,
+    disabled_small_banners_path: String,
     /// There are some bytes after the nul-terminated string. Not sure what they
     /// are for.
-    small_disabled_banner_path_remainder: Vec<u8>,
-    large_banner_path: String,
+    disabled_small_banners_path_remainder: Vec<u8>,
+    large_banners_path: String,
     /// There are some bytes after the nul-terminated string. Not sure what they
     /// are for.
-    large_banner_path_remainder: Vec<u8>,
+    large_banners_path_remainder: Vec<u8>,
     last_battle_gold: u16,
     gold_in_coffers: u16,
     magic_items: [u8; 40],
@@ -155,34 +155,34 @@ impl<R: Read + Seek> Decoder<R> {
             default_name_index: header.default_name_index,
             name: header.name,
             name_remainder: header.name_remainder,
-            small_banner_path: header.small_banner_path,
-            small_banner_path_remainder: header.small_banner_path_remainder,
-            small_disabled_banner_path: header.small_disabled_banner_path,
-            small_disabled_banner_path_remainder: header
-                .small_disabled_banner_path_remainder
+            small_banners_path: header.small_banners_path,
+            small_banners_path_remainder: header.small_banners_path_remainder,
+            disabled_small_banners_path: header.disabled_small_banners_path,
+            disabled_small_banners_path_remainder: header
+                .disabled_small_banners_path_remainder
                 .clone(),
-            small_disabled_banner_path_remainder_as_u16s: header
-                .small_disabled_banner_path_remainder
+            disabled_small_banners_path_remainder_as_u16s: header
+                .disabled_small_banners_path_remainder
                 .clone()
                 .chunks_exact(2)
                 .map(|chunk| u16::from_le_bytes(chunk.try_into().unwrap()))
                 .collect(),
-            small_disabled_banner_path_remainder_as_u32s: header
-                .small_disabled_banner_path_remainder
+            disabled_small_banners_path_remainder_as_u32s: header
+                .disabled_small_banners_path_remainder
                 .clone()
                 .chunks_exact(4)
                 .map(|chunk| u32::from_le_bytes(chunk.try_into().unwrap()))
                 .collect(),
-            large_banner_path: header.large_banner_path,
-            large_banner_path_remainder: header.large_banner_path_remainder.clone(),
-            large_banner_path_remainder_as_u16s: header
-                .large_banner_path_remainder
+            large_banners_path: header.large_banners_path,
+            large_banners_path_remainder: header.large_banners_path_remainder.clone(),
+            large_banners_path_remainder_as_u16s: header
+                .large_banners_path_remainder
                 .clone()
                 .chunks_exact(2)
                 .map(|chunk| u16::from_le_bytes(chunk.try_into().unwrap()))
                 .collect(),
-            large_banner_path_remainder_as_u32s: header
-                .large_banner_path_remainder
+            large_banners_path_remainder_as_u32s: header
+                .large_banners_path_remainder
                 .clone()
                 .chunks_exact(4)
                 .map(|chunk| u32::from_le_bytes(chunk.try_into().unwrap()))
@@ -581,30 +581,30 @@ impl<R: Read + Seek> Decoder<R> {
             .map(|(i, _)| army_name_buf.split_at(i + 1))
             .unwrap_or((army_name_buf, &[]));
 
-        let small_banner_path_buf = &buf[50..82];
-        let (small_banner_path_buf, small_banner_path_remainder) = small_banner_path_buf
+        let small_banners_path_buf = &buf[50..82];
+        let (small_banners_path_buf, small_banners_path_remainder) = small_banners_path_buf
             .iter()
             .enumerate()
             .find(|(_, &b)| b == 0)
-            .map(|(i, _)| small_banner_path_buf.split_at(i + 1))
-            .unwrap_or((small_banner_path_buf, &[]));
+            .map(|(i, _)| small_banners_path_buf.split_at(i + 1))
+            .unwrap_or((small_banners_path_buf, &[]));
 
-        let small_disabled_banner_path_buf = &buf[82..114];
-        let (small_disabled_banner_path_buf, small_disabled_banner_path_remainder) =
-            small_disabled_banner_path_buf
+        let disabled_small_banners_path_buf = &buf[82..114];
+        let (disabled_small_banners_path_buf, disabled_small_banners_path_remainder) =
+            disabled_small_banners_path_buf
                 .iter()
                 .enumerate()
                 .find(|(_, &b)| b == 0)
-                .map(|(i, _)| small_disabled_banner_path_buf.split_at(i + 1))
-                .unwrap_or((small_disabled_banner_path_buf, &[]));
+                .map(|(i, _)| disabled_small_banners_path_buf.split_at(i + 1))
+                .unwrap_or((disabled_small_banners_path_buf, &[]));
 
-        let large_banner_path_buf = &buf[114..146];
-        let (large_banner_path_buf, large_banner_path_remainder) = large_banner_path_buf
+        let large_banners_path_buf = &buf[114..146];
+        let (large_banners_path_buf, large_banners_path_remainder) = large_banners_path_buf
             .iter()
             .enumerate()
             .find(|(_, &b)| b == 0)
-            .map(|(i, _)| large_banner_path_buf.split_at(i + 1))
-            .unwrap_or((large_banner_path_buf, &[]));
+            .map(|(i, _)| large_banners_path_buf.split_at(i + 1))
+            .unwrap_or((large_banners_path_buf, &[]));
 
         Ok(Header {
             _format: u32::from_le_bytes(buf[0..4].try_into().unwrap()),
@@ -615,12 +615,12 @@ impl<R: Read + Seek> Decoder<R> {
             default_name_index: u16::from_le_bytes(buf[16..18].try_into().unwrap()),
             name: self.read_string(army_name_buf)?,
             name_remainder: army_name_remainder.to_vec(),
-            small_banner_path: self.read_string(small_banner_path_buf)?,
-            small_banner_path_remainder: small_banner_path_remainder.to_vec(),
-            small_disabled_banner_path: self.read_string(small_disabled_banner_path_buf)?,
-            small_disabled_banner_path_remainder: small_disabled_banner_path_remainder.to_vec(),
-            large_banner_path: self.read_string(large_banner_path_buf)?,
-            large_banner_path_remainder: large_banner_path_remainder.to_vec(),
+            small_banners_path: self.read_string(small_banners_path_buf)?,
+            small_banners_path_remainder: small_banners_path_remainder.to_vec(),
+            disabled_small_banners_path: self.read_string(disabled_small_banners_path_buf)?,
+            disabled_small_banners_path_remainder: disabled_small_banners_path_remainder.to_vec(),
+            large_banners_path: self.read_string(large_banners_path_buf)?,
+            large_banners_path_remainder: large_banners_path_remainder.to_vec(),
             last_battle_gold: u16::from_le_bytes(buf[146..148].try_into().unwrap()),
             gold_in_coffers: u16::from_le_bytes(buf[148..150].try_into().unwrap()),
             magic_items: buf[150..190].try_into().unwrap(),
@@ -686,7 +686,7 @@ impl<R: Read + Seek> Decoder<R> {
             unit_profile: UnitProfile {
                 sprite_sheet_index: u16::from_le_bytes(buf[20..22].try_into().unwrap()),
                 display_name: self.read_string(&buf[22..54])?,
-                display_name_id: u16::from_le_bytes(buf[54..56].try_into().unwrap()),
+                display_name_index: u16::from_le_bytes(buf[54..56].try_into().unwrap()),
                 alignment: unit_alignment,
                 max_unit_count: buf[57],
                 alive_unit_count: buf[58],
@@ -708,7 +708,7 @@ impl<R: Read + Seek> Decoder<R> {
             leader_profile: UnitProfile {
                 sprite_sheet_index: u16::from_le_bytes(buf[84..86].try_into().unwrap()),
                 display_name: self.read_string(&buf[86..118])?,
-                display_name_id: u16::from_le_bytes(buf[118..120].try_into().unwrap()),
+                display_name_index: u16::from_le_bytes(buf[118..120].try_into().unwrap()),
                 alignment: leader_alignment,
                 max_unit_count: buf[121],
                 alive_unit_count: buf[122],
@@ -749,7 +749,7 @@ impl<R: Read + Seek> Decoder<R> {
             max_purchasable_armor: buf[181],
             repurchased_unit_count: buf[182],
             max_purchasable_unit_count: buf[183],
-            book_profile: buf[184..188].try_into().unwrap(),
+            book_profile_index: u32::from_le_bytes(buf[184..188].try_into().unwrap()),
         })
     }
 
