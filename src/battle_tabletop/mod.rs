@@ -45,7 +45,7 @@ pub struct BattleTabletop {
 }
 
 /// The ID of the critical regiment lose condition objective.
-pub const CRITICAL_REGIMENT_LOSE_CONDITION_ID: i32 = 1;
+pub const CRITICAL_REGIMENT_LOSE_CONDITION_ID: i32 = 3;
 
 /// The ID of the initial regiment orientation objective.
 pub const INITIAL_REGIMENT_ORIENTATION_ID: i32 = 7;
@@ -61,7 +61,7 @@ pub struct Objective {
     ///
     /// Interesting IDs:
     ///
-    /// - 1: Defines critical regiment lose condition. `value1` is the regiment
+    /// - 3: Defines critical regiment lose condition. `value1` is the regiment
     ///   ID of the player regiment and `value2` is unknown.
     /// - 7: Defines initial regiment orientation on the battlefield. `value1`
     ///   is the orientation of player regiments and `value2` is the orientation
