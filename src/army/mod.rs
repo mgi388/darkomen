@@ -225,12 +225,12 @@ pub struct SaveGameFooter {
     /// for the case where the player wins the battle.
     ///
     /// This is used to display a message to the player after winning a battle.
-    victory_message_index: u32,
+    pub victory_message_index: u32,
     /// The index into the list of battle debrief messages found in ENGREL.EXE
     /// for the case where the player loses the battle.
     ///
     /// This is used to display a message to the player after losing a battle.
-    defeat_message_index: u32,
+    pub defeat_message_index: u32,
     rng_seed: u32,
     /// A list of animations used on the cutscene screens shown in between
     /// battles.

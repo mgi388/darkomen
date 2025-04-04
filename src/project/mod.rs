@@ -151,7 +151,7 @@ impl Terrain {
     /// single row of the terrain.
     #[inline]
     fn width_in_blocks(&self) -> u32 {
-        (self.width + 7) / 8 // adding 7 and dividing by 8 is equivalent to ceil division
+        self.width.div_ceil(8) // equivalent to adding 7 and dividing by 8
     }
 
     /// Returns the height of the terrain in blocks. That is, how many 8x8
@@ -159,7 +159,7 @@ impl Terrain {
     #[inline]
     #[allow(dead_code)]
     fn height_in_blocks(&self) -> u32 {
-        (self.height + 7) / 8 // adding 7 and dividing by 8 is equivalent to ceil division
+        self.height.div_ceil(8) // equivalent to adding 7 and dividing by 8
     }
 
     #[inline]
