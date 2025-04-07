@@ -78,6 +78,7 @@ pub(crate) const HEADER_SIZE_BYTES: usize = 192;
 const SAVE_GAME_HEADER_SIZE_BYTES: usize = 504;
 pub(crate) const SAVE_GAME_DISPLAY_NAME_SIZE_BYTES: usize = 90;
 const SCRIPT_STATE_SIZE_BYTES: usize = 220;
+const SCRIPT_VARIABLES_SIZE_BYTES: usize = 96; // allows for 24 variables of 4 bytes each
 pub(crate) const REGIMENT_SIZE_BYTES: usize = 188;
 
 pub(crate) const SAVE_GAME_FOOTER_UNKNOWN1_SIZE_BYTES: usize = 1128;
@@ -250,6 +251,35 @@ impl<R: Read + Seek> Decoder<R> {
         })
     }
 
+    fn read_script_variables(&mut self, buf: &[u8]) -> Result<ScriptVariables, DecodeError> {
+        Ok(ScriptVariables {
+            bogenhafen_mission: buf[0] != 0,
+            goblin_camp_or_ragnar: buf[4] != 0,
+            goblin_camp_mission: buf[8] != 0,
+            ragnar_mission_pre_battle: buf[12] != 0,
+            vingtienne_or_treeman: buf[16] != 0,
+            vingtienne_mission: buf[20] != 0,
+            treeman_mission: buf[24] != 0,
+            count_carstein_destroyed: buf[28] != 0,
+            hand_of_nagash_destroyed: buf[32] != 0,
+            black_grail_destroyed: buf[36] != 0,
+            unknown1: u32::from_le_bytes(buf[40..44].try_into()?),
+            helmgart_mission: buf[44] != 0,
+            ragnar_mission: buf[48] != 0,
+            loren_king_met: buf[52] != 0,
+            axebite_mission_completed: buf[56] != 0,
+            unknown2: u32::from_le_bytes(buf[60..64].try_into()?),
+            unknown3: u32::from_le_bytes(buf[64..68].try_into()?),
+            unknown4: u32::from_le_bytes(buf[68..72].try_into()?),
+            unknown5: u32::from_le_bytes(buf[72..76].try_into()?),
+            unknown6: u32::from_le_bytes(buf[76..80].try_into()?),
+            unknown7: u32::from_le_bytes(buf[80..84].try_into()?),
+            previous_battle_won_1: buf[84] != 0,
+            previous_battle_won_2: buf[88] != 0,
+            previous_answer: u32::from_le_bytes(buf[92..96].try_into()?),
+        })
+    }
+
     fn maybe_read_save_game_header(
         &mut self,
     ) -> Result<(u64, Option<SaveGameHeader>), DecodeError> {
@@ -282,9 +312,19 @@ impl<R: Read + Seek> Decoder<R> {
                     .map(|(i, _)| suggested_display_name_buf.split_at(i + 1))
                     .unwrap_or((suggested_display_name_buf, &[]));
 
-            let script_state_buf = buf[188..188 + SCRIPT_STATE_SIZE_BYTES].to_vec();
+            const SCRIPT_STATE_OFFSET_END: usize = 188 + SCRIPT_STATE_SIZE_BYTES;
+
+            let script_state_buf = buf[188..SCRIPT_STATE_OFFSET_END].to_vec();
 
             let script_state = self.read_script_state(&script_state_buf)?;
+
+            const SCRIPT_VARIABLES_OFFSET_END: usize =
+                SCRIPT_STATE_OFFSET_END + SCRIPT_VARIABLES_SIZE_BYTES;
+
+            let script_variables_buf =
+                buf[SCRIPT_STATE_OFFSET_END..SCRIPT_VARIABLES_OFFSET_END].to_vec();
+
+            let script_variables = self.read_script_variables(&script_variables_buf)?;
 
             return Ok((
                 SAVE_GAME_HEADER_SIZE_BYTES as u64,
@@ -339,30 +379,7 @@ impl<R: Read + Seek> Decoder<R> {
                         .map(|chunk| u32::from_le_bytes(chunk.try_into().unwrap()))
                         .collect(),
                     script_state,
-                    bogenhafen_mission: buf[408] != 0,
-                    goblin_camp_or_ragnar: buf[412] != 0,
-                    goblin_camp_mission: buf[416] != 0,
-                    ragnar_mission_pre_battle: buf[420] != 0,
-                    vingtienne_or_treeman: buf[424] != 0,
-                    vingtienne_mission: buf[428] != 0,
-                    treeman_mission: buf[432] != 0,
-                    carstein_defeated: buf[436] != 0,
-                    hand_of_nagash_defeated: buf[440] != 0,
-                    black_grail_defeated: buf[444] != 0,
-                    unknown1: u32::from_le_bytes(buf[448..452].try_into().unwrap()),
-                    helmgart_mission: buf[452] != 0,
-                    ragnar_mission: buf[456] != 0,
-                    loren_king_met: buf[460] != 0,
-                    axebite_mission: buf[464] != 0,
-                    unknown2: u32::from_le_bytes(buf[468..472].try_into().unwrap()),
-                    unknown3: u32::from_le_bytes(buf[472..476].try_into().unwrap()),
-                    unknown4: u32::from_le_bytes(buf[476..480].try_into().unwrap()),
-                    unknown5: u32::from_le_bytes(buf[480..484].try_into().unwrap()),
-                    unknown6: u32::from_le_bytes(buf[484..488].try_into().unwrap()),
-                    unknown7: u32::from_le_bytes(buf[488..492].try_into().unwrap()),
-                    previous_battle_won_1: buf[492] != 0,
-                    previous_battle_won_2: buf[496] != 0,
-                    previous_answer: u32::from_le_bytes(buf[500..504].try_into().unwrap()),
+                    script_variables,
                 }),
             ));
         }

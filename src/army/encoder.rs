@@ -79,6 +79,75 @@ impl<W: Write> Encoder<W> {
         Ok(())
     }
 
+    fn write_script_variables(&mut self, v: &ScriptVariables) -> Result<(), EncodeError> {
+        self.writer
+            .write_all(&(if v.bogenhafen_mission { 1u32 } else { 0u32 }).to_le_bytes())?;
+        self.writer
+            .write_all(&(if v.goblin_camp_or_ragnar { 1u32 } else { 0u32 }).to_le_bytes())?;
+        self.writer
+            .write_all(&(if v.goblin_camp_mission { 1u32 } else { 0u32 }).to_le_bytes())?;
+        self.writer.write_all(
+            &(if v.ragnar_mission_pre_battle {
+                1u32
+            } else {
+                0u32
+            })
+            .to_le_bytes(),
+        )?;
+        self.writer
+            .write_all(&(if v.vingtienne_or_treeman { 1u32 } else { 0u32 }).to_le_bytes())?;
+        self.writer
+            .write_all(&(if v.vingtienne_mission { 1u32 } else { 0u32 }).to_le_bytes())?;
+        self.writer
+            .write_all(&(if v.treeman_mission { 1u32 } else { 0u32 }).to_le_bytes())?;
+        self.writer.write_all(
+            &(if v.count_carstein_destroyed {
+                1u32
+            } else {
+                0u32
+            })
+            .to_le_bytes(),
+        )?;
+        self.writer.write_all(
+            &(if v.hand_of_nagash_destroyed {
+                1u32
+            } else {
+                0u32
+            })
+            .to_le_bytes(),
+        )?;
+        self.writer
+            .write_all(&(if v.black_grail_destroyed { 1u32 } else { 0u32 }).to_le_bytes())?;
+        self.writer.write_all(&v.unknown1.to_le_bytes())?;
+        self.writer
+            .write_all(&(if v.helmgart_mission { 1u32 } else { 0u32 }).to_le_bytes())?;
+        self.writer
+            .write_all(&(if v.ragnar_mission { 1u32 } else { 0u32 }).to_le_bytes())?;
+        self.writer
+            .write_all(&(if v.loren_king_met { 1u32 } else { 0u32 }).to_le_bytes())?;
+        self.writer.write_all(
+            &(if v.axebite_mission_completed {
+                1u32
+            } else {
+                0u32
+            })
+            .to_le_bytes(),
+        )?;
+        self.writer.write_all(&v.unknown2.to_le_bytes())?;
+        self.writer.write_all(&v.unknown3.to_le_bytes())?;
+        self.writer.write_all(&v.unknown4.to_le_bytes())?;
+        self.writer.write_all(&v.unknown5.to_le_bytes())?;
+        self.writer.write_all(&v.unknown6.to_le_bytes())?;
+        self.writer.write_all(&v.unknown7.to_le_bytes())?;
+        self.writer
+            .write_all(&(if v.previous_battle_won_1 { 1u32 } else { 0u32 }).to_le_bytes())?;
+        self.writer
+            .write_all(&(if v.previous_battle_won_2 { 1u32 } else { 0u32 }).to_le_bytes())?;
+        self.writer.write_all(&v.previous_answer.to_le_bytes())?;
+
+        Ok(())
+    }
+
     fn maybe_write_save_game_header(&mut self, army: &Army) -> Result<(), EncodeError> {
         let Some(header) = army.save_game_header.as_ref() else {
             return Ok(());
@@ -103,107 +172,7 @@ impl<W: Write> Encoder<W> {
 
         self.write_script_state(&header.script_state)?;
 
-        self.writer.write_all(
-            &(if header.bogenhafen_mission {
-                1u32
-            } else {
-                0u32
-            })
-            .to_le_bytes(),
-        )?;
-        self.writer.write_all(
-            &(if header.goblin_camp_or_ragnar {
-                1u32
-            } else {
-                0u32
-            })
-            .to_le_bytes(),
-        )?;
-        self.writer.write_all(
-            &(if header.goblin_camp_mission {
-                1u32
-            } else {
-                0u32
-            })
-            .to_le_bytes(),
-        )?;
-        self.writer.write_all(
-            &(if header.ragnar_mission_pre_battle {
-                1u32
-            } else {
-                0u32
-            })
-            .to_le_bytes(),
-        )?;
-        self.writer.write_all(
-            &(if header.vingtienne_or_treeman {
-                1u32
-            } else {
-                0u32
-            })
-            .to_le_bytes(),
-        )?;
-        self.writer.write_all(
-            &(if header.vingtienne_mission {
-                1u32
-            } else {
-                0u32
-            })
-            .to_le_bytes(),
-        )?;
-        self.writer
-            .write_all(&(if header.treeman_mission { 1u32 } else { 0u32 }).to_le_bytes())?;
-        self.writer
-            .write_all(&(if header.carstein_defeated { 1u32 } else { 0u32 }).to_le_bytes())?;
-        self.writer.write_all(
-            &(if header.hand_of_nagash_defeated {
-                1u32
-            } else {
-                0u32
-            })
-            .to_le_bytes(),
-        )?;
-        self.writer.write_all(
-            &(if header.black_grail_defeated {
-                1u32
-            } else {
-                0u32
-            })
-            .to_le_bytes(),
-        )?;
-        self.writer.write_all(&header.unknown1.to_le_bytes())?;
-        self.writer
-            .write_all(&(if header.helmgart_mission { 1u32 } else { 0u32 }).to_le_bytes())?;
-        self.writer
-            .write_all(&(if header.ragnar_mission { 1u32 } else { 0u32 }).to_le_bytes())?;
-        self.writer
-            .write_all(&(if header.loren_king_met { 1u32 } else { 0u32 }).to_le_bytes())?;
-        self.writer
-            .write_all(&(if header.axebite_mission { 1u32 } else { 0u32 }).to_le_bytes())?;
-        self.writer.write_all(&header.unknown2.to_le_bytes())?;
-        self.writer.write_all(&header.unknown3.to_le_bytes())?;
-        self.writer.write_all(&header.unknown4.to_le_bytes())?;
-        self.writer.write_all(&header.unknown5.to_le_bytes())?;
-        self.writer.write_all(&header.unknown6.to_le_bytes())?;
-        self.writer.write_all(&header.unknown7.to_le_bytes())?;
-        self.writer.write_all(
-            &(if header.previous_battle_won_1 {
-                1u32
-            } else {
-                0u32
-            })
-            .to_le_bytes(),
-        )?;
-        self.writer.write_all(
-            &(if header.previous_battle_won_2 {
-                1u32
-            } else {
-                0u32
-            })
-            .to_le_bytes(),
-        )?;
-        self.writer
-            .write_all(&header.previous_answer.to_le_bytes())?;
+        self.write_script_variables(&header.script_variables)?;
 
         Ok(())
     }

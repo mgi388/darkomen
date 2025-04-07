@@ -80,6 +80,56 @@ impl ScriptState {
     derive(Reflect),
     reflect(Debug, Default, Deserialize, Serialize)
 )]
+pub struct ScriptVariables {
+    /// Protect Bogenhafen mission played.
+    pub bogenhafen_mission: bool,
+    /// Attacked Goblin Camp or helped Ragnar.
+    pub goblin_camp_or_ragnar: bool,
+    /// Attacked the goblin camp together with Munz.
+    pub goblin_camp_mission: bool,
+    /// Helps Ragnar but mission has not been started.
+    pub ragnar_mission_pre_battle: bool,
+    /// Attacked Greenskins in Vingtienne or helped Treeman.
+    pub vingtienne_or_treeman: bool,
+    /// Attacked the Greenskins near Vingtienne.
+    pub vingtienne_mission: bool,
+    /// Helped the treeman in Loren Lake mission.
+    pub treeman_mission: bool,
+    /// Manfred von Carstein defeated.
+    pub count_carstein_destroyed: bool,
+    /// Hand of Nagash defeated.
+    pub hand_of_nagash_destroyed: bool,
+    /// Black Grail defeated.
+    pub black_grail_destroyed: bool,
+    pub unknown1: u32,
+    /// Helmgart mission played.
+    pub helmgart_mission: bool,
+    /// Helped Ragnar defeat the trolls.
+    pub ragnar_mission: bool,
+    /// Talked with King Orion (Woodelf King).
+    pub loren_king_met: bool,
+    /// Helped Azkuz moving through the Axebite Pass.
+    pub axebite_mission_completed: bool,
+    pub unknown2: u32,
+    pub unknown3: u32,
+    pub unknown4: u32,
+    pub unknown5: u32,
+    pub unknown6: u32,
+    pub unknown7: u32,
+    /// Previous fought battle won.
+    pub previous_battle_won_1: bool,
+    /// Previous fought battle won.
+    pub previous_battle_won_2: bool,
+    /// Answer for last asked question.
+    pub previous_answer: u32,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[cfg_attr(
+    feature = "bevy_reflect",
+    derive(Reflect),
+    reflect(Debug, Default, Deserialize, Serialize)
+)]
 pub struct SaveGameHeader {
     /// The name displayed when loading the save game.
     pub display_name: String,
@@ -106,47 +156,9 @@ pub struct SaveGameHeader {
     /// The script state of the save game. Used by the WHMTG scripting engine to
     /// run the next part of the campaign.
     pub script_state: ScriptState,
-    /// Protect Bogenhafen mission played.
-    pub bogenhafen_mission: bool,
-    /// Attacked Goblin Camp or helped Ragnar.
-    pub goblin_camp_or_ragnar: bool,
-    /// Attacked the goblin camp together with Munz.
-    pub goblin_camp_mission: bool,
-    /// Helps Ragnar but mission has not been started.
-    pub ragnar_mission_pre_battle: bool,
-    /// Attacked Greenskins in Vingtienne or helped Treeman.
-    pub vingtienne_or_treeman: bool,
-    /// Attacked the Greenskins near Vingtienne.
-    pub vingtienne_mission: bool,
-    /// Helped the treeman in Loren Lake mission.
-    pub treeman_mission: bool,
-    /// Manfred von Carstein defeated.
-    pub carstein_defeated: bool,
-    /// Hand of Nagash defeated.
-    pub hand_of_nagash_defeated: bool,
-    /// Black Grail defeated.
-    pub black_grail_defeated: bool,
-    pub unknown1: u32,
-    /// Helmgart mission played.
-    pub helmgart_mission: bool,
-    /// Helped Ragnar defeat the trolls.
-    pub ragnar_mission: bool,
-    /// Talked with King Orion (Woodelf King).
-    pub loren_king_met: bool,
-    /// Helped Azkuz moving through the Axebite Pass.
-    pub axebite_mission: bool,
-    pub unknown2: u32,
-    pub unknown3: u32,
-    pub unknown4: u32,
-    pub unknown5: u32,
-    pub unknown6: u32,
-    pub unknown7: u32,
-    /// Previous fought battle won.
-    pub previous_battle_won_1: bool,
-    /// Previous fought battle won.
-    pub previous_battle_won_2: bool,
-    /// Answer for last asked question.
-    pub previous_answer: u32,
+    /// The script variables set throughout the campaign. Useful for making
+    /// decisions in the campaign.
+    pub script_variables: ScriptVariables,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
