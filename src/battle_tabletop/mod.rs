@@ -643,6 +643,52 @@ mod tests {
                 .unwrap();
             }
 
+            // Every 1-player battle tabletop should at least have the following
+            // objectives.
+            for id in [
+                1,
+                CRITICAL_REGIMENT_LOSE_CONDITION_ID,
+                4,
+                INITIAL_REGIMENT_ORIENTATION_ID,
+                26,
+            ] {
+                // Skip if file name is TMPBAT.BTB.
+                if path.file_name().unwrap() == "TMPBAT.BTB" {
+                    continue;
+                }
+                // Skip the multiplayer files.
+                if path.file_name().unwrap().to_str().unwrap().starts_with('M') {
+                    continue;
+                }
+                // Skip the tutorial file.
+                if path.file_name().unwrap() == "SPARE9.BTB" {
+                    continue;
+                }
+
+                assert!(
+                    b.objectives.iter().any(|obj| obj.id == id),
+                    "Battle tabletop {:?} is missing required objective ID: {}",
+                    path.file_name().unwrap(),
+                    id
+                );
+            }
+
+            // Every multiplayer battle tabletop should have the following
+            // objectives.
+            for id in [1, 4, INITIAL_REGIMENT_ORIENTATION_ID, 26] {
+                // Skip non-multiplayer files.
+                if !path.file_name().unwrap().to_str().unwrap().starts_with('M') {
+                    continue;
+                }
+
+                assert!(
+                    b.objectives.iter().any(|obj| obj.id == id),
+                    "Battle tabletop {:?} is missing required objective ID: {}",
+                    path.file_name().unwrap(),
+                    id
+                );
+            }
+
             for o in &b.obstacles {
                 // Should either block movement or projectiles.
                 assert!(
