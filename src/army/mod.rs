@@ -1631,6 +1631,18 @@ mod tests {
             let file = File::open(path).unwrap();
             let army = Decoder::new(file).decode().unwrap();
 
+            // Every same game should at least have the following objectives.
+            let save_game_footer = army.save_game_footer.as_ref().unwrap();
+            let required_objective_ids = [1, 3, 4, 7, 26];
+            for id in required_objective_ids {
+                assert!(
+                    save_game_footer.objectives.iter().any(|obj| obj.id == id),
+                    "Save game {:?} is missing required objective ID: {}",
+                    path.file_name().unwrap(),
+                    id
+                );
+            }
+
             let parent_dir = path
                 .components()
                 .collect::<Vec<_>>()
