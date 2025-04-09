@@ -81,47 +81,108 @@ impl ScriptState {
     reflect(Debug, Default, Deserialize, Serialize)
 )]
 pub struct ScriptVariables {
-    /// Protect Bogenhafen mission played.
-    pub bogenhafen_mission: bool,
-    /// Attacked Goblin Camp or helped Ragnar.
-    pub goblin_camp_or_ragnar: bool,
-    /// Attacked the goblin camp together with Munz.
-    pub goblin_camp_mission: bool,
-    /// Helps Ragnar but mission has not been started.
-    pub ragnar_mission_pre_battle: bool,
-    /// Attacked Greenskins in Vingtienne or helped Treeman.
-    pub vingtienne_or_treeman: bool,
-    /// Attacked the Greenskins near Vingtienne.
-    pub vingtienne_mission: bool,
-    /// Helped the treeman in Loren Lake mission.
-    pub treeman_mission: bool,
+    /// Bogenhafen mission completed. This does not mean the mission was won or
+    /// lost, just that it was completed.
+    ///
+    /// This is variable 0 in the WHMTG script.
+    pub bogenhafen_mission_completed: bool,
+    /// Attacked either the mission to attack the Goblin camp or the mission to
+    /// help Ragnar fight the trolls.
+    ///
+    /// This is variable 1 in the WHMTG script.
+    pub goblin_camp_or_ragnar_troll_mission_accepted: bool,
+    /// Accepted the mission to attack the Goblin camp together with Munz.
+    ///
+    /// This is variable 2 in the WHMTG script.
+    pub goblin_camp_mission_accepted: bool,
+    /// Accepted the mission to help Ragnar fight the trolls.
+    ///
+    /// This is variable 3 in the WHMTG script.
+    pub ragnar_troll_mission_accepted: bool,
+    /// Accepted either the mission to attack the Greenskins near Vingtienne or
+    /// the mission to help Treeman in Loren Lake.
+    ///
+    /// This is variable 4 in the WHMTG script.
+    pub vingtienne_or_treeman_mission_accepted: bool,
+    /// Accepted the mission to attack the Greenskins near Vingtienne.
+    ///
+    /// This is variable 5 in the WHMTG script.
+    pub vingtienne_mission_accepted: bool,
+    /// Accepted the mission to help Treeman in Loren Lake.
+    ///
+    /// This is variable 6 in the WHMTG script.
+    pub treeman_mission_accepted: bool,
     /// Manfred von Carstein defeated.
+    ///
+    /// This is variable 7 in the WHMTG script.
     pub count_carstein_destroyed: bool,
     /// Hand of Nagash defeated.
+    ///
+    /// This is variable 8 in the WHMTG script.
     pub hand_of_nagash_destroyed: bool,
     /// Black Grail defeated.
+    ///
+    /// This is variable 9 in the WHMTG script.
     pub black_grail_destroyed: bool,
-    pub unknown1: u32,
+    /// Set to true if the enemy was victorious in the Bogenhafen mission.
+    ///
+    /// This is variable 10 in the WHMTG script.
+    pub bogenhafen_mission_failed: bool,
     /// Helmgart mission played.
-    pub helmgart_mission: bool,
+    ///
+    /// This is variable 11 in the WHMTG script.
+    pub helmgart_mission_victorious: bool,
     /// Helped Ragnar defeat the trolls.
-    pub ragnar_mission: bool,
+    ///
+    /// This is variable 12 in the WHMTG script.
+    pub troll_country_mission_victorious: bool,
     /// Talked with King Orion (Woodelf King).
+    ///
+    /// This is variable 13 in the WHMTG script.
     pub loren_king_met: bool,
-    /// Helped Azkuz moving through the Axebite Pass.
+    /// Helped Azkuz move through the Axebite Pass. This does not mean the
+    /// mission was won or lost, just that it was completed.
+    ///
+    /// This is variable 14 in the WHMTG script.
     pub axebite_mission_completed: bool,
+    /// The Wood Elf Glade Guards are destroyed.
+    ///
+    /// This is variable 15 in the WHMTG script.
+    pub wood_elf_glade_guards_destroyed: bool,
+    /// The Imperial Steam Tank is destroyed.
+    ///
+    /// This is variable 16 in the WHMTG script.
+    pub imperial_steam_tank_destroyed: bool,
+    /// This is variable 17 in the WHMTG script.
+    pub unknown1: u32,
+    /// This is variable 18 in the WHMTG script.
     pub unknown2: u32,
+    /// This is variable 19 in the WHMTG script.
     pub unknown3: u32,
+    /// This is variable 20 in the WHMTG script.
     pub unknown4: u32,
-    pub unknown5: u32,
-    pub unknown6: u32,
-    pub unknown7: u32,
-    /// Previous fought battle won.
-    pub previous_battle_won_1: bool,
-    /// Previous fought battle won.
-    pub previous_battle_won_2: bool,
-    /// Answer for last asked question.
-    pub previous_answer: u32,
+    /// Meet action selected by the player.
+    ///
+    /// This is variable 21 in the WHMTG script.
+    pub meet_action: u32,
+    /// Indicates if the player selected to either continue campaign or replay
+    /// meet. Set to true when player selects either "Continue Campaign" or
+    /// "Replay Meet" in a meeting.
+    ///
+    /// This is variable 22 in the WHMTG script.
+    pub meet_continue_or_replay_selected: bool,
+    /// Indicates the player's decision at choice points in meets.
+    ///
+    /// - `true` = Player chose the "positive/heroic" option (first choice).
+    /// - `false` = Player chose the "cautious/pragmatic" option (second
+    ///   choice).
+    ///
+    /// Note: The value is inverted from the choice index. For example, for the
+    /// "Stay and fight" and "Continue to Helmgart" choices, the value is `true`
+    /// for the first choice and `false` for the second choice.
+    ///
+    /// This is variable 23 in the WHMTG script.
+    pub heroic_choice_made: bool,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Serialize)]
