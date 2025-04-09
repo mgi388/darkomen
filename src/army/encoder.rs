@@ -80,26 +80,62 @@ impl<W: Write> Encoder<W> {
     }
 
     fn write_script_variables(&mut self, v: &ScriptVariables) -> Result<(), EncodeError> {
-        self.writer
-            .write_all(&(if v.bogenhafen_mission { 1u32 } else { 0u32 }).to_le_bytes())?;
-        self.writer
-            .write_all(&(if v.goblin_camp_or_ragnar { 1u32 } else { 0u32 }).to_le_bytes())?;
-        self.writer
-            .write_all(&(if v.goblin_camp_mission { 1u32 } else { 0u32 }).to_le_bytes())?;
         self.writer.write_all(
-            &(if v.ragnar_mission_pre_battle {
+            &(if v.bogenhafen_mission_completed {
                 1u32
             } else {
                 0u32
             })
             .to_le_bytes(),
         )?;
-        self.writer
-            .write_all(&(if v.vingtienne_or_treeman { 1u32 } else { 0u32 }).to_le_bytes())?;
-        self.writer
-            .write_all(&(if v.vingtienne_mission { 1u32 } else { 0u32 }).to_le_bytes())?;
-        self.writer
-            .write_all(&(if v.treeman_mission { 1u32 } else { 0u32 }).to_le_bytes())?;
+        self.writer.write_all(
+            &(if v.goblin_camp_or_ragnar_troll_mission_accepted {
+                1u32
+            } else {
+                0u32
+            })
+            .to_le_bytes(),
+        )?;
+        self.writer.write_all(
+            &(if v.goblin_camp_mission_accepted {
+                1u32
+            } else {
+                0u32
+            })
+            .to_le_bytes(),
+        )?;
+        self.writer.write_all(
+            &(if v.ragnar_troll_mission_accepted {
+                1u32
+            } else {
+                0u32
+            })
+            .to_le_bytes(),
+        )?;
+        self.writer.write_all(
+            &(if v.vingtienne_or_treeman_mission_accepted {
+                1u32
+            } else {
+                0u32
+            })
+            .to_le_bytes(),
+        )?;
+        self.writer.write_all(
+            &(if v.vingtienne_mission_accepted {
+                1u32
+            } else {
+                0u32
+            })
+            .to_le_bytes(),
+        )?;
+        self.writer.write_all(
+            &(if v.treeman_mission_accepted {
+                1u32
+            } else {
+                0u32
+            })
+            .to_le_bytes(),
+        )?;
         self.writer.write_all(
             &(if v.count_carstein_destroyed {
                 1u32
@@ -118,11 +154,30 @@ impl<W: Write> Encoder<W> {
         )?;
         self.writer
             .write_all(&(if v.black_grail_destroyed { 1u32 } else { 0u32 }).to_le_bytes())?;
-        self.writer.write_all(&v.unknown1.to_le_bytes())?;
-        self.writer
-            .write_all(&(if v.helmgart_mission { 1u32 } else { 0u32 }).to_le_bytes())?;
-        self.writer
-            .write_all(&(if v.ragnar_mission { 1u32 } else { 0u32 }).to_le_bytes())?;
+        self.writer.write_all(
+            &(if v.bogenhafen_mission_failed {
+                1u32
+            } else {
+                0u32
+            })
+            .to_le_bytes(),
+        )?;
+        self.writer.write_all(
+            &(if v.helmgart_mission_victorious {
+                1u32
+            } else {
+                0u32
+            })
+            .to_le_bytes(),
+        )?;
+        self.writer.write_all(
+            &(if v.troll_country_mission_victorious {
+                1u32
+            } else {
+                0u32
+            })
+            .to_le_bytes(),
+        )?;
         self.writer
             .write_all(&(if v.loren_king_met { 1u32 } else { 0u32 }).to_le_bytes())?;
         self.writer.write_all(
@@ -133,17 +188,37 @@ impl<W: Write> Encoder<W> {
             })
             .to_le_bytes(),
         )?;
+        self.writer.write_all(
+            &(if v.wood_elf_glade_guards_destroyed {
+                1u32
+            } else {
+                0u32
+            })
+            .to_le_bytes(),
+        )?;
+        self.writer.write_all(
+            &(if v.imperial_steam_tank_destroyed {
+                1u32
+            } else {
+                0u32
+            })
+            .to_le_bytes(),
+        )?;
+        self.writer.write_all(&v.unknown1.to_le_bytes())?;
         self.writer.write_all(&v.unknown2.to_le_bytes())?;
         self.writer.write_all(&v.unknown3.to_le_bytes())?;
         self.writer.write_all(&v.unknown4.to_le_bytes())?;
-        self.writer.write_all(&v.unknown5.to_le_bytes())?;
-        self.writer.write_all(&v.unknown6.to_le_bytes())?;
-        self.writer.write_all(&v.unknown7.to_le_bytes())?;
+        self.writer.write_all(&v.meet_action.to_le_bytes())?;
+        self.writer.write_all(
+            &(if v.meet_continue_or_replay_selected {
+                1u32
+            } else {
+                0u32
+            })
+            .to_le_bytes(),
+        )?;
         self.writer
-            .write_all(&(if v.previous_battle_won_1 { 1u32 } else { 0u32 }).to_le_bytes())?;
-        self.writer
-            .write_all(&(if v.previous_battle_won_2 { 1u32 } else { 0u32 }).to_le_bytes())?;
-        self.writer.write_all(&v.previous_answer.to_le_bytes())?;
+            .write_all(&(if v.heroic_choice_made { 1u32 } else { 0u32 }).to_le_bytes())?;
 
         Ok(())
     }
