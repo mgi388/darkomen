@@ -358,10 +358,10 @@ pub struct Army {
     large_banners_path_remainder_as_u32s: Vec<u32>, // TODO: Remove, debug only.
     /// The amount of gold captured from treasures and earned in the last
     /// battle.
-    pub last_battle_gold: u16,
-    /// The amount of gold available to the army for buying new units and
-    /// reinforcements.
-    pub gold_in_coffers: u16,
+    pub last_battle_captured_gold: u16,
+    /// The total amount of gold available to the army for buying new units and
+    /// armor.
+    pub total_gold: u16,
     /// A list of magic items in the army's inventory.
     ///
     /// Each magic item is an index into the list of magic items. A value of 1
@@ -632,10 +632,18 @@ bitflags! {
         /// be shown in the troop roster, or if the regiment is available in the
         /// army reserve. Also known as "available for hire".
         const ACTIVE = 1 << 0;
-        /// Set if the regiment was deployed in the last battle. This is used
-        /// when deciding if the regiment should be shown on the debrief screen
-        /// battle roster.
-        const DEPLOYED_LAST_BATTLE = 1 << 1;
+        /// Set if the regiment is deployed or was deployed in the last battle.
+        ///
+        /// This flag's meaning is context-dependent.
+        ///
+        /// During a battle, it indicates that the regiment is currently
+        /// deployed to the battlefield. If a regiment is not deployed, then it
+        /// remains in the army's reserve.
+        ///
+        /// Outside of a battle, it indicates that the regiment was deployed in
+        /// the last battle. Among other things, this is used when deciding if
+        /// the regiment should be shown on the debrief screen battle roster.
+        const DEPLOYED = 1 << 1;
         /// The flag seems to be unused in any .ARM or save games. It's possible
         /// it's only set during battle.
         const UNKNOWN_REGIMENT_FLAG_2 = 1 << 2;

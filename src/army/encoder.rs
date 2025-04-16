@@ -334,8 +334,8 @@ impl<W: Write> Encoder<W> {
         self.write_string(&army.large_banners_path)?;
         self.writer.write_all(&army.large_banners_path_remainder)?;
         self.writer
-            .write_all(&army.last_battle_gold.to_le_bytes())?;
-        self.writer.write_all(&army.gold_in_coffers.to_le_bytes())?;
+            .write_all(&army.last_battle_captured_gold.to_le_bytes())?;
+        self.writer.write_all(&army.total_gold.to_le_bytes())?;
         self.writer.write_all(&army.magic_items)?;
         self.writer.write_all(&army.unknown3)?;
 

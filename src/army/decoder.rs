@@ -119,8 +119,8 @@ pub(crate) struct Header {
     /// There are some bytes after the nul-terminated string. Not sure what they
     /// are for.
     large_banners_path_remainder: Vec<u8>,
-    last_battle_gold: u16,
-    gold_in_coffers: u16,
+    last_battle_captured_gold: u16,
+    total_gold: u16,
     magic_items: [u8; 40],
     unknown3: [u8; 2], // purpose of bytes at index 190 and 191 is unknown
 }
@@ -188,8 +188,8 @@ impl<R: Read + Seek> Decoder<R> {
                 .chunks_exact(4)
                 .map(|chunk| u32::from_le_bytes(chunk.try_into().unwrap()))
                 .collect(),
-            last_battle_gold: header.last_battle_gold,
-            gold_in_coffers: header.gold_in_coffers,
+            last_battle_captured_gold: header.last_battle_captured_gold,
+            total_gold: header.total_gold,
             magic_items: header.magic_items.to_vec(),
             unknown3: header.unknown3.to_vec(),
             regiments,
@@ -638,8 +638,8 @@ impl<R: Read + Seek> Decoder<R> {
             disabled_small_banners_path_remainder: disabled_small_banners_path_remainder.to_vec(),
             large_banners_path: self.read_string(large_banners_path_buf)?,
             large_banners_path_remainder: large_banners_path_remainder.to_vec(),
-            last_battle_gold: u16::from_le_bytes(buf[146..148].try_into().unwrap()),
-            gold_in_coffers: u16::from_le_bytes(buf[148..150].try_into().unwrap()),
+            last_battle_captured_gold: u16::from_le_bytes(buf[146..148].try_into().unwrap()),
+            total_gold: u16::from_le_bytes(buf[148..150].try_into().unwrap()),
             magic_items: buf[150..190].try_into().unwrap(),
             unknown3: buf[190..192].try_into().unwrap(),
         })
