@@ -752,7 +752,7 @@ pub enum RegimentClass {
     OrcInfantryman = 12,
     UndeadInfantryman = 13,
     Townsfolk = 14,
-    Ogre = 15,
+    Ogre1 = 15,
     HumanCavalryman = 16,
     OrcCavalryman = 20,
     UndeadCavalryman = 21,
@@ -772,7 +772,7 @@ pub enum RegimentClass {
     Monster = 55,
     UndeadChariot = 61,
     Fanatic = 67,
-    Unknown1 = 71,
+    Ogre2 = 71,
 }
 
 impl RegimentClass {
@@ -794,6 +794,14 @@ impl RegimentClass {
 
     pub fn is_mage(&self) -> bool {
         Into::<u8>::into(*self) >> 3 == Into::<u8>::into(RegimentType::Mage)
+    }
+
+    pub fn is_monster(&self) -> bool {
+        Into::<u8>::into(*self) >> 3 == Into::<u8>::into(RegimentType::Monster)
+    }
+
+    pub fn is_chariot(&self) -> bool {
+        Into::<u8>::into(*self) >> 3 == Into::<u8>::into(RegimentType::Chariot)
     }
 
     pub fn is_human(&self) -> bool {
@@ -822,6 +830,10 @@ impl RegimentClass {
 
     pub fn is_townsfolk(&self) -> bool {
         Into::<u8>::into(*self) & 0x07 == Into::<u8>::into(RegimentRace::Townsfolk)
+    }
+
+    pub fn is_ogre(&self) -> bool {
+        Into::<u8>::into(*self) & 0x07 == Into::<u8>::into(RegimentRace::Ogre)
     }
 }
 
@@ -864,6 +876,7 @@ pub enum RegimentRace {
     Orc,
     Undead,
     Townsfolk,
+    Ogre,
 }
 
 #[repr(u8)]
