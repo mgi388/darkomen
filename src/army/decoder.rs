@@ -667,24 +667,24 @@ impl<R: Read + Seek> Decoder<R> {
             MageClass::try_from(buf[8]).map_err(|_| DecodeError::InvalidMageClass(buf[8]))?;
         let unit_alignment = RegimentAlignment::try_from(buf[56])
             .map_err(|_| DecodeError::InvalidRegimentAlignment(buf[56]))?;
-        let unit_mount = RegimentMount::try_from(buf[73])
+        let unit_mount_class = MountClass::try_from(buf[73])
             .map_err(|_| DecodeError::InvalidRegimentMount(buf[73]))?;
-        let unit_weapon =
-            Weapon::try_from(buf[75]).map_err(|_| DecodeError::InvalidWeapon(buf[75]))?;
+        let unit_weapon_class =
+            WeaponClass::try_from(buf[75]).map_err(|_| DecodeError::InvalidWeapon(buf[75]))?;
         let unit_class = RegimentClass::try_from(buf[76])
             .map_err(|_| DecodeError::InvalidRegimentClass(buf[76]))?;
-        let unit_projectile =
-            Projectile::try_from(buf[78]).map_err(|_| DecodeError::InvalidProjectile(buf[78]))?;
+        let unit_projectile_class = ProjectileClass::try_from(buf[78])
+            .map_err(|_| DecodeError::InvalidProjectile(buf[78]))?;
         let leader_alignment = RegimentAlignment::try_from(buf[120])
             .map_err(|_| DecodeError::InvalidRegimentAlignment(buf[120]))?;
-        let leader_mount = RegimentMount::try_from(buf[136])
+        let leader_mount_class = MountClass::try_from(buf[136])
             .map_err(|_| DecodeError::InvalidRegimentMount(buf[136]))?;
-        let leader_weapon =
-            Weapon::try_from(buf[138]).map_err(|_| DecodeError::InvalidWeapon(buf[138]))?;
+        let leader_weapon_class =
+            WeaponClass::try_from(buf[138]).map_err(|_| DecodeError::InvalidWeapon(buf[138]))?;
         let leader_class = RegimentClass::try_from(buf[139])
             .map_err(|_| DecodeError::InvalidRegimentClass(buf[139]))?;
-        let leader_projectile =
-            Projectile::try_from(buf[141]).map_err(|_| DecodeError::InvalidProjectile(buf[141]))?;
+        let leader_projectile_class = ProjectileClass::try_from(buf[141])
+            .map_err(|_| DecodeError::InvalidProjectile(buf[141]))?;
         let spell_book_u16 = u16::from_le_bytes(buf[160..162].try_into().unwrap());
         let spell_book = SpellBook::try_from(spell_book_u16)
             .map_err(|_| DecodeError::InvalidSpellBook(spell_book_u16))?;
@@ -710,12 +710,12 @@ impl<R: Read + Seek> Decoder<R> {
                 rank_count: buf[59],
                 unknown1: buf[60..64].into(),
                 stats: self.read_unit_stats(&buf[64..73]),
-                mount: unit_mount,
+                mount_class: unit_mount_class,
                 armor: buf[74],
-                weapon: unit_weapon,
+                weapon_class: unit_weapon_class,
                 class: unit_class,
                 point_value: buf[77],
-                projectile: unit_projectile,
+                projectile_class: unit_projectile_class,
                 unknown2: buf[79..83].try_into().unwrap(),
                 unknown2_a: u16::from_le_bytes(buf[79..81].try_into().unwrap()),
                 unknown2_b: u16::from_le_bytes(buf[81..83].try_into().unwrap()),
@@ -732,12 +732,12 @@ impl<R: Read + Seek> Decoder<R> {
                 rank_count: buf[123],
                 unknown1: buf[124..127].into(),
                 stats: self.read_unit_stats(&buf[127..136]),
-                mount: leader_mount,
+                mount_class: leader_mount_class,
                 armor: buf[137],
-                weapon: leader_weapon,
+                weapon_class: leader_weapon_class,
                 class: leader_class,
                 point_value: buf[140],
-                projectile: leader_projectile,
+                projectile_class: leader_projectile_class,
                 unknown2: buf[142..146].try_into().unwrap(),
                 unknown2_a: u16::from_le_bytes(buf[142..144].try_into().unwrap()),
                 unknown2_b: u16::from_le_bytes(buf[144..146].try_into().unwrap()),
