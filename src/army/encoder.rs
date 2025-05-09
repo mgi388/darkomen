@@ -410,12 +410,13 @@ impl<W: Write> Encoder<W> {
         self.writer.write_all(&[u.stats.initiative])?;
         self.writer.write_all(&[u.stats.attacks])?;
         self.writer.write_all(&[u.stats.leadership])?;
-        self.writer.write_all(&[Into::<u8>::into(u.mount)])?;
+        self.writer.write_all(&[Into::<u8>::into(u.mount_class)])?;
         self.writer.write_all(&[u.armor])?;
-        self.writer.write_all(&[Into::<u8>::into(u.weapon)])?;
+        self.writer.write_all(&[Into::<u8>::into(u.weapon_class)])?;
         self.writer.write_all(&[Into::<u8>::into(u.class)])?;
         self.writer.write_all(&[u.point_value])?;
-        self.writer.write_all(&[Into::<u8>::into(u.projectile)])?;
+        self.writer
+            .write_all(&[Into::<u8>::into(u.projectile_class)])?;
         self.writer.write_all(&u.unknown2)?;
 
         Ok(())

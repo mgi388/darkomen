@@ -618,6 +618,12 @@ impl Regiment {
             .copied()
             .collect()
     }
+
+    /// Returns the projectile class of the regiment.
+    #[inline(always)]
+    pub fn projectile_class(&self) -> ProjectileClass {
+        self.leader_profile.projectile_class
+    }
 }
 
 bitflags! {
@@ -888,7 +894,7 @@ pub enum RegimentRace {
     derive(Reflect),
     reflect(Debug, Default, Deserialize, PartialEq, Serialize)
 )]
-pub enum RegimentMount {
+pub enum MountClass {
     #[default]
     None,
     Horse,
@@ -1009,7 +1015,7 @@ pub enum SpellBook {
     derive(Reflect),
     reflect(Debug, Default, Deserialize, PartialEq, Serialize)
 )]
-pub enum Weapon {
+pub enum WeaponClass {
     #[default]
     None,
     BasicHandWeapon,
@@ -1037,7 +1043,7 @@ pub enum Weapon {
     derive(Reflect),
     reflect(Debug, Default, Deserialize, PartialEq, Serialize)
 )]
-pub enum Projectile {
+pub enum ProjectileClass {
     #[default]
     None,
     ShortBow = 7,
@@ -1093,9 +1099,17 @@ pub struct UnitProfile {
     pub rank_count: u8,
     unknown1: Vec<u8>,
     pub stats: UnitStats,
-    pub mount: RegimentMount,
+    pub mount_class: MountClass,
+    /// When you purchase armor, this goes up by 1 for each armor shield
+    /// purchased.
+    ///
+    /// When you sell armor, this goes down by 1 for each armor shield sold.
+    ///
+    /// If you have not purchased any armor, this is the same as `min_armor`.
+    ///
+    /// This is displayed as the silver shields in the troop roster.
     pub armor: u8,
-    pub weapon: Weapon,
+    pub weapon_class: WeaponClass,
     pub class: RegimentClass,
     /// A value from 0 to 31, inclusive, that indicates the regiment's threat
     /// rating.
@@ -1110,7 +1124,7 @@ pub struct UnitProfile {
     ///
     /// This is set in the `unit_profile`, but 0 in the `leader_profile`.
     pub point_value: u8,
-    pub projectile: Projectile,
+    pub projectile_class: ProjectileClass,
     unknown2: [u8; 4],
     unknown2_a: u16,      // TODO: Remove, debug only.
     unknown2_b: u16,      // TODO: Remove, debug only.
@@ -1357,7 +1371,7 @@ mod tests {
             a.regiments[0].unit_profile.class,
             RegimentClass::HumanCavalryman
         );
-        assert_eq!(a.regiments[0].unit_profile.mount, RegimentMount::Horse);
+        assert_eq!(a.regiments[0].unit_profile.mount_class, MountClass::Horse);
         assert_eq!(
             a.regiments[0].leader_profile.display_name,
             "Morgan Bernhardt"
