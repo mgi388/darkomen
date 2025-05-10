@@ -89,8 +89,8 @@ pub(crate) const OBJECTIVES_SIZE_BYTES: usize = 648; // 27 objectives * 24 bytes
 /// travel path history, limiting the accumulated journey to 50 entries.
 pub(crate) const TRAVEL_PATH_HISTORY_CAPACITY: usize = 50;
 
-pub(crate) const SAVE_GAME_CUTSCENE_ANIMATION_COUNT: usize = 38;
-pub(crate) const SAVE_GAME_CUTSCENE_SIZE_BYTES: usize = 288;
+pub(crate) const SAVE_GAME_MEET_ANIMATED_SPRITE_COUNT: usize = 38;
+pub(crate) const SAVE_GAME_MEET_ANIMATED_SPRITE_SIZE_BYTES: usize = 288;
 pub(crate) const SAVE_GAME_ASSET_PATH_SIZE_BYTES: usize = 256;
 
 pub(crate) struct Header {
@@ -447,22 +447,23 @@ impl<R: Read + Seek> Decoder<R> {
                 .try_into()?,
         );
 
-        const ANIMATIONS_OFFSET_START: usize = BACKGROUND_IMAGE_PATH_OFFSET_END + 16; // 4 u32s
+        const ANIMATED_SPRITES_OFFSET_START: usize = BACKGROUND_IMAGE_PATH_OFFSET_END + 16; // 4 u32s
 
-        const ANIMATIONS_OFFSET_END: usize = ANIMATIONS_OFFSET_START
-            + SAVE_GAME_CUTSCENE_ANIMATION_COUNT * SAVE_GAME_CUTSCENE_SIZE_BYTES;
-        let mut animations_buf =
-            [0; SAVE_GAME_CUTSCENE_ANIMATION_COUNT * SAVE_GAME_CUTSCENE_SIZE_BYTES];
-        animations_buf.copy_from_slice(&buf[ANIMATIONS_OFFSET_START..ANIMATIONS_OFFSET_END]);
-        let mut animations = Vec::with_capacity(SAVE_GAME_CUTSCENE_ANIMATION_COUNT);
-        for i in 0..SAVE_GAME_CUTSCENE_ANIMATION_COUNT {
-            animations.push(self.read_cutscene_animation(
-                &animations_buf
-                    [i * SAVE_GAME_CUTSCENE_SIZE_BYTES..(i + 1) * SAVE_GAME_CUTSCENE_SIZE_BYTES],
+        const ANIMATED_SPRITES_OFFSET_END: usize = ANIMATED_SPRITES_OFFSET_START
+            + SAVE_GAME_MEET_ANIMATED_SPRITE_COUNT * SAVE_GAME_MEET_ANIMATED_SPRITE_SIZE_BYTES;
+        let mut meet_animated_sprites_buf =
+            [0; SAVE_GAME_MEET_ANIMATED_SPRITE_COUNT * SAVE_GAME_MEET_ANIMATED_SPRITE_SIZE_BYTES];
+        meet_animated_sprites_buf
+            .copy_from_slice(&buf[ANIMATED_SPRITES_OFFSET_START..ANIMATED_SPRITES_OFFSET_END]);
+        let mut meet_animated_sprites = Vec::with_capacity(SAVE_GAME_MEET_ANIMATED_SPRITE_COUNT);
+        for i in 0..SAVE_GAME_MEET_ANIMATED_SPRITE_COUNT {
+            meet_animated_sprites.push(self.read_meet_animated_sprite(
+                &meet_animated_sprites_buf[i * SAVE_GAME_MEET_ANIMATED_SPRITE_SIZE_BYTES
+                    ..(i + 1) * SAVE_GAME_MEET_ANIMATED_SPRITE_SIZE_BYTES],
             )?);
         }
 
-        let unknown3 = buf[ANIMATIONS_OFFSET_END..].to_vec();
+        let unknown3 = buf[ANIMATED_SPRITES_OFFSET_END..].to_vec();
 
         let hex: Vec<String> = buf
             .chunks(16)
@@ -534,7 +535,7 @@ impl<R: Read + Seek> Decoder<R> {
             victory_message_index,
             defeat_message_index,
             rng_seed,
-            cutscene_animations: animations,
+            meet_animated_sprites,
             unknown3: unknown3.clone(),
             unknown3_as_u16s: unknown3
                 .chunks_exact(2)
@@ -549,11 +550,11 @@ impl<R: Read + Seek> Decoder<R> {
         }))
     }
 
-    fn read_cutscene_animation(&mut self, buf: &[u8]) -> Result<CutsceneAnimation, DecodeError> {
+    fn read_meet_animated_sprite(&mut self, buf: &[u8]) -> Result<MeetAnimatedSprite, DecodeError> {
         // 16 bytes for enabled, unknown1, position, and path.
         const PATH_OFFSET_END: usize = 16 + SAVE_GAME_ASSET_PATH_SIZE_BYTES;
 
-        Ok(CutsceneAnimation {
+        Ok(MeetAnimatedSprite {
             enabled: u32::from_le_bytes(buf[0..4].try_into().unwrap()) != 0,
             unknown1: u32::from_le_bytes(buf[4..8].try_into().unwrap()),
             position: UVec2::new(

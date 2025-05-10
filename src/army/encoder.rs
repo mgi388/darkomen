@@ -289,8 +289,8 @@ impl<W: Write> Encoder<W> {
             .write_all(&footer.defeat_message_index.to_le_bytes())?;
         self.writer.write_all(&footer.rng_seed.to_le_bytes())?;
 
-        for a in &footer.cutscene_animations {
-            self.write_cutscene_animation(a)?;
+        for s in &footer.meet_animated_sprites {
+            self.write_meet_animated_sprite(s)?;
         }
 
         self.writer.write_all(&footer.unknown3)?;
@@ -298,18 +298,18 @@ impl<W: Write> Encoder<W> {
         Ok(())
     }
 
-    fn write_cutscene_animation(&mut self, a: &CutsceneAnimation) -> Result<(), EncodeError> {
+    fn write_meet_animated_sprite(&mut self, s: &MeetAnimatedSprite) -> Result<(), EncodeError> {
         self.writer
-            .write_all(&(if a.enabled { 1u32 } else { 0u32 }).to_le_bytes())?;
-        self.writer.write_all(&a.unknown1.to_le_bytes())?;
-        self.writer.write_all(&a.position.x.to_le_bytes())?;
-        self.writer.write_all(&a.position.y.to_le_bytes())?;
-        self.write_string_with_limit(&a.path, SAVE_GAME_ASSET_PATH_SIZE_BYTES)?;
-        self.writer.write_all(&a.unknown2.to_le_bytes())?;
-        self.writer.write_all(&a.unknown3.to_le_bytes())?;
-        self.writer.write_all(&a.sprite_count.to_le_bytes())?;
+            .write_all(&(if s.enabled { 1u32 } else { 0u32 }).to_le_bytes())?;
+        self.writer.write_all(&s.unknown1.to_le_bytes())?;
+        self.writer.write_all(&s.position.x.to_le_bytes())?;
+        self.writer.write_all(&s.position.y.to_le_bytes())?;
+        self.write_string_with_limit(&s.path, SAVE_GAME_ASSET_PATH_SIZE_BYTES)?;
+        self.writer.write_all(&s.unknown2.to_le_bytes())?;
+        self.writer.write_all(&s.unknown3.to_le_bytes())?;
+        self.writer.write_all(&s.sprite_count.to_le_bytes())?;
         self.writer
-            .write_all(&a.frame_duration_millis.to_le_bytes())?;
+            .write_all(&s.frame_duration_millis.to_le_bytes())?;
 
         Ok(())
     }
