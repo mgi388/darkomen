@@ -228,20 +228,22 @@ pub struct SaveGameHeader {
     derive(Reflect),
     reflect(Debug, Default, Deserialize, Serialize)
 )]
-pub struct CutsceneAnimation {
-    /// Whether the animation is enabled.
+pub struct MeetAnimatedSprite {
+    /// Whether the animated sprite is enabled.
     pub enabled: bool,
     unknown1: u32,
-    /// The initial position of the animation within the background image.
+    /// The position the top-left corner of the animated sprite should be placed
+    /// on the screen.
     pub position: UVec2,
     /// The path to the sprite sheet file, e.g., "[SPRITES]\m_empbi1.spr".
     pub path: String,
     unknown2: u32,
     unknown3: u32,
     /// The number of sprites in the sprite sheet / the number of frames in the
-    /// animation.
+    /// animated sprite.
     pub sprite_count: u32,
-    /// The duration, in milliseconds, to display each frame of the animation.
+    /// The duration, in milliseconds, to display each frame of the animated
+    /// sprite.
     pub frame_duration_millis: u32,
 }
 
@@ -305,9 +307,9 @@ pub struct SaveGameFooter {
     /// This is used to display a message to the player after losing a battle.
     pub defeat_message_index: u32,
     rng_seed: u32,
-    /// A list of animations used on the cutscene screens shown in between
+    /// A list of aniamted sprites used on the meet screens shown in between
     /// battles.
-    pub cutscene_animations: Vec<CutsceneAnimation>,
+    pub meet_animated_sprites: Vec<MeetAnimatedSprite>,
     unknown3: Vec<u8>,
     unknown3_as_u16s: Vec<u16>, // TODO: Remove, debug only.
     unknown3_as_u32s: Vec<u32>, // TODO: Remove, debug only.
