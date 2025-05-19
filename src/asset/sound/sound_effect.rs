@@ -42,11 +42,12 @@ impl Plugin for SoundEffectAssetPlugin {
 pub struct PacketAsset {
     source: Packet,
     #[cfg(feature = "bevy_audio")]
-    audio_sources: bevy_utils::HashMap<String, Handle<bevy_audio::AudioSource>>,
+    audio_sources: bevy_platform::collections::HashMap<String, Handle<bevy_audio::AudioSource>>,
     #[cfg(feature = "bevy_kira_audio")]
-    kira_audio_sources: bevy_utils::HashMap<String, Handle<bevy_kira_audio::AudioSource>>,
+    kira_audio_sources:
+        bevy_platform::collections::HashMap<String, Handle<bevy_kira_audio::AudioSource>>,
     #[cfg(feature = "bevy-kira-components")]
-    audio_files: bevy_utils::HashMap<
+    audio_files: bevy_platform::collections::HashMap<
         String,
         Handle<bevy_kira_components::sources::audio_file::source::AudioFile>,
     >,
@@ -193,11 +194,11 @@ impl AssetLoader for PacketAssetLoader {
             .collect::<Vec<_>>();
 
         #[cfg(feature = "bevy_audio")]
-        let mut audio_sources = bevy_utils::HashMap::new();
+        let mut audio_sources = bevy_platform::collections::HashMap::new();
         #[cfg(feature = "bevy_kira_audio")]
-        let mut kira_audio_sources = bevy_utils::HashMap::new();
+        let mut kira_audio_sources = bevy_platform::collections::HashMap::new();
         #[cfg(feature = "bevy-kira-components")]
-        let mut audio_files = bevy_utils::HashMap::new();
+        let mut audio_files = bevy_platform::collections::HashMap::new();
 
         for file_name in file_names {
             let sample_path = sound_path.join(file_name).with_extension("wav");
