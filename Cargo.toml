@@ -67,7 +67,7 @@ features = ["wav"]
 optional = true
 
 [dependencies.bevy_derive]
-version = "0.15"
+version = "0.16"
 optional = true
 
 [dependencies.bevy_ecs]
