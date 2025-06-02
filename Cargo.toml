@@ -113,7 +113,7 @@ version = "0.15"
 optional = true
 
 [dependencies.bevy_utils]
-version = "0.15"
+version = "0.16"
 default-features = false
 optional = true
 
