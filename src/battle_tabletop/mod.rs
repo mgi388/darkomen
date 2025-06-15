@@ -238,6 +238,16 @@ impl Region {
             || self.flags.contains(RegionFlags::IS_PLAYER2_DEPLOYMENT_ZONE)
     }
 
+    /// Returns `true` if the region is a player 1 deployment zone.
+    pub fn is_player1_deployment_zone(&self) -> bool {
+        self.flags.contains(RegionFlags::IS_PLAYER1_DEPLOYMENT_ZONE)
+    }
+
+    /// Returns `true` if the region is a player 2 deployment zone.
+    pub fn is_player2_deployment_zone(&self) -> bool {
+        self.flags.contains(RegionFlags::IS_PLAYER2_DEPLOYMENT_ZONE)
+    }
+
     /// Returns `true` if the given point is contained within the region.
     pub fn is_point_contained(&self, point: IVec2) -> bool {
         let mut intersections = 0;
