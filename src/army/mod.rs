@@ -161,10 +161,17 @@ pub struct ScriptVariables {
     pub unknown3: u32,
     /// This is variable 20 in the WHMTG script.
     pub unknown4: u32,
-    /// Meet action selected by the player.
+    /// Debrief or meet action selected by the player.
+    ///
+    /// When the player saves the game while on the debrief screen, this is set
+    /// to 1 which corresponds to the "Save or Load" action from the debrief
+    /// screen.
+    ///
+    /// When the player saves the game while on the meet screen, this is set to
+    /// 0 which corresponds to the "Save or Load" action from the meet screen.
     ///
     /// This is variable 21 in the WHMTG script.
-    pub meet_action: u32,
+    pub debrief_or_meet_action: u32,
     /// Indicates if the player selected to either continue campaign or replay
     /// meet. Set to true when player selects either "Continue Campaign" or
     /// "Replay Meet" in a meeting.
