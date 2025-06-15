@@ -208,7 +208,8 @@ impl<W: Write> Encoder<W> {
         self.writer.write_all(&v.unknown2.to_le_bytes())?;
         self.writer.write_all(&v.unknown3.to_le_bytes())?;
         self.writer.write_all(&v.unknown4.to_le_bytes())?;
-        self.writer.write_all(&v.meet_action.to_le_bytes())?;
+        self.writer
+            .write_all(&v.debrief_or_meet_action.to_le_bytes())?;
         self.writer.write_all(
             &(if v.meet_continue_or_replay_selected {
                 1u32

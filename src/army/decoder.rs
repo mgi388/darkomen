@@ -274,7 +274,7 @@ impl<R: Read + Seek> Decoder<R> {
             unknown2: u32::from_le_bytes(buf[72..76].try_into()?),
             unknown3: u32::from_le_bytes(buf[76..80].try_into()?),
             unknown4: u32::from_le_bytes(buf[80..84].try_into()?),
-            meet_action: u32::from_le_bytes(buf[84..88].try_into()?),
+            debrief_or_meet_action: u32::from_le_bytes(buf[84..88].try_into()?),
             meet_continue_or_replay_selected: buf[88] != 0,
             heroic_choice_made: buf[92] != 0,
         })
