@@ -37,7 +37,7 @@ impl MonoAudio {
                     sample_format: SampleFormat::Int,
                 },
             )
-            .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+            .map_err(io::Error::other)?;
 
             let mut samples = Vec::new();
 
@@ -55,9 +55,7 @@ impl MonoAudio {
                 sample_writer.write_sample(sample);
             }
 
-            sample_writer
-                .flush()
-                .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+            sample_writer.flush().map_err(io::Error::other)?;
         }
 
         Ok(buffer.into_inner())
