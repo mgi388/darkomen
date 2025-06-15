@@ -153,7 +153,7 @@ impl<W: Write> Encoder<W> {
         self.writer.write_all(&i.next.to_le_bytes())?;
         self.writer.write_all(&i.selected.to_le_bytes())?;
         self.writer
-            .write_all(&i.exclude_from_terrain.to_le_bytes())?;
+            .write_all(&(if i.exclude_from_terrain { 1u32 } else { 0u32 }).to_le_bytes())?;
         self.write_dvec3_from_i32s(&i.position, 1024.0)?;
         self.write_dvec3_from_u32s(&i.rotation, 4096.0)?;
         self.write_dvec3_from_i32s(&i.aabb_min, 1024.0)?;
@@ -170,9 +170,16 @@ impl<W: Write> Encoder<W> {
         self.writer.write_all(&i.sfx_code.to_le_bytes())?;
         self.writer.write_all(&i.gfx_code.to_le_bytes())?;
         self.writer.write_all(&i.locked.to_le_bytes())?;
+        self.writer.write_all(
+            &(if i.exclude_from_terrain_shadow {
+                1u32
+            } else {
+                0u32
+            })
+            .to_le_bytes(),
+        )?;
         self.writer
-            .write_all(&i.exclude_from_terrain_shadow.to_le_bytes())?;
-        self.writer.write_all(&i.exclude_from_walk.to_le_bytes())?;
+            .write_all(&(if i.exclude_from_walk { 1u32 } else { 0u32 }).to_le_bytes())?;
         self.writer.write_all(&i.magic_item_id.to_le_bytes())?;
         self.writer
             .write_all(&i.particle_effect_code.to_le_bytes())?;

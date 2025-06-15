@@ -136,7 +136,6 @@ impl Lightmap {
 
 #[derive(Clone, Debug, Serialize)]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
-
 pub struct LightmapBlock {
     /// The base height of all 64 (8x8) values in the block.
     pub base_height: i32,

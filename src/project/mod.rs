@@ -80,7 +80,7 @@ pub struct Instance {
     prev: i32,
     next: i32,
     selected: i32,
-    pub exclude_from_terrain: i32,
+    pub exclude_from_terrain: bool,
     pub position: DVec3,
     pub rotation: DVec3,
     pub aabb_min: DVec3,
@@ -101,8 +101,8 @@ pub struct Instance {
     /// animated flag or sign.
     pub gfx_code: u32,
     locked: i32,
-    exclude_from_terrain_shadow: i32,
-    exclude_from_walk: i32,
+    pub exclude_from_terrain_shadow: bool,
+    pub exclude_from_walk: bool,
     pub magic_item_id: u32,
     pub particle_effect_code: u32,
     /// Slot is 1-based, not 0-based. A slot of 1 refers to the first furniture
