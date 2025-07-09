@@ -39,10 +39,10 @@ impl From<std::array::TryFromSliceError> for DecodeError {
 impl fmt::Display for DecodeError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            DecodeError::IoError(e) => write!(f, "IO error: {}", e),
-            DecodeError::InvalidFormat(s) => write!(f, "invalid format: {}", s),
+            DecodeError::IoError(e) => write!(f, "IO error: {e}"),
+            DecodeError::InvalidFormat(s) => write!(f, "invalid format: {s}"),
             DecodeError::TryFromSliceError(e) => {
-                write!(f, "could not convert slice to array: {}", e)
+                write!(f, "could not convert slice to array: {e}")
             }
         }
     }

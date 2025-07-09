@@ -56,11 +56,11 @@ pub(crate) fn lex(input: &str) -> Vec<Token> {
             chars.next();
 
             let Some(&c) = chars.peek() else {
-                panic!("{}:{}: expected '/', found 'EOF'", line, column);
+                panic!("{line}:{column}: expected '/', found 'EOF'");
             };
 
             if c != '/' {
-                panic!("{}:{}: expected '/', found '{}'", line, column, c);
+                panic!("{line}:{column}: expected '/', found '{c}'");
             }
 
             column += 1;
@@ -100,7 +100,7 @@ pub(crate) fn lex(input: &str) -> Vec<Token> {
 
             // A directive.
             let Some(&c) = chars.peek() else {
-                panic!("{}:{}: expected directive field, found 'EOF'", line, column);
+                panic!("{line}:{column}: expected directive field, found 'EOF'");
             };
 
             // Check if the next character is '-' which means we expect the
@@ -112,25 +112,25 @@ pub(crate) fn lex(input: &str) -> Vec<Token> {
                     if c.is_whitespace() {
                         if c == '\n' {
                             if s != "-----" {
-                                panic!("{}:{}: expected '-----', found '{}'", line, column, c);
+                                panic!("{line}:{column}: expected '-----', found '{c}'");
                             }
                             break;
                         }
-                        panic!("{}:{}: expected '-----', found '{}'", line, column, c);
+                        panic!("{line}:{column}: expected '-----', found '{c}'");
                     } else if c == '-' {
                         if s == "-----" {
-                            panic!("{}:{}: expected '\n', found '{}'", line, column, c);
+                            panic!("{line}:{column}: expected '\n', found '{c}'");
                         }
                         s.push(c);
                         chars.next();
                         column += 1;
                     } else {
-                        panic!("{}:{}: expected '-----', found '{}'", line, column, c);
+                        panic!("{line}:{column}: expected '-----', found '{c}'");
                     }
                 }
 
                 if s != "-----" {
-                    panic!("{}:{}: expected '-----', found 'EOF'", line, column);
+                    panic!("{line}:{column}: expected '-----', found 'EOF'");
                 }
 
                 tokens.push(Token::SoundDividerDirective { line, column });
@@ -147,7 +147,7 @@ pub(crate) fn lex(input: &str) -> Vec<Token> {
                     if c == '\n' {
                         line += 1;
                         column = 1;
-                        panic!("{}:{}: expected directive field, found '\n'", line, column);
+                        panic!("{line}:{column}: expected directive field, found '\n'");
                     }
                     column += 1;
                     chars.next();
@@ -155,7 +155,7 @@ pub(crate) fn lex(input: &str) -> Vec<Token> {
                 }
                 if c == ':' {
                     if field.is_empty() {
-                        panic!("{}:{}: expected directive field, found ':'", line, column);
+                        panic!("{line}:{column}: expected directive field, found ':'");
                     }
                     column += 1;
                     chars.next();
@@ -170,7 +170,7 @@ pub(crate) fn lex(input: &str) -> Vec<Token> {
             }
 
             if field.is_empty() {
-                panic!("{}:{}: expected directive field, found 'EOF'", line, column);
+                panic!("{line}:{column}: expected directive field, found 'EOF'");
             }
 
             tokens.push(Token::Identifier {
@@ -205,7 +205,7 @@ pub(crate) fn lex(input: &str) -> Vec<Token> {
 
             let mut s = String::new();
             let Some(&c) = chars.peek() else {
-                panic!("{}:{}: expected 'define', found 'EOF'", line, column);
+                panic!("{line}:{column}: expected 'define', found 'EOF'");
             };
             if c.is_alphanumeric() {
                 while let Some(&c) = chars.peek() {
@@ -218,10 +218,10 @@ pub(crate) fn lex(input: &str) -> Vec<Token> {
                     }
                 }
             } else {
-                panic!("{}:{}: expected 'define', found '{}'", line, column, c,);
+                panic!("{line}:{column}: expected 'define', found '{c}'");
             }
             if s != "define" {
-                panic!("{}:{}: expected 'define', found 'EOF'", line, column);
+                panic!("{line}:{column}: expected 'define', found 'EOF'");
             }
             tokens.push(Token::Define { line, column });
 
@@ -231,7 +231,7 @@ pub(crate) fn lex(input: &str) -> Vec<Token> {
             while let Some(&c) = chars.peek() {
                 if c.is_whitespace() {
                     if c == '\n' {
-                        panic!("{}:{}: expected name, found '{}'", line, column, c);
+                        panic!("{line}:{column}: expected name, found '{c}'");
                     }
                     column += 1;
                     chars.next();
@@ -251,7 +251,7 @@ pub(crate) fn lex(input: &str) -> Vec<Token> {
                     }
                     break;
                 } else {
-                    panic!("{}:{}: expected name, found '{}'", line, column, c,);
+                    panic!("{line}:{column}: expected name, found '{c}'");
                 }
             }
 
@@ -267,7 +267,7 @@ pub(crate) fn lex(input: &str) -> Vec<Token> {
             while let Some(&c) = chars.peek() {
                 if c.is_whitespace() {
                     if c == '\n' {
-                        panic!("{}:{}: expected ID, found '{}'", line, column, c);
+                        panic!("{line}:{column}: expected ID, found '{c}'");
                     }
                     column += 1;
                     chars.next();
@@ -287,7 +287,7 @@ pub(crate) fn lex(input: &str) -> Vec<Token> {
                     }
                     break;
                 } else {
-                    panic!("{}:{}: expected ID, found '{}'", line, column, c,);
+                    panic!("{line}:{column}: expected ID, found '{c}'");
                 }
             }
 
@@ -297,7 +297,7 @@ pub(crate) fn lex(input: &str) -> Vec<Token> {
                 column: id_start_column.unwrap_or(column),
             });
         } else {
-            panic!("{}:{}: unexpected '{}'", line, column, c);
+            panic!("{line}:{column}: unexpected '{c}'");
         }
     }
 

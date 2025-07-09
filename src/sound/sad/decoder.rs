@@ -21,7 +21,7 @@ impl From<io::Error> for DecodeError {
 impl fmt::Display for DecodeError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            DecodeError::IoError(e) => write!(f, "IO error: {}", e),
+            DecodeError::IoError(e) => write!(f, "IO error: {e}"),
         }
     }
 }
@@ -54,8 +54,7 @@ impl<R: Read + Seek> Decoder<R> {
                 return Err(DecodeError::IoError(io::Error::new(
                     std::io::ErrorKind::UnexpectedEof,
                     format!(
-                        "could not read stereo sample and index data: read {} byte(s), expected 8",
-                        n
+                        "could not read stereo sample and index data: read {n} byte(s), expected 8",
                     ),
                 )));
             }
@@ -80,8 +79,7 @@ impl<R: Read + Seek> Decoder<R> {
                 return Err(DecodeError::IoError(io::Error::new(
                     std::io::ErrorKind::UnexpectedEof,
                     format!(
-                        "could not read stereo ADPCM data: read {} byte(s), expected {}",
-                        n, SIZE_BYTES
+                        "could not read stereo ADPCM data: read {n} byte(s), expected {SIZE_BYTES}",
                     ),
                 )));
             }

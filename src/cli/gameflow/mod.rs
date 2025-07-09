@@ -72,7 +72,7 @@ fn edit_gameflow_file(args: &EditGameflowArgs) -> anyhow::Result<()> {
             .and_then(|stem| stem.to_str())
             .unwrap_or("gameflow"),
     );
-    let suffix = format!(".{}", extension);
+    let suffix = format!(".{extension}");
     let mut temp_file = tempfile::Builder::new()
         .prefix(&prefix)
         .suffix(&suffix)

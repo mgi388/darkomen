@@ -17,7 +17,7 @@ impl From<std::fmt::Error> for EncodeError {
 impl std::fmt::Display for EncodeError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            EncodeError::FmtError(e) => write!(f, "fmt error: {}", e),
+            EncodeError::FmtError(e) => write!(f, "fmt error: {e}"),
         }
     }
 }
@@ -36,12 +36,12 @@ impl<W: Write> Encoder<W> {
         let mut wrote_newline = false;
 
         for (id, num) in &script.states {
-            writeln!(self.writer, "state {} {}", id, num).unwrap();
+            writeln!(self.writer, "state {id} {num}").unwrap();
             wrote_newline = true;
         }
 
         if let Some(start_state) = &script.start_state {
-            writeln!(self.writer, "start-state {}", start_state).unwrap();
+            writeln!(self.writer, "start-state {start_state}").unwrap();
             wrote_newline = true;
         }
 
@@ -51,7 +51,7 @@ impl<W: Write> Encoder<W> {
         }
 
         for (id, file_name) in &script.samples {
-            writeln!(self.writer, "sample {} {}", file_name, id).unwrap();
+            writeln!(self.writer, "sample {file_name} {id}").unwrap();
             wrote_newline = true;
         }
 
@@ -63,7 +63,7 @@ impl<W: Write> Encoder<W> {
                 writeln!(self.writer, "\tsequence").unwrap();
                 writeln!(self.writer, "\t{{").unwrap();
                 for seq in sequence.0.iter() {
-                    writeln!(self.writer, "\t\t{}", seq).unwrap();
+                    writeln!(self.writer, "\t\t{seq}").unwrap();
                 }
                 writeln!(self.writer, "\t}}").unwrap();
             }
@@ -80,7 +80,7 @@ impl<W: Write> Encoder<W> {
                     .unwrap_or(0);
 
                 for (state, pattern_id) in state_table.0.iter() {
-                    let state_str = format!("{:<width$}", state, width = max_state_length);
+                    let state_str = format!("{state:<max_state_length$}");
                     writeln!(self.writer, "\t\t{}\t{}", state_str, pattern_id.as_str()).unwrap();
                 }
                 writeln!(self.writer, "\t}}").unwrap();

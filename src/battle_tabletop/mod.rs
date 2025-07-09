@@ -119,7 +119,7 @@ bitflags! {
     #[cfg_attr(feature = "bevy_reflect", derive(Reflect), reflect(opaque), reflect(Debug, Default, Deserialize, Hash, PartialEq, Serialize))]
     pub struct ObstacleFlags: u32 {
         const NONE = 0;
-        const IS_ENABLED = 1 << 0;
+        const ACTIVE = 1 << 0;
         const BLOCKS_MOVEMENT = 1 << 1;
         const BLOCKS_PROJECTILES = 1 << 2;
         const UNKNOWN_FLAG_1 = 1 << 3;
@@ -234,18 +234,18 @@ pub struct Region {
 impl Region {
     /// Returns `true` if the region is a deployment zone.
     pub fn is_deployment_zone(&self) -> bool {
-        self.flags.contains(RegionFlags::IS_PLAYER1_DEPLOYMENT_ZONE)
-            || self.flags.contains(RegionFlags::IS_PLAYER2_DEPLOYMENT_ZONE)
+        self.flags.contains(RegionFlags::PLAYER1_DEPLOYMENT_ZONE)
+            || self.flags.contains(RegionFlags::PLAYER2_DEPLOYMENT_ZONE)
     }
 
     /// Returns `true` if the region is a player 1 deployment zone.
     pub fn is_player1_deployment_zone(&self) -> bool {
-        self.flags.contains(RegionFlags::IS_PLAYER1_DEPLOYMENT_ZONE)
+        self.flags.contains(RegionFlags::PLAYER1_DEPLOYMENT_ZONE)
     }
 
     /// Returns `true` if the region is a player 2 deployment zone.
     pub fn is_player2_deployment_zone(&self) -> bool {
-        self.flags.contains(RegionFlags::IS_PLAYER2_DEPLOYMENT_ZONE)
+        self.flags.contains(RegionFlags::PLAYER2_DEPLOYMENT_ZONE)
     }
 
     /// Returns `true` if the given point is contained within the region.
@@ -284,21 +284,21 @@ bitflags! {
     #[cfg_attr(feature = "bevy_reflect", derive(Reflect), reflect(opaque), reflect(Debug, Default, Deserialize, Hash, PartialEq, Serialize))]
     pub struct RegionFlags: u32 {
         const NONE = 0;
-        const UNKNOWN_FLAG_1 = 1 << 0;
-        const IS_CLOSED = 1 << 1;
-        const IS_OPEN = 1 << 2;
+        const ACTIVE = 1 << 0;
+        const CLOSED = 1 << 1;
+        const OPEN = 1 << 2;
         const UNKNOWN_FLAG_2 = 1 << 3;
         /// The region is used for holes in the battle's navmesh.
-        const IS_BOUNDARY_REVERSED = 1 << 4;
+        const BOUNDARY_REVERSED = 1 << 4;
         /// The region is used for the outer geometry of the battle's navmesh.
-        const IS_BATTLE_BOUNDARY = 1 << 5;
+        const BATTLE_BOUNDARY = 1 << 5;
         const UNKNOWN_FLAG_3 = 1 << 6;
-        const IS_BOUNDARY = 1 << 7;
+        const BOUNDARY = 1 << 7;
         /// The region is a deployment zone for player 1, i.e., the main player.
-        const IS_PLAYER1_DEPLOYMENT_ZONE = 1 << 8;
+        const PLAYER1_DEPLOYMENT_ZONE = 1 << 8;
         /// The region is a deployment zone for player 2, i.e., the enemy.
-        const IS_PLAYER2_DEPLOYMENT_ZONE = 1 << 9;
-        const IS_VISIBLE_AREA = 1 << 10;
+        const PLAYER2_DEPLOYMENT_ZONE = 1 << 9;
+        const VISIBLE_AREA = 1 << 10;
         const UNKNOWN_FLAG_4 = 1 << 11;
         const UNKNOWN_FLAG_5 = 1 << 12;
         const UNKNOWN_FLAG_6 = 1 << 13;
@@ -339,7 +339,7 @@ impl Node {
     /// Returns `true` if the node is a waypoint.
     #[inline]
     pub fn is_waypoint(&self) -> bool {
-        self.flags.contains(NodeFlags::IS_WAYPOINT)
+        self.flags.contains(NodeFlags::WAYPOINT)
     }
 
     /// Returns the position of the node in the horizontal plane in world
@@ -387,9 +387,9 @@ bitflags! {
     #[cfg_attr(feature = "bevy_reflect", derive(Reflect), reflect(opaque), reflect(Debug, Default, Deserialize, Hash, PartialEq, Serialize))]
     pub struct NodeFlags: u32 {
         const NONE = 0;
-        const IS_CENTERED_POINT = 1 << 0;
-        const IS_REGIMENT = 1 << 1;
-        const IS_WAYPOINT = 1 << 2;
+        const ACTIVE = 1 << 0;
+        const REGIMENT = 1 << 1;
+        const WAYPOINT = 1 << 2;
         const UNKNOWN_FLAG_1 = 1 << 3;
         const UNKNOWN_FLAG_2 = 1 << 4;
         const UNKNOWN_FLAG_3 = 1 << 5;
@@ -496,7 +496,7 @@ mod tests {
             .map(|chunk| {
                 chunk
                     .iter()
-                    .map(|b| format!("{:02X}", b))
+                    .map(|b| format!("{b:02X}"))
                     .collect::<Vec<_>>()
                     .join(" ")
             })
@@ -508,7 +508,7 @@ mod tests {
             .map(|chunk| {
                 chunk
                     .iter()
-                    .map(|b| format!("{:02X}", b))
+                    .map(|b| format!("{b:02X}"))
                     .collect::<Vec<_>>()
                     .join(" ")
             })
@@ -705,8 +705,33 @@ mod tests {
                     o.flags.contains(ObstacleFlags::BLOCKS_MOVEMENT)
                         || o.flags.contains(ObstacleFlags::BLOCKS_PROJECTILES)
                 );
-                // Should not be any disabled obstacles.
-                assert!(o.flags.contains(ObstacleFlags::IS_ENABLED));
+                // All obstacles should be active.
+                assert!(o.flags.contains(ObstacleFlags::ACTIVE));
+            }
+
+            for region in &b.regions {
+                // All regions should be active.
+                assert!(region.flags.contains(RegionFlags::ACTIVE));
+            }
+
+            for node in &b.nodes {
+                // All nodes should be active.
+                assert!(node.flags.contains(NodeFlags::ACTIVE));
+
+                // All regiment nodes should have a regiment ID except for
+                // "TMPBAT.BTB". "TMPBAT.BTB" is the only file that has a
+                // regiment node with a regiment ID of 0. It was probably a
+                // temporary file.
+                if node.flags.contains(NodeFlags::REGIMENT)
+                    && path.file_name().unwrap() != "TMPBAT.BTB"
+                {
+                    assert!(node.regiment_id > 0);
+                }
+
+                // All waypoint nodes should have a route ID.
+                if node.flags.contains(NodeFlags::WAYPOINT) {
+                    assert!(node.node_id > 0);
+                }
             }
 
             let output_path = append_ext("ron", output_dir.join(path.file_name().unwrap()));

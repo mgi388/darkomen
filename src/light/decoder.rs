@@ -30,9 +30,9 @@ impl From<IoError> for DecodeError {
 impl fmt::Display for DecodeError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            DecodeError::IoError(e) => write!(f, "IO error: {}", e),
-            DecodeError::InvalidFormat(s) => write!(f, "invalid format: {}", s),
-            DecodeError::InvalidLightFlags(v) => write!(f, "invalid light flags: {}", v),
+            DecodeError::IoError(e) => write!(f, "IO error: {e}"),
+            DecodeError::InvalidFormat(s) => write!(f, "invalid format: {s}"),
+            DecodeError::InvalidLightFlags(v) => write!(f, "invalid light flags: {v}"),
         }
     }
 }

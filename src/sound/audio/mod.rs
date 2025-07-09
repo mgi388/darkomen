@@ -19,7 +19,7 @@ impl From<io::Error> for BlockError {
 impl std::fmt::Display for BlockError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            BlockError::IoError(e) => write!(f, "IO error: {}", e),
+            BlockError::IoError(e) => write!(f, "IO error: {e}"),
         }
     }
 }

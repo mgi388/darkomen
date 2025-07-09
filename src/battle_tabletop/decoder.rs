@@ -47,13 +47,13 @@ impl From<IoError> for DecodeError {
 impl fmt::Display for DecodeError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            DecodeError::IoError(e) => write!(f, "IO error: {}", e),
-            DecodeError::InvalidObjectHeaderId(id) => write!(f, "invalid object header ID: {}", id),
+            DecodeError::IoError(e) => write!(f, "IO error: {e}"),
+            DecodeError::InvalidObjectHeaderId(id) => write!(f, "invalid object header ID: {id}"),
             DecodeError::InvalidPropertyHeaderId(id) => {
-                write!(f, "invalid property header ID: {}", id)
+                write!(f, "invalid property header ID: {id}")
             }
             DecodeError::InvalidPropertySize(size) => {
-                write!(f, "invalid property size: {}", size)
+                write!(f, "invalid property size: {size}")
             }
         }
     }
