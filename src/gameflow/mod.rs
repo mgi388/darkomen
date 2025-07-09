@@ -118,7 +118,7 @@ mod tests {
             .map(|chunk| {
                 chunk
                     .iter()
-                    .map(|b| format!("{:02X}", b))
+                    .map(|b| format!("{b:02X}"))
                     .collect::<Vec<_>>()
                     .join(" ")
             })
@@ -130,7 +130,7 @@ mod tests {
             .map(|chunk| {
                 chunk
                     .iter()
-                    .map(|b| format!("{:02X}", b))
+                    .map(|b| format!("{b:02X}"))
                     .collect::<Vec<_>>()
                     .join(" ")
             })

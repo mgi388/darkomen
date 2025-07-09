@@ -28,8 +28,8 @@ impl From<BlockError> for DecodeError {
 impl fmt::Display for DecodeError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            DecodeError::IoError(e) => write!(f, "IO error: {}", e),
-            DecodeError::BlockError(e) => write!(f, "block error: {}", e),
+            DecodeError::IoError(e) => write!(f, "IO error: {e}"),
+            DecodeError::BlockError(e) => write!(f, "block error: {e}"),
         }
     }
 }
@@ -68,8 +68,7 @@ impl<R: Read + Seek> Decoder<R> {
                 return Err(DecodeError::IoError(io::Error::new(
                     std::io::ErrorKind::UnexpectedEof,
                     format!(
-                        "could not read mono sample and index data: read {} byte(s), expected 4",
-                        n
+                        "could not read mono sample and index data: read {n} byte(s), expected 4",
                     ),
                 )));
             }
@@ -90,8 +89,7 @@ impl<R: Read + Seek> Decoder<R> {
                 return Err(DecodeError::IoError(io::Error::new(
                     std::io::ErrorKind::UnexpectedEof,
                     format!(
-                        "could not read mono ADPCM data: read {} byte(s), expected {}",
-                        n, SIZE_BYTES
+                        "could not read mono ADPCM data: read {n} byte(s), expected {SIZE_BYTES}",
                     ),
                 )));
             }

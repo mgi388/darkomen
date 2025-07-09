@@ -25,8 +25,8 @@ impl From<BlockError> for EncodeError {
 impl std::fmt::Display for EncodeError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            EncodeError::IoError(e) => write!(f, "IO error: {}", e),
-            EncodeError::BlockError(e) => write!(f, "block error: {}", e),
+            EncodeError::IoError(e) => write!(f, "IO error: {e}"),
+            EncodeError::BlockError(e) => write!(f, "block error: {e}"),
         }
     }
 }

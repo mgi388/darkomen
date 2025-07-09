@@ -25,10 +25,10 @@ impl From<IoError> for DecodeError {
 impl fmt::Display for DecodeError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            DecodeError::IoError(error) => write!(f, "IO error: {}", error),
-            DecodeError::InvalidFormat(format) => write!(f, "invalid format: {}", format),
-            DecodeError::InvalidSpriteType(v) => write!(f, "invalid sprite type: {}", v),
-            DecodeError::InvalidCompression(v) => write!(f, "invalid compression: {}", v),
+            DecodeError::IoError(error) => write!(f, "IO error: {error}"),
+            DecodeError::InvalidFormat(format) => write!(f, "invalid format: {format}"),
+            DecodeError::InvalidSpriteType(v) => write!(f, "invalid sprite type: {v}"),
+            DecodeError::InvalidCompression(v) => write!(f, "invalid compression: {v}"),
         }
     }
 }
@@ -427,7 +427,7 @@ mod tests {
                     println!("Skipping empty image {:?}", path.file_name().unwrap());
                     continue;
                 }
-                let output_path = output_dir.join(format!("{}.png", i));
+                let output_path = output_dir.join(format!("{i}.png"));
                 texture.save(output_path).unwrap();
             }
         });

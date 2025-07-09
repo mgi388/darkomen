@@ -48,7 +48,7 @@ fn parse_pattern(tokens: &[Token]) -> Result<(String, Pattern, usize), ParseErro
         Some((_, token)) => {
             let line_column = token.line_column();
             return Err(ParseError::new(
-                format!("expected string token for pattern ID, found '{:?}'", token),
+                format!("expected string token for pattern ID, found '{token:?}'"),
                 Some(line_column),
             ));
         }
@@ -67,7 +67,7 @@ fn parse_pattern(tokens: &[Token]) -> Result<(String, Pattern, usize), ParseErro
         Some((_, token)) => {
             let line_column = token.line_column();
             return Err(ParseError::new(
-                format!("expected '{{', found '{:?}'", token),
+                format!("expected '{{', found '{token:?}'"),
                 Some(line_column),
             ));
         }
@@ -91,10 +91,7 @@ fn parse_pattern(tokens: &[Token]) -> Result<(String, Pattern, usize), ParseErro
                     Token::OpenBrace { .. } => {}
                     _ => {
                         let (line, column) = tokens[i].line_column();
-                        panic!(
-                            "{}:{}: expected '{{', found '{:?}'",
-                            line, column, tokens[i]
-                        );
+                        panic!("{line}:{column}: expected '{{', found '{:?}'", tokens[i]);
                     }
                 };
                 i += 1; // consume the open brace token
@@ -169,10 +166,7 @@ fn parse_pattern(tokens: &[Token]) -> Result<(String, Pattern, usize), ParseErro
             }
             _ => {
                 let (line, column) = tokens[i].line_column();
-                panic!(
-                    "{}:{}: unexpected keyword in pattern: {}",
-                    line, column, keyword,
-                );
+                panic!("{line}:{column}: unexpected keyword in pattern: {keyword}");
             }
         }
     }
@@ -181,10 +175,7 @@ fn parse_pattern(tokens: &[Token]) -> Result<(String, Pattern, usize), ParseErro
         Token::CloseBrace { .. } => {}
         _ => {
             let (line, column) = tokens[i].line_column();
-            panic!(
-                "{}:{}: expected '}}', found '{:?}'",
-                line, column, tokens[i]
-            );
+            panic!("{line}:{column}:expected '}}', found '{:?}'", tokens[i]);
         }
     };
     i += 1; // consume the close brace token
@@ -278,8 +269,7 @@ fn parse(tokens: &[Token]) -> Script {
                         i += pos; // consume the tokens the pattern parsing consumed
                     }
                     _ => panic!(
-                        "unexpected keyword in context {}: {} at line {}, column {}",
-                        context, keyword, line, column
+                        "unexpected keyword in context {context}: {keyword} at line {line}, column {column}",
                     ),
                 }
             }
@@ -312,7 +302,7 @@ impl From<IoError> for DecodeError {
 impl fmt::Display for DecodeError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            DecodeError::IoError(e) => write!(f, "IO error: {}", e),
+            DecodeError::IoError(e) => write!(f, "IO error: {e}"),
         }
     }
 }

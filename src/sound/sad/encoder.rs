@@ -25,8 +25,8 @@ impl From<BlockError> for EncodeError {
 impl std::fmt::Display for EncodeError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            EncodeError::IoError(e) => write!(f, "IO error: {}", e),
-            EncodeError::BlockError(e) => write!(f, "block error: {}", e),
+            EncodeError::IoError(e) => write!(f, "IO error: {e}"),
+            EncodeError::BlockError(e) => write!(f, "block error: {e}"),
         }
     }
 }
@@ -50,7 +50,7 @@ impl<W: Write> Encoder<W> {
                 _ => {
                     return Err(EncodeError::IoError(std::io::Error::new(
                         std::io::ErrorKind::InvalidData,
-                        format!("left block at position {} is not an ADPCM block", i),
+                        format!("left block at position {i} is not an ADPCM block"),
                     )))
                 }
             };
@@ -61,7 +61,7 @@ impl<W: Write> Encoder<W> {
                 _ => {
                     return Err(EncodeError::IoError(std::io::Error::new(
                         std::io::ErrorKind::InvalidData,
-                        format!("right block at position {} is not an ADPCM block", i),
+                        format!("right block at position {i} is not an ADPCM block"),
                     )))
                 }
             };

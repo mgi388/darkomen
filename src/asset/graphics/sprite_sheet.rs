@@ -198,7 +198,7 @@ impl AssetLoader for SpriteSheetAssetLoader {
                 };
                 (
                     load_context
-                        .labeled_asset_scope(format!("{}_texture", i).to_string(), |_| x.clone()),
+                        .labeled_asset_scope(format!("{i}_texture").to_string(), |_| x.clone()),
                     x,
                 )
             })

@@ -420,7 +420,7 @@ mod tests {
             .map(|chunk| {
                 chunk
                     .iter()
-                    .map(|b| format!("{:02X}", b))
+                    .map(|b| format!("{b:02X}"))
                     .collect::<Vec<_>>()
                     .join(" ")
             })
@@ -432,7 +432,7 @@ mod tests {
             .map(|chunk| {
                 chunk
                     .iter()
-                    .map(|b| format!("{:02X}", b))
+                    .map(|b| format!("{b:02X}"))
                     .collect::<Vec<_>>()
                     .join(" ")
             })
@@ -759,7 +759,7 @@ mod tests {
             .join("heightmaps");
         let golden_img_path = golden_images_path
             .join(path.file_name().unwrap())
-            .with_extension(format!("{}.golden.png", heightmap_num));
+            .with_extension(format!("{heightmap_num}.golden.png"));
 
         if !Path::new(&golden_img_path).exists() {
             img.save(&golden_img_path).unwrap();
@@ -780,7 +780,7 @@ mod tests {
             img.save(
                 golden_images_path
                     .join(path.file_name().unwrap())
-                    .with_extension(format!("{}.actual.png", heightmap_num)),
+                    .with_extension(format!("{heightmap_num}.actual.png")),
             )
             .unwrap();
 
@@ -805,7 +805,7 @@ mod tests {
                 .save(
                     golden_images_path
                         .join(path.file_name().unwrap())
-                        .with_extension(format!("{}.diff.png", heightmap_num)),
+                        .with_extension(format!("{heightmap_num}.diff.png")),
                 )
                 .unwrap();
         }

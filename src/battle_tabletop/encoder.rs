@@ -26,7 +26,7 @@ impl From<std::io::Error> for EncodeError {
 impl fmt::Display for EncodeError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            EncodeError::IoError(e) => write!(f, "IO error: {}", e),
+            EncodeError::IoError(e) => write!(f, "IO error: {e}"),
             EncodeError::InvalidString => write!(f, "invalid string"),
             EncodeError::StringTooLong => write!(f, "string too long"),
         }

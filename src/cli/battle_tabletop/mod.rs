@@ -72,7 +72,7 @@ fn edit_battle_tabletop_file(args: &EditBattleTabletopArgs) -> anyhow::Result<()
             .and_then(|stem| stem.to_str())
             .unwrap_or("battle_tabletop"),
     );
-    let suffix = format!(".{}", extension);
+    let suffix = format!(".{extension}");
     let mut temp_file = tempfile::Builder::new()
         .prefix(&prefix)
         .suffix(&suffix)

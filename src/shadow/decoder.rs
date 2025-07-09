@@ -30,17 +30,16 @@ impl From<IoError> for DecodeError {
 impl fmt::Display for DecodeError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            DecodeError::IoError(e) => write!(f, "IO error: {}", e),
-            DecodeError::Invalid(s) => write!(f, "invalid: {}", s),
-            DecodeError::InvalidFormat(s) => write!(f, "invalid format: {}", s),
+            DecodeError::IoError(e) => write!(f, "IO error: {e}"),
+            DecodeError::Invalid(s) => write!(f, "invalid: {s}"),
+            DecodeError::InvalidFormat(s) => write!(f, "invalid format: {s}"),
             DecodeError::InvalidHeightOffsetsIndex(index) => {
-                write!(f, "height offsets index {} is not a multiple of 64", index)
+                write!(f, "height offsets index {index} is not a multiple of 64")
             }
             DecodeError::InvalidHeightOffsetsSize(offset_count, height_offsets_size_bytes) => {
                 write!(
                     f,
-                    "invalid height offsets size {}, should be offset count ({}) x 64",
-                    height_offsets_size_bytes, offset_count
+                    "invalid height offsets size {height_offsets_size_bytes}, should be offset count ({offset_count}) x 64",
                 )
             }
         }

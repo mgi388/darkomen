@@ -70,10 +70,7 @@ fn parse_sound(tokens: &[Token]) -> (Sound, usize) {
 
                 let directive_tokens = &tokens[i..i + 2];
                 if directive_tokens.len() < 2 {
-                    panic!(
-                        "{}:{}: expected directive field and value, found 'EOF'",
-                        line, column
-                    );
+                    panic!("{line}:{column}: expected directive field and value, found 'EOF'",);
                 }
                 let (field_token, value_token) = parse_directive(directive_tokens);
                 let value = value_token.value;
@@ -182,10 +179,7 @@ fn parse_sfx(tokens: &[Token]) -> (Sfx, usize) {
 
                 let directive_tokens = &tokens[i..i + 2];
                 if directive_tokens.len() < 2 {
-                    panic!(
-                        "{}:{}: expected directive field and value, found 'EOF'",
-                        line, column
-                    );
+                    panic!("{line}:{column}: expected directive field and value, found 'EOF'",);
                 }
                 let (field_token, value_token) = parse_directive(directive_tokens);
                 let value = value_token.value;
@@ -289,10 +283,7 @@ fn parse(tokens: &[Token]) -> Packet {
 
                 let directive_tokens = &tokens[i..i + 2];
                 if directive_tokens.len() < 2 {
-                    panic!(
-                        "{}:{}: expected directive field and value, found 'EOF'",
-                        line, column
-                    );
+                    panic!("{line}:{column}: expected directive field and value, found 'EOF'",);
                 }
                 let (field_token, value_token) = parse_directive(directive_tokens);
                 let value = value_token.value;
@@ -337,7 +328,7 @@ impl From<IoError> for DecodeError {
 impl fmt::Display for DecodeError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            DecodeError::IoError(e) => write!(f, "IO error: {}", e),
+            DecodeError::IoError(e) => write!(f, "IO error: {e}"),
         }
     }
 }

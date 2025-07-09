@@ -147,10 +147,7 @@ pub(crate) fn lex(input: &str) -> Vec<Token> {
 
                 if s == "sample" {
                     let Some(_) = chars.peek() else {
-                        panic!(
-                            "{}:{}: expected a string after 'sample', found 'EOF'",
-                            line, column
-                        );
+                        panic!("{line}:{column}: expected a string after 'sample', found 'EOF'");
                     };
 
                     // After a keyword "sample", expect a string.
@@ -158,8 +155,7 @@ pub(crate) fn lex(input: &str) -> Vec<Token> {
                         if c.is_whitespace() {
                             if c == '\n' {
                                 panic!(
-                                    "{}:{}: expected a string after 'sample', found '{}'",
-                                    line, column, c
+                                    "{line}:{column}: expected a string after 'sample', found '{c}'",
                                 );
                             } else {
                                 column += 1;
@@ -187,8 +183,7 @@ pub(crate) fn lex(input: &str) -> Vec<Token> {
 
                     let Some(_) = chars.peek() else {
                         panic!(
-                            "{}:{}: expected an identifier after 'sample' string, found 'EOF'",
-                            line, column
+                            "{line}:{column}: expected an identifier after 'sample' string, found 'EOF'",
                         );
                     };
 
@@ -197,8 +192,7 @@ pub(crate) fn lex(input: &str) -> Vec<Token> {
                         if c.is_whitespace() {
                             if c == '\n' {
                                 panic!(
-                                    "{}:{}: expected an identifier after 'sample' string, found '{}'",
-                                    line, column, c
+                                    "{line}:{column}: expected an identifier after 'sample' string, found '{c}'",
                                 );
                             } else {
                                 column += 1;
@@ -240,7 +234,7 @@ pub(crate) fn lex(input: &str) -> Vec<Token> {
             chars.next();
             column += 1;
         } else {
-            panic!("{}:{}: unexpected '{}'", line, column, c);
+            panic!("{line}:{column}: unexpected '{c}'");
         }
     }
 

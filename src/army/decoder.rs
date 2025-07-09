@@ -45,29 +45,29 @@ impl From<std::array::TryFromSliceError> for DecodeError {
 impl fmt::Display for DecodeError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            DecodeError::IoError(e) => write!(f, "IO error: {}", e),
-            DecodeError::InvalidFormat(format) => write!(f, "invalid format: {}", format),
+            DecodeError::IoError(e) => write!(f, "IO error: {e}"),
+            DecodeError::InvalidFormat(format) => write!(f, "invalid format: {format}"),
             DecodeError::TryFromSliceError(e) => {
-                write!(f, "could not convert slice to array: {}", e)
+                write!(f, "could not convert slice to array: {e}")
             }
             DecodeError::InvalidString => write!(f, "invalid string"),
-            DecodeError::InvalidArmyRace(v) => write!(f, "invalid army race: {}", v),
-            DecodeError::InvalidRegimentFlags(v) => write!(f, "invalid regiment flags: {}", v),
-            DecodeError::InvalidMageClass(v) => write!(f, "invalid mage class: {}", v),
+            DecodeError::InvalidArmyRace(v) => write!(f, "invalid army race: {v}"),
+            DecodeError::InvalidRegimentFlags(v) => write!(f, "invalid regiment flags: {v}"),
+            DecodeError::InvalidMageClass(v) => write!(f, "invalid mage class: {v}"),
             DecodeError::InvalidRegimentAttributes(v) => {
-                write!(f, "invalid regiment attributes: {}", v)
+                write!(f, "invalid regiment attributes: {v}")
             }
             DecodeError::InvalidRegimentAlignment(v) => {
-                write!(f, "invalid regiment alignment: {}", v)
+                write!(f, "invalid regiment alignment: {v}")
             }
-            DecodeError::InvalidWeapon(v) => write!(f, "invalid weapon: {}", v),
-            DecodeError::InvalidProjectile(v) => write!(f, "invalid projectile: {}", v),
+            DecodeError::InvalidWeapon(v) => write!(f, "invalid weapon: {v}"),
+            DecodeError::InvalidProjectile(v) => write!(f, "invalid projectile: {v}"),
             DecodeError::InvalidRegimentMount(v) => {
-                write!(f, "invalid regiment mount: {}", v)
+                write!(f, "invalid regiment mount: {v}")
             }
-            DecodeError::InvalidRegimentClass(v) => write!(f, "invalid regiment class: {}", v),
+            DecodeError::InvalidRegimentClass(v) => write!(f, "invalid regiment class: {v}"),
             DecodeError::InvalidSpellBook(v) => {
-                write!(f, "invalid spell book: {}", v)
+                write!(f, "invalid spell book: {v}")
             }
         }
     }
@@ -215,7 +215,7 @@ impl<R: Read + Seek> Decoder<R> {
                 .map(|chunk| {
                     chunk
                         .iter()
-                        .map(|b| format!("{:02x}", b))
+                        .map(|b| format!("{b:02x}"))
                         .collect::<Vec<String>>()
                         .join("")
                 })
@@ -239,7 +239,7 @@ impl<R: Read + Seek> Decoder<R> {
                 .map(|chunk| {
                     chunk
                         .iter()
-                        .map(|b| format!("{:02x}", b))
+                        .map(|b| format!("{b:02x}"))
                         .collect::<Vec<String>>()
                         .join("")
                 })
@@ -369,7 +369,7 @@ impl<R: Read + Seek> Decoder<R> {
                         .map(|chunk| {
                             chunk
                                 .iter()
-                                .map(|b| format!("{:02x}", b))
+                                .map(|b| format!("{b:02x}"))
                                 .collect::<Vec<String>>()
                                 .join("")
                         })
@@ -470,7 +470,7 @@ impl<R: Read + Seek> Decoder<R> {
             .map(|chunk| {
                 chunk
                     .iter()
-                    .map(|b| format!("{:02x}", b))
+                    .map(|b| format!("{b:02x}"))
                     .collect::<Vec<String>>()
                     .join("")
             })

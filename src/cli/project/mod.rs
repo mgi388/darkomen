@@ -72,7 +72,7 @@ fn edit_project_file(args: &EditProjectArgs) -> anyhow::Result<()> {
             .and_then(|stem| stem.to_str())
             .unwrap_or("project"),
     );
-    let suffix = format!(".{}", extension);
+    let suffix = format!(".{extension}");
     let mut temp_file = tempfile::Builder::new()
         .prefix(&prefix)
         .suffix(&suffix)
