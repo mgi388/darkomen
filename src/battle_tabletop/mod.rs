@@ -633,10 +633,8 @@ mod tests {
             roundtrip_test(&original_bytes, &b);
 
             let project_file = File::open(path.with_extension("PRJ"));
-            if project_file.is_ok() {
-                let p = project::Decoder::new(project_file.unwrap())
-                    .decode()
-                    .unwrap();
+            if let Ok(project_file) = project_file {
+                let p = project::Decoder::new(project_file).decode().unwrap();
 
                 // The scaled down dimensions should always be smaller than the
                 // project dimensions.
