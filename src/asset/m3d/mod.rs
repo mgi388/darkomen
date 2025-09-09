@@ -27,26 +27,46 @@ use mesh::*;
 
 pub const EXTENSIONS: &[&str; 4] = &["M3D", "m3d", "M3X", "m3x"];
 
-pub struct M3dAssetPlugin<MaterialT: Material + std::fmt::Debug> {
+pub struct M3dAssetPlugin<
+    #[cfg(feature = "debug")] MaterialT: Material + core::fmt::Debug,
+    #[cfg(not(feature = "debug"))] MaterialT: Material,
+> {
     _phantom: PhantomData<MaterialT>,
 
     material_loader: Box<dyn MaterialLoader<MaterialT> + Send + Sync>,
+
+    textures_path: PathBuf,
+    low_resolution_textures_path: PathBuf,
 }
 
-impl<MaterialT: Material + std::fmt::Debug> M3dAssetPlugin<MaterialT> {
-    pub fn new(material_loader: Box<dyn MaterialLoader<MaterialT> + Send + Sync>) -> Self {
+impl<
+        #[cfg(feature = "debug")] MaterialT: Material + core::fmt::Debug,
+        #[cfg(not(feature = "debug"))] MaterialT: Material,
+    > M3dAssetPlugin<MaterialT>
+{
+    pub fn new(
+        material_loader: Box<dyn MaterialLoader<MaterialT> + Send + Sync>,
+        textures_path: PathBuf,
+        low_resolution_textures_path: PathBuf,
+    ) -> Self {
         Self {
             _phantom: PhantomData,
             material_loader,
+            textures_path,
+            low_resolution_textures_path,
         }
     }
 }
 
-impl<MaterialT: Material + std::fmt::Debug> Plugin for M3dAssetPlugin<MaterialT> {
+impl<
+        #[cfg(feature = "debug")] MaterialT: Material + core::fmt::Debug,
+        #[cfg(not(feature = "debug"))] MaterialT: Material,
+    > Plugin for M3dAssetPlugin<MaterialT>
+{
     fn build(&self, app: &mut App) {
         app.insert_resource(M3dAssetLoaderSettings::<MaterialT>::new(
-            PathBuf::from("TEXTURE"),
-            PathBuf::from("LTEXTURE"),
+            self.textures_path.clone(),
+            self.low_resolution_textures_path.clone(),
         ))
         .register_type::<M3dAssetLoaderSettings<MaterialT>>()
         .init_asset::<M3dAsset<MaterialT>>()
@@ -64,15 +84,21 @@ impl<MaterialT: Material + std::fmt::Debug> Plugin for M3dAssetPlugin<MaterialT>
     }
 }
 
-#[derive(Clone, Debug, Default, Reflect)]
-#[reflect(Debug, Default)]
+#[derive(Clone, Default)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect), reflect(Default))]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct M3dTextureDescriptor {
     pub transparent: bool,
     pub color_keyed: bool,
     pub animated: bool,
 }
 
-pub trait MaterialLoader<MaterialT: Material + std::fmt::Debug>: DynClone {
+pub trait MaterialLoader<
+    #[cfg(feature = "debug")] MaterialT: Material + core::fmt::Debug,
+    #[cfg(not(feature = "debug"))] MaterialT: Material,
+>: DynClone
+{
     fn load(
         &self,
         load_context: &mut LoadContext,
@@ -84,16 +110,28 @@ pub trait MaterialLoader<MaterialT: Material + std::fmt::Debug>: DynClone {
     ) -> Handle<MaterialT>;
 }
 
-#[derive(Asset, Clone, Debug, Reflect)]
-#[reflect(Debug)]
-pub struct M3dAsset<MaterialT: Material + std::fmt::Debug> {
+#[derive(Asset, Clone)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[cfg_attr(not(feature = "bevy_reflect"), derive(TypePath))]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
+pub struct M3dAsset<
+    #[cfg(feature = "debug")] MaterialT: Material + core::fmt::Debug,
+    #[cfg(not(feature = "debug"))] MaterialT: Material,
+> {
     pub meshes: Vec<M3dMesh<MaterialT>>,
     pub animated: bool,
 }
 
-#[derive(Clone, Debug, Reflect)]
-#[reflect(Debug)]
-pub struct M3dMesh<MaterialT: Material + std::fmt::Debug> {
+#[derive(Clone)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[cfg_attr(not(feature = "bevy_reflect"), derive(TypePath))]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
+pub struct M3dMesh<
+    #[cfg(feature = "debug")] MaterialT: Material + core::fmt::Debug,
+    #[cfg(not(feature = "debug"))] MaterialT: Material,
+> {
     /// Topology to be rendered.
     pub mesh: Handle<Mesh>,
 
@@ -103,22 +141,34 @@ pub struct M3dMesh<MaterialT: Material + std::fmt::Debug> {
     pub source_object: Object,
 }
 
-impl<MaterialT: Material + std::fmt::Debug> M3dMesh<MaterialT> {
+impl<
+        #[cfg(feature = "debug")] MaterialT: Material + core::fmt::Debug,
+        #[cfg(not(feature = "debug"))] MaterialT: Material,
+    > M3dMesh<MaterialT>
+{
     pub fn name(&self) -> &str {
         &self.source_object.name
     }
 }
 
-pub struct M3dAssetLoader<MaterialT: Material + std::fmt::Debug> {
+pub struct M3dAssetLoader<
+    #[cfg(feature = "debug")] MaterialT: Material + core::fmt::Debug,
+    #[cfg(not(feature = "debug"))] MaterialT: Material,
+> {
     _phantom: PhantomData<MaterialT>,
 
     default_settings: M3dAssetLoaderSettings<MaterialT>,
     material_loader: Box<dyn MaterialLoader<MaterialT> + Send + Sync>,
 }
 
-#[derive(Clone, Debug, Deserialize, Reflect, Resource, Serialize)]
-#[reflect(Debug, Resource)]
-pub struct M3dAssetLoaderSettings<MaterialT: Material + std::fmt::Debug> {
+#[derive(Clone, Deserialize, Resource, Serialize)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect), reflect(Resource))]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
+pub struct M3dAssetLoaderSettings<
+    #[cfg(feature = "debug")] MaterialT: Material + core::fmt::Debug,
+    #[cfg(not(feature = "debug"))] MaterialT: Material,
+> {
     #[reflect(ignore)]
     _phantom: PhantomData<MaterialT>,
 
@@ -132,7 +182,11 @@ pub struct M3dAssetLoaderSettings<MaterialT: Material + std::fmt::Debug> {
     pub low_resolution_textures_path: PathBuf,
 }
 
-impl<MaterialT: Material + std::fmt::Debug> Default for M3dAssetLoaderSettings<MaterialT> {
+impl<
+        #[cfg(feature = "debug")] MaterialT: Material + core::fmt::Debug,
+        #[cfg(not(feature = "debug"))] MaterialT: Material,
+    > Default for M3dAssetLoaderSettings<MaterialT>
+{
     fn default() -> Self {
         Self {
             _phantom: PhantomData,
@@ -144,7 +198,11 @@ impl<MaterialT: Material + std::fmt::Debug> Default for M3dAssetLoaderSettings<M
     }
 }
 
-impl<MaterialT: Material + std::fmt::Debug> M3dAssetLoaderSettings<MaterialT> {
+impl<
+        #[cfg(feature = "debug")] MaterialT: Material + core::fmt::Debug,
+        #[cfg(not(feature = "debug"))] MaterialT: Material,
+    > M3dAssetLoaderSettings<MaterialT>
+{
     pub fn new(textures_path: PathBuf, low_resolution_textures_path: PathBuf) -> Self {
         Self {
             _phantom: PhantomData,
@@ -179,7 +237,11 @@ pub enum M3dAssetLoaderError {
     LoadTextureError { dependency: AssetPath<'static> },
 }
 
-impl<MaterialT: Material + std::fmt::Debug> AssetLoader for M3dAssetLoader<MaterialT> {
+impl<
+        #[cfg(feature = "debug")] MaterialT: Material + core::fmt::Debug,
+        #[cfg(not(feature = "debug"))] MaterialT: Material,
+    > AssetLoader for M3dAssetLoader<MaterialT>
+{
     type Asset = M3dAsset<MaterialT>;
     type Settings = M3dAssetLoaderSettings<MaterialT>;
     type Error = M3dAssetLoaderError;
@@ -221,7 +283,11 @@ impl<MaterialT: Material + std::fmt::Debug> AssetLoader for M3dAssetLoader<Mater
     }
 }
 
-impl<MaterialT: Material + std::fmt::Debug> M3dAssetLoader<MaterialT> {
+impl<
+        #[cfg(feature = "debug")] MaterialT: Material + core::fmt::Debug,
+        #[cfg(not(feature = "debug"))] MaterialT: Material,
+    > M3dAssetLoader<MaterialT>
+{
     pub fn new(
         settings: M3dAssetLoaderSettings<MaterialT>,
         material_loader: Box<dyn MaterialLoader<MaterialT> + Send + Sync>,

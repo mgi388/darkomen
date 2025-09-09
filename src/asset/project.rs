@@ -15,9 +15,16 @@ use super::{
 };
 
 #[derive(Debug, Default)]
-pub struct ProjectPlugin<MaterialT: Material + std::fmt::Debug>(PhantomData<MaterialT>);
+pub struct ProjectPlugin<
+    #[cfg(feature = "debug")] MaterialT: Material + core::fmt::Debug,
+    #[cfg(not(feature = "debug"))] MaterialT: Material,
+>(PhantomData<MaterialT>);
 
-impl<MaterialT: Material + std::fmt::Debug> Plugin for ProjectPlugin<MaterialT> {
+impl<
+        #[cfg(feature = "debug")] MaterialT: Material + core::fmt::Debug,
+        #[cfg(not(feature = "debug"))] MaterialT: Material,
+    > Plugin for ProjectPlugin<MaterialT>
+{
     fn build(&self, app: &mut App) {
         if !app.is_plugin_added::<AssetPathsPlugin>() {
             app.add_plugins(AssetPathsPlugin);
@@ -36,14 +43,21 @@ impl<MaterialT: Material + std::fmt::Debug> Plugin for ProjectPlugin<MaterialT> 
         }
 
         app.init_asset::<ProjectAsset<MaterialT>>()
-            .init_asset_loader::<ProjectAssetLoader<MaterialT>>()
-            .register_asset_reflect::<ProjectAsset<MaterialT>>();
+            .init_asset_loader::<ProjectAssetLoader<MaterialT>>();
+        #[cfg(feature = "bevy_reflect")]
+        app.register_asset_reflect::<ProjectAsset<MaterialT>>();
     }
 }
 
-#[derive(Asset, Clone, Debug, Reflect)]
-#[reflect(Debug)]
-pub struct ProjectAsset<MaterialT: Material + std::fmt::Debug> {
+#[derive(Asset, Clone)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[cfg_attr(not(feature = "bevy_reflect"), derive(TypePath))]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
+pub struct ProjectAsset<
+    #[cfg(feature = "debug")] MaterialT: Material + core::fmt::Debug,
+    #[cfg(not(feature = "debug"))] MaterialT: Material,
+> {
     source: Project,
     /// The ID of the project, e.g., `B1_01`. This is the same as the directory
     /// that the project file is in.
@@ -64,7 +78,11 @@ pub struct ProjectAsset<MaterialT: Material + std::fmt::Debug> {
     pub battle_tabletop: Handle<BattleTabletopAsset>,
 }
 
-impl<MaterialT: Material + std::fmt::Debug> ProjectAsset<MaterialT> {
+impl<
+        #[cfg(feature = "debug")] MaterialT: Material + core::fmt::Debug,
+        #[cfg(not(feature = "debug"))] MaterialT: Material,
+    > ProjectAsset<MaterialT>
+{
     #[inline(always)]
     pub fn get(&self) -> &Project {
         &self.source
@@ -104,15 +122,24 @@ impl<MaterialT: Material + std::fmt::Debug> ProjectAsset<MaterialT> {
     }
 }
 
-#[derive(Clone, Debug)]
-pub struct ProjectAssetLoader<MaterialT: Material + std::fmt::Debug> {
+#[derive(Clone)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+pub struct ProjectAssetLoader<
+    #[cfg(feature = "debug")] MaterialT: Material + core::fmt::Debug,
+    #[cfg(not(feature = "debug"))] MaterialT: Material,
+> {
     _phantom: PhantomData<MaterialT>,
 
     asset_paths: AssetPaths,
 }
 
-#[derive(Clone, Debug, Default, Deserialize, Reflect, Serialize)]
-#[reflect(Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[cfg_attr(
+    feature = "bevy_reflect",
+    derive(Reflect),
+    reflect(Default, Deserialize, Serialize)
+)]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct ProjectAssetLoaderSettings {
     pub music_script_path: PathBuf,
     pub lightmap_loader_settings: Option<LightmapAssetLoaderSettings>,
@@ -131,7 +158,11 @@ pub enum ProjectAssetLoaderError {
     DecodeError(DecodeError),
 }
 
-impl<MaterialT: Material + std::fmt::Debug> AssetLoader for ProjectAssetLoader<MaterialT> {
+impl<
+        #[cfg(feature = "debug")] MaterialT: Material + core::fmt::Debug,
+        #[cfg(not(feature = "debug"))] MaterialT: Material,
+    > AssetLoader for ProjectAssetLoader<MaterialT>
+{
     type Asset = ProjectAsset<MaterialT>;
     type Settings = ProjectAssetLoaderSettings;
     type Error = ProjectAssetLoaderError;
@@ -209,7 +240,11 @@ impl<MaterialT: Material + std::fmt::Debug> AssetLoader for ProjectAssetLoader<M
     }
 }
 
-impl<MaterialT: Material + std::fmt::Debug> FromWorld for ProjectAssetLoader<MaterialT> {
+impl<
+        #[cfg(feature = "debug")] MaterialT: Material + core::fmt::Debug,
+        #[cfg(not(feature = "debug"))] MaterialT: Material,
+    > FromWorld for ProjectAssetLoader<MaterialT>
+{
     fn from_world(world: &mut World) -> Self {
         let asset_paths = world.resource::<AssetPaths>();
 

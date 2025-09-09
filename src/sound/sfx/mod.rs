@@ -5,7 +5,7 @@ mod lexer;
 use bevy_reflect::prelude::*;
 use bitflags::bitflags;
 use num_enum::{IntoPrimitive, TryFromPrimitive};
-use rand::{seq::SliceRandom as _, Rng};
+use rand::{seq::IndexedRandom as _, Rng};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -205,7 +205,7 @@ impl Sound {
             return base_playback_rate;
         }
 
-        let random_frequency_deviation = rng.gen_range(0..self.frequency_deviation);
+        let random_frequency_deviation = rng.random_range(0..self.frequency_deviation);
 
         // Adjust the playback rate by the random frequency deviation.
         base_playback_rate * (frequency / (frequency + random_frequency_deviation as f32))
