@@ -31,14 +31,19 @@ impl Plugin for SoundEffectAssetPlugin {
         }
 
         app.init_asset::<PacketAsset>()
-            .init_asset_loader::<PacketAssetLoader>()
-            .register_asset_reflect::<PacketAsset>()
-            .register_type::<PacketAssetHandle>();
+            .init_asset_loader::<PacketAssetLoader>();
+        #[cfg(feature = "bevy_reflect")]
+        app.register_asset_reflect::<PacketAsset>();
+        #[cfg(feature = "bevy_reflect")]
+        app.register_type::<PacketAssetHandle>();
     }
 }
 
-#[derive(Asset, Clone, Debug, Reflect)]
-#[reflect(Debug)]
+#[derive(Asset, Clone)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[cfg_attr(not(feature = "bevy_reflect"), derive(TypePath))]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct PacketAsset {
     source: Packet,
     #[cfg(feature = "bevy_audio")]
@@ -54,8 +59,14 @@ pub struct PacketAsset {
 }
 
 /// A [`Handle`] to a [`PacketAsset`] asset.
-#[derive(Clone, Component, Debug, Default, Deref, DerefMut, Eq, From, PartialEq, Reflect)]
-#[reflect(Component, Debug, Default, PartialEq)]
+#[derive(Clone, Component, Default, Deref, DerefMut, Eq, From, PartialEq)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[cfg_attr(
+    feature = "bevy_reflect",
+    derive(Reflect),
+    reflect(Component, Default, PartialEq)
+)]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct PacketAssetHandle(pub Handle<PacketAsset>);
 
 impl From<PacketAssetHandle> for AssetId<PacketAsset> {
@@ -128,8 +139,13 @@ pub struct PacketAssetLoader {
     asset_paths: AssetPaths,
 }
 
-#[derive(Clone, Debug, Default, Deserialize, Reflect, Serialize)]
-#[reflect(Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[cfg_attr(
+    feature = "bevy_reflect",
+    derive(Reflect),
+    reflect(Default, Deserialize, Serialize)
+)]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct PacketAssetLoaderSettings {
     pub sound_path: PathBuf,
 }
