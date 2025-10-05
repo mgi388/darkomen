@@ -8,12 +8,14 @@ use serde::{Deserialize, Serialize};
 pub use decoder::{DecodeError, Decoder};
 pub use encoder::{EncodeError, Encoder};
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 #[cfg_attr(
     feature = "bevy_reflect",
     derive(Reflect),
-    reflect(Debug, Deserialize, Serialize)
+    reflect(Deserialize, Serialize)
 )]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct Gameflow {
     /// The paths that the gameflow follows.
     pub paths: Vec<Path>,
@@ -32,12 +34,14 @@ pub struct Gameflow {
     pub(crate) unknown4: Vec<u8>,
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 #[cfg_attr(
     feature = "bevy_reflect",
     derive(Reflect),
-    reflect(Debug, Deserialize, Serialize)
+    reflect(Deserialize, Serialize)
 )]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct Path {
     /// The control points used to make a curve that represents the path.
     pub control_points: Vec<Point>,
@@ -79,12 +83,14 @@ pub struct Path {
     pub unknown8: Vec<u8>,
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 #[cfg_attr(
     feature = "bevy_reflect",
     derive(Reflect),
-    reflect(Debug, Deserialize, Serialize)
+    reflect(Deserialize, Serialize)
 )]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct Point {
     /// The x-coordinate of the point.
     pub x: u32,

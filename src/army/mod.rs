@@ -12,12 +12,14 @@ use serde::{Deserialize, Serialize};
 pub use decoder::{DecodeError, Decoder};
 pub use encoder::{EncodeError, Encoder};
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Default, Deserialize, Serialize)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 #[cfg_attr(
     feature = "bevy_reflect",
     derive(Reflect),
-    reflect(Debug, Default, Deserialize, Serialize)
+    reflect(Default, Deserialize, Serialize)
 )]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct ScriptState {
     pub program_counter: u32,
     ///  - 0x13 (19u32) is saved after a cutscene (which could also be just
@@ -74,12 +76,14 @@ impl ScriptState {
     }
 }
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Default, Deserialize, Serialize)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 #[cfg_attr(
     feature = "bevy_reflect",
     derive(Reflect),
-    reflect(Debug, Default, Deserialize, Serialize)
+    reflect(Default, Deserialize, Serialize)
 )]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct ScriptVariables {
     /// Bogenhafen mission completed. This does not mean the mission was won or
     /// lost, just that it was completed.
@@ -192,12 +196,14 @@ pub struct ScriptVariables {
     pub heroic_choice_made: bool,
 }
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Default, Deserialize, Serialize)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 #[cfg_attr(
     feature = "bevy_reflect",
     derive(Reflect),
-    reflect(Debug, Default, Deserialize, Serialize)
+    reflect(Default, Deserialize, Serialize)
 )]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct SaveGameHeader {
     /// The name displayed when loading the save game.
     pub display_name: String,
@@ -229,12 +235,14 @@ pub struct SaveGameHeader {
     pub script_variables: ScriptVariables,
 }
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Default, Deserialize, Serialize)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 #[cfg_attr(
     feature = "bevy_reflect",
     derive(Reflect),
-    reflect(Debug, Default, Deserialize, Serialize)
+    reflect(Default, Deserialize, Serialize)
 )]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct MeetAnimatedSprite {
     /// Whether the animated sprite is enabled.
     pub enabled: bool,
@@ -254,12 +262,14 @@ pub struct MeetAnimatedSprite {
     pub frame_duration_millis: u32,
 }
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Default, Deserialize, Serialize)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 #[cfg_attr(
     feature = "bevy_reflect",
     derive(Reflect),
-    reflect(Debug, Default, Deserialize, Serialize)
+    reflect(Default, Deserialize, Serialize)
 )]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct Objective {
     pub unknown1: i32,
     /// The ID of the objective.
@@ -276,12 +286,14 @@ pub struct Objective {
     pub unknown5: i32,
 }
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Default, Deserialize, Serialize)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 #[cfg_attr(
     feature = "bevy_reflect",
     derive(Reflect),
-    reflect(Debug, Default, Deserialize, Serialize)
+    reflect(Default, Deserialize, Serialize)
 )]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct SaveGameFooter {
     unknown1: Vec<u8>,
     unknown1_as_u16s: Vec<u16>, // TODO: Remove, debug only.
@@ -323,12 +335,14 @@ pub struct SaveGameFooter {
     hex: Vec<String>,           // TODO: Remove, debug only.
 }
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Default, Deserialize, Serialize)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 #[cfg_attr(
     feature = "bevy_reflect",
     derive(Reflect),
-    reflect(Debug, Default, Deserialize, Serialize)
+    reflect(Default, Deserialize, Serialize)
 )]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct Army {
     /// An optional save game header if the army is a save game.
     pub save_game_header: Option<SaveGameHeader>,
@@ -421,8 +435,10 @@ impl Army {
 
 bitflags! {
     #[repr(transparent)]
-    #[derive(Clone, Copy, Debug, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
-    #[cfg_attr(feature = "bevy_reflect", derive(Reflect), reflect(opaque), reflect(Debug, Default, Deserialize, Hash, PartialEq, Serialize))]
+    #[derive(Clone, Copy, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
+    #[cfg_attr(feature = "debug", derive(Debug))]
+    #[cfg_attr(feature = "bevy_reflect", derive(Reflect), reflect(opaque), reflect(Default, Deserialize, Hash, PartialEq, Serialize))]
+    #[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
     pub struct ArmyRace: u8 {
         /// Empire army.
         const EMPIRE = 0;
@@ -435,12 +451,14 @@ bitflags! {
     }
 }
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Default, Deserialize, Serialize)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 #[cfg_attr(
     feature = "bevy_reflect",
     derive(Reflect),
-    reflect(Debug, Default, Deserialize, Serialize)
+    reflect(Default, Deserialize, Serialize)
 )]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct Regiment {
     pub flags: RegimentFlags,
     unknown1: [u8; 2],
@@ -637,8 +655,10 @@ impl Regiment {
 
 bitflags! {
     #[repr(transparent)]
-    #[derive(Clone, Copy, Debug, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
-    #[cfg_attr(feature = "bevy_reflect", derive(Reflect), reflect(opaque), reflect(Debug, Default, Deserialize, Hash, PartialEq, Serialize))]
+    #[derive(Clone, Copy, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
+    #[cfg_attr(feature = "debug", derive(Debug))]
+    #[cfg_attr(feature = "bevy_reflect", derive(Reflect), reflect(opaque), reflect(Default, Deserialize, Hash, PartialEq, Serialize))]
+    #[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
     pub struct RegimentFlags: u16 {
         /// No flags are set. This is the default state.
         const NONE = 0;
@@ -716,13 +736,15 @@ bitflags! {
 
 #[repr(u8)]
 #[derive(
-    Clone, Copy, Debug, Default, Deserialize, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive,
+    Clone, Copy, Default, Deserialize, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive,
 )]
+#[cfg_attr(feature = "debug", derive(Debug))]
 #[cfg_attr(
     feature = "bevy_reflect",
     derive(Reflect),
-    reflect(Debug, Default, Deserialize, PartialEq, Serialize)
+    reflect(Default, Deserialize, PartialEq, Serialize)
 )]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub enum MageClass {
     #[default]
     None = 0,
@@ -734,13 +756,15 @@ pub enum MageClass {
 
 #[repr(u8)]
 #[derive(
-    Clone, Copy, Debug, Default, Deserialize, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive,
+    Clone, Copy, Default, Deserialize, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive,
 )]
+#[cfg_attr(feature = "debug", derive(Debug))]
 #[cfg_attr(
     feature = "bevy_reflect",
     derive(Reflect),
-    reflect(Debug, Default, Deserialize, PartialEq, Serialize)
+    reflect(Default, Deserialize, PartialEq, Serialize)
 )]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub enum RegimentAlignment {
     #[default]
     Good = 0,
@@ -750,13 +774,15 @@ pub enum RegimentAlignment {
 
 #[repr(u8)]
 #[derive(
-    Clone, Copy, Debug, Default, Deserialize, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive,
+    Clone, Copy, Default, Deserialize, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive,
 )]
+#[cfg_attr(feature = "debug", derive(Debug))]
 #[cfg_attr(
     feature = "bevy_reflect",
     derive(Reflect),
-    reflect(Debug, Default, Deserialize, PartialEq, Serialize)
+    reflect(Default, Deserialize, PartialEq, Serialize)
 )]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub enum RegimentClass {
     #[default]
     None = 0,
@@ -854,13 +880,15 @@ impl RegimentClass {
 
 #[repr(u8)]
 #[derive(
-    Clone, Copy, Debug, Default, Deserialize, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive,
+    Clone, Copy, Default, Deserialize, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive,
 )]
+#[cfg_attr(feature = "debug", derive(Debug))]
 #[cfg_attr(
     feature = "bevy_reflect",
     derive(Reflect),
-    reflect(Debug, Default, Deserialize, PartialEq, Serialize)
+    reflect(Default, Deserialize, PartialEq, Serialize)
 )]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub enum RegimentType {
     #[default]
     Unknown,
@@ -875,13 +903,15 @@ pub enum RegimentType {
 
 #[repr(u8)]
 #[derive(
-    Clone, Copy, Debug, Default, Deserialize, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive,
+    Clone, Copy, Default, Deserialize, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive,
 )]
+#[cfg_attr(feature = "debug", derive(Debug))]
 #[cfg_attr(
     feature = "bevy_reflect",
     derive(Reflect),
-    reflect(Debug, Default, Deserialize, PartialEq, Serialize)
+    reflect(Default, Deserialize, PartialEq, Serialize)
 )]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub enum RegimentRace {
     #[default]
     Human,
@@ -896,13 +926,15 @@ pub enum RegimentRace {
 
 #[repr(u8)]
 #[derive(
-    Clone, Copy, Debug, Default, Deserialize, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive,
+    Clone, Copy, Default, Deserialize, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive,
 )]
+#[cfg_attr(feature = "debug", derive(Debug))]
 #[cfg_attr(
     feature = "bevy_reflect",
     derive(Reflect),
-    reflect(Debug, Default, Deserialize, PartialEq, Serialize)
+    reflect(Default, Deserialize, PartialEq, Serialize)
 )]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub enum MountClass {
     #[default]
     None,
@@ -912,8 +944,10 @@ pub enum MountClass {
 
 bitflags! {
     #[repr(transparent)]
-    #[derive(Clone, Copy, Debug, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
-    #[cfg_attr(feature = "bevy_reflect", derive(Reflect), reflect(opaque), reflect(Debug, Default, Deserialize, Hash, PartialEq, Serialize))]
+    #[derive(Clone, Copy, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
+    #[cfg_attr(feature = "debug", derive(Debug))]
+    #[cfg_attr(feature = "bevy_reflect", derive(Reflect), reflect(opaque), reflect(Default, Deserialize, Hash, PartialEq, Serialize))]
+    #[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
     pub struct RegimentAttributes: u32 {
         const NONE = 0;
         /// The regiment never retreats from a fight and the retreat button is
@@ -981,12 +1015,14 @@ bitflags! {
     }
 }
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Default, Deserialize, Serialize)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 #[cfg_attr(
     feature = "bevy_reflect",
     derive(Reflect),
-    reflect(Debug, Default, Deserialize, Serialize)
+    reflect(Default, Deserialize, Serialize)
 )]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct LastBattleStats {
     /// The number of units in the regiment that were killed in the last battle.
     pub unit_killed_count: u16,
@@ -999,13 +1035,15 @@ pub struct LastBattleStats {
 
 #[repr(u16)]
 #[derive(
-    Clone, Copy, Debug, Default, Deserialize, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive,
+    Clone, Copy, Default, Deserialize, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive,
 )]
+#[cfg_attr(feature = "debug", derive(Debug))]
 #[cfg_attr(
     feature = "bevy_reflect",
     derive(Reflect),
-    reflect(Debug, Default, Deserialize, PartialEq, Serialize)
+    reflect(Default, Deserialize, PartialEq, Serialize)
 )]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub enum SpellBook {
     #[default]
     None = 65535,
@@ -1017,13 +1055,15 @@ pub enum SpellBook {
 
 #[repr(u8)]
 #[derive(
-    Clone, Copy, Debug, Default, Deserialize, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive,
+    Clone, Copy, Default, Deserialize, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive,
 )]
+#[cfg_attr(feature = "debug", derive(Debug))]
 #[cfg_attr(
     feature = "bevy_reflect",
     derive(Reflect),
-    reflect(Debug, Default, Deserialize, PartialEq, Serialize)
+    reflect(Default, Deserialize, PartialEq, Serialize)
 )]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub enum WeaponClass {
     #[default]
     None,
@@ -1038,7 +1078,6 @@ pub enum WeaponClass {
 #[derive(
     Clone,
     Copy,
-    Debug,
     Default,
     Deserialize,
     IntoPrimitive,
@@ -1047,11 +1086,13 @@ pub enum WeaponClass {
     Serialize,
     TryFromPrimitive,
 )]
+#[cfg_attr(feature = "debug", derive(Debug))]
 #[cfg_attr(
     feature = "bevy_reflect",
     derive(Reflect),
-    reflect(Debug, Default, Deserialize, PartialEq, Serialize)
+    reflect(Default, Deserialize, PartialEq, Serialize)
 )]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub enum ProjectileClass {
     #[default]
     None,
@@ -1076,12 +1117,14 @@ pub enum DecodeClassError {
     InvalidRace(TryFromPrimitiveError<RegimentRace>),
 }
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Default, Deserialize, Serialize)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 #[cfg_attr(
     feature = "bevy_reflect",
     derive(Reflect),
-    reflect(Debug, Default, Deserialize, Serialize)
+    reflect(Default, Deserialize, Serialize)
 )]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct UnitProfile {
     /// The index into the list of sprite sheet file names found in ENGREL.EXE
     /// for the unit's sprite sheet.
@@ -1140,12 +1183,14 @@ pub struct UnitProfile {
     unknown2_as_u32: u32, // TODO: Remove, debug only.
 }
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Default, Deserialize, Serialize)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 #[cfg_attr(
     feature = "bevy_reflect",
     derive(Reflect),
-    reflect(Debug, Default, Deserialize, Serialize)
+    reflect(Default, Deserialize, Serialize)
 )]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct UnitStats {
     pub movement: u8,
     pub weapon_skill: u8,

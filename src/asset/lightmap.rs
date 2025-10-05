@@ -21,20 +21,26 @@ impl Plugin for LightmapAssetPlugin {
 }
 
 /// An asset that represents a lightmap.
-#[derive(Asset, Clone, Debug, Reflect)]
-#[reflect(Debug)]
+#[derive(Asset, Clone)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[cfg_attr(not(feature = "bevy_reflect"), derive(TypePath))]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct LightmapAsset {
     source: Lightmap,
     pub texture: Handle<Image>,
 }
 
 /// An asset loader for loading lightmaps into a [`LightmapAsset`].
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Default)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 pub struct LightmapAssetLoader;
 
 /// Settings for the [`LightmapAssetLoader`].
-#[derive(Clone, Copy, Debug, Default, Deserialize, Reflect, Serialize)]
-#[reflect(Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Copy, Default, Deserialize, Reflect, Serialize)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[reflect(Default, Deserialize, Serialize)]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct LightmapAssetLoaderSettings {
     /// Optional settings for transforming the lightmap image. If not provided,
     /// the default settings are used.
@@ -42,8 +48,10 @@ pub struct LightmapAssetLoaderSettings {
 }
 
 /// The orientation of the image.
-#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Reflect, Serialize)]
-#[reflect(Debug, Hash, Deserialize, PartialEq, Serialize)]
+#[derive(Clone, Copy, Deserialize, Eq, Hash, PartialEq, Reflect, Serialize)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[reflect(Hash, Deserialize, PartialEq, Serialize)]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub enum Orientation {
     /// Rotate by 90 degrees clockwise.
     Rotate90,
@@ -55,8 +63,10 @@ pub enum Orientation {
 }
 
 /// Settings for transforming the lightmap image.
-#[derive(Clone, Copy, Debug, Deserialize, Reflect, Serialize)]
-#[reflect(Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Copy, Deserialize, Reflect, Serialize)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[reflect(Default, Deserialize, Serialize)]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct TransformLightmapImageSettings {
     /// The orientation of the image. If not provided, the image is not rotated.
     pub orientation: Option<Orientation>,

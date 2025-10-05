@@ -14,7 +14,8 @@ use super::{
     battle_tabletop::*, light::*, lightmap::*, m3d::M3dAsset, paths::*, sound::music_script::*,
 };
 
-#[derive(Debug, Default)]
+#[derive(Default)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 pub struct ProjectPlugin<
     #[cfg(feature = "debug")] MaterialT: Material + core::fmt::Debug,
     #[cfg(not(feature = "debug"))] MaterialT: Material,
@@ -133,7 +134,8 @@ pub struct ProjectAssetLoader<
     asset_paths: AssetPaths,
 }
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Default, Deserialize, Serialize)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 #[cfg_attr(
     feature = "bevy_reflect",
     derive(Reflect),

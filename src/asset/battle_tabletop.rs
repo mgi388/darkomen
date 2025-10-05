@@ -22,8 +22,11 @@ impl Plugin for BattleTabletopAssetPlugin {
     }
 }
 
-#[derive(Asset, Clone, Debug, Reflect)]
-#[reflect(Debug)]
+#[derive(Asset, Clone)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[cfg_attr(not(feature = "bevy_reflect"), derive(TypePath))]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct BattleTabletopAsset {
     source: BattleTabletop,
 
@@ -58,11 +61,14 @@ impl BattleTabletopAsset {
     }
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Default)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 pub struct BattleTabletopAssetLoader;
 
-#[derive(Clone, Copy, Debug, Default, Deserialize, Reflect, Serialize)]
-#[reflect(Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Copy, Default, Deserialize, Reflect, Serialize)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[reflect(Default, Deserialize, Serialize)]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct BattleTabletopAssetLoaderSettings {
     pub load_player_army: bool,
     pub player_army_loader_settings: Option<ArmyAssetLoaderSettings>,

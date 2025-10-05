@@ -11,12 +11,14 @@ use std::collections::HashMap;
 
 pub use decoder::{DecodeError, Decoder};
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Default, Deserialize, Serialize)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 #[cfg_attr(
     feature = "bevy_reflect",
     derive(Reflect),
-    reflect(Debug, Default, Deserialize, Serialize)
+    reflect(Default, Deserialize, Serialize)
 )]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct Packet {
     /// The name of the packet, e.g., `WaterFallingTears`.
     pub name: String,
@@ -24,12 +26,14 @@ pub struct Packet {
     pub sfxs: HashMap<SfxId, Sfx>,
 }
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Default, Deserialize, Serialize)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 #[cfg_attr(
     feature = "bevy_reflect",
     derive(Reflect),
-    reflect(Debug, Default, Deserialize, Serialize)
+    reflect(Default, Deserialize, Serialize)
 )]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct Sfx {
     /// The ID of the SFX.
     pub id: SfxId,
@@ -64,14 +68,14 @@ impl Sfx {
 pub type SfxId = u8;
 
 #[repr(u8)]
-#[derive(
-    Clone, Debug, Default, Deserialize, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive,
-)]
+#[derive(Clone, Default, Deserialize, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 #[cfg_attr(
     feature = "bevy_reflect",
     derive(Reflect),
-    reflect(Debug, Default, Deserialize, PartialEq, Serialize)
+    reflect(Default, Deserialize, PartialEq, Serialize)
 )]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub enum SfxType {
     /// A sound effect that plays one sound and does not loop.
     ///
@@ -152,8 +156,10 @@ pub enum SfxType {
 
 bitflags! {
     #[repr(transparent)]
-    #[derive(Clone, Copy, Debug, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
-    #[cfg_attr(feature = "bevy_reflect", derive(Reflect), reflect(opaque), reflect(Debug, Default, Deserialize, Hash, PartialEq, Serialize))]
+    #[derive(Clone, Copy, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
+    #[cfg_attr(feature = "debug", derive(Debug))]
+    #[cfg_attr(feature = "bevy_reflect", derive(Reflect), reflect(opaque), reflect(Default, Deserialize, Hash, PartialEq, Serialize))]
+    #[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
     pub struct SfxFlags: u8 {
         const NONE = 0;
         const UNKNOWN_FLAG_1 = 1 << 0;
@@ -161,12 +167,14 @@ bitflags! {
     }
 }
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Default, Deserialize, Serialize)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 #[cfg_attr(
     feature = "bevy_reflect",
     derive(Reflect),
-    reflect(Debug, Default, Deserialize, Serialize)
+    reflect(Default, Deserialize, Serialize)
 )]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct Sound {
     /// The file name of the sound excluding the path and extension, i.e., the
     /// stem of the file name, e.g., `watfal02`.

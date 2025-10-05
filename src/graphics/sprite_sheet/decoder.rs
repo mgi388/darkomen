@@ -41,7 +41,8 @@ const FORMAT: &str = "WHDO";
 const HEADER_SIZE_BYTES: usize = 32;
 const SPRITE_HEADER_SIZE_BYTES: usize = 32;
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 struct Header {
     _file_size_bytes: u16,
     _sprite_header_offset: u16,
@@ -53,8 +54,10 @@ struct Header {
 }
 
 #[repr(u8)]
-#[derive(Clone, Copy, Debug, Default, IntoPrimitive, PartialEq, TryFromPrimitive)]
+#[derive(Clone, Copy, Default, IntoPrimitive, PartialEq, TryFromPrimitive)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub enum Compression {
     #[default]
     None = 0,
@@ -62,7 +65,8 @@ pub enum Compression {
     ZeroRuns = 2,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 struct SpriteHeader {
     typ: SpriteType,
     compression: Compression,
@@ -79,7 +83,8 @@ struct SpriteHeader {
 }
 
 #[repr(u8)]
-#[derive(Clone, Copy, Debug, Default, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive)]
+#[derive(Clone, Copy, Default, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 enum SpriteType {
     /// Indicates the sprite is a repeat of a previous sprite.
     Repeat = 0,

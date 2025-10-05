@@ -1,6 +1,7 @@
 use adpcm::AdpcmBlock;
+use core::fmt::Debug;
 use pcm::Pcm16Block;
-use std::{fmt::Debug, io};
+use std::io;
 
 pub mod adpcm;
 pub mod pcm;
@@ -24,13 +25,14 @@ impl std::fmt::Display for BlockError {
     }
 }
 
-pub(crate) trait BlockTrait: Clone + Debug {
+pub(crate) trait BlockTrait: Clone {
     fn to_bytes(&self) -> Result<Vec<u8>, BlockError>;
 
     fn as_pcm16_block(&self) -> Pcm16Block;
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 pub enum Block {
     AdpcmBlock(AdpcmBlock),
     Pcm16Block(Pcm16Block),

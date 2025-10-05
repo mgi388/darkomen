@@ -30,8 +30,11 @@ impl Plugin for MusicScriptAssetPlugin {
     }
 }
 
-#[derive(Asset, Clone, Debug, Reflect)]
-#[reflect(Debug)]
+#[derive(Asset, Clone)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[cfg_attr(not(feature = "bevy_reflect"), derive(TypePath))]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct MusicScriptAsset {
     script: Script,
 
@@ -81,8 +84,10 @@ pub struct MusicScriptAssetLoader {
     asset_paths: AssetPaths,
 }
 
-#[derive(Clone, Debug, Default, Deserialize, Reflect, Serialize)]
-#[reflect(Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Default, Deserialize, Reflect, Serialize)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[reflect(Default, Deserialize, Serialize)]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct MusicScriptAssetLoaderSettings {
     pub music_path: PathBuf,
 }

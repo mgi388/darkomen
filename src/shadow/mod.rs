@@ -9,8 +9,14 @@ use serde::Serialize;
 pub use decoder::{DecodeError, Decoder};
 pub use encoder::{EncodeError, Encoder};
 
-#[derive(Clone, Debug, Default, Serialize)]
+#[derive(Clone, Default, Serialize)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+#[cfg_attr(
+    all(feature = "bevy_reflect", feature = "debug"),
+    reflect(Default, Serialize)
+)]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct Lightmap {
     pub width: u32,
     pub height: u32,
@@ -134,8 +140,10 @@ impl Lightmap {
     }
 }
 
-#[derive(Clone, Debug, Serialize)]
-#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+#[derive(Clone, Serialize)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect), reflect(Serialize))]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct LightmapBlock {
     /// The base height of all 64 (8x8) values in the block.
     pub base_height: i32,

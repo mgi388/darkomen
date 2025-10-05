@@ -139,7 +139,8 @@ pub struct PacketAssetLoader {
     asset_paths: AssetPaths,
 }
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Default, Deserialize, Serialize)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 #[cfg_attr(
     feature = "bevy_reflect",
     derive(Reflect),

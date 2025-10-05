@@ -17,15 +17,20 @@ impl Plugin for LightAssetPlugin {
     }
 }
 
-#[derive(Asset, Clone, Debug, Deref, Reflect)]
-#[reflect(Debug)]
+#[derive(Asset, Clone, Deref)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[cfg_attr(not(feature = "bevy_reflect"), derive(TypePath))]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct LightsAsset(pub Vec<Light>);
 
 #[derive(Clone, Default)]
 pub struct LightsAssetLoader;
 
-#[derive(Clone, Copy, Debug, Default, Deserialize, Reflect, Serialize)]
-#[reflect(Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Copy, Default, Deserialize, Reflect, Serialize)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[reflect(Default, Deserialize, Serialize)]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct LightsAssetLoaderSettings;
 
 /// Possible errors that can be produced by [`LightsAssetLoader`].

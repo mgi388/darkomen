@@ -25,8 +25,10 @@ impl Plugin for AssetPathsPlugin {
     }
 }
 
-#[derive(Clone, Debug, Reflect, Resource)]
-#[reflect(Debug, Resource)]
+#[derive(Clone, Reflect, Resource)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[reflect(Resource)]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct AssetPaths {
     pub gameflow_path: PathBuf,
     pub banners_path: PathBuf,

@@ -2,7 +2,8 @@ use std::io::{Cursor, Read, Write};
 
 use super::BlockError;
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 pub struct Pcm16Block {
     pub data: Vec<i16>,
 }

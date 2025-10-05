@@ -7,18 +7,18 @@ use std::{
 use clap::{Args, Subcommand, ValueEnum};
 use darkomen::battle_tabletop::*;
 
-#[derive(Debug, Args)]
+#[derive(Args)]
 pub struct BattleTabletopArgs {
     #[command(subcommand)]
     pub subcommand: Option<BattleTabletopSubcommands>,
 }
 
-#[derive(Debug, Subcommand)]
+#[derive(Subcommand)]
 pub enum BattleTabletopSubcommands {
     Edit(EditBattleTabletopArgs),
 }
 
-#[derive(Debug, Args)]
+#[derive(Args)]
 pub struct EditBattleTabletopArgs {
     /// The path to the battle tabletop file to edit, e.g., ".../B1_01.BTB".
     #[arg(index = 1)]
@@ -34,7 +34,7 @@ pub struct EditBattleTabletopArgs {
     pub format: Format,
 }
 
-#[derive(Clone, Debug, ValueEnum)]
+#[derive(Clone, ValueEnum)]
 pub enum Format {
     Json,
     Ron,

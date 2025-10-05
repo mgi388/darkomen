@@ -10,12 +10,14 @@ use serde::{Deserialize, Serialize};
 pub use decoder::{DecodeError, Decoder};
 pub use encoder::{EncodeError, Encoder};
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 #[cfg_attr(
     feature = "bevy_reflect",
     derive(Reflect),
-    reflect(Debug, Deserialize, Serialize)
+    reflect(Deserialize, Serialize)
 )]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct Light {
     pub position: Vec3,
     pub flags: LightFlags,
@@ -65,8 +67,10 @@ impl Light {
 
 bitflags! {
     #[repr(transparent)]
-    #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
-    #[cfg_attr(feature = "bevy_reflect", derive(Reflect), reflect(opaque), reflect(Debug, Deserialize, Hash, PartialEq, Serialize))]
+    #[derive(Clone, Copy, Deserialize, Eq, Hash, PartialEq, Serialize)]
+    #[cfg_attr(feature = "debug", derive(Debug))]
+    #[cfg_attr(feature = "bevy_reflect", derive(Reflect), reflect(opaque), reflect(Deserialize, Hash, PartialEq, Serialize))]
+    #[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
     pub struct LightFlags: u32 {
         const NONE = 0;
         /// Without this flag, the light is labeled as "no shadows".

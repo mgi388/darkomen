@@ -7,18 +7,18 @@ use std::{
 use clap::{Args, Subcommand, ValueEnum};
 use darkomen::army::*;
 
-#[derive(Debug, Args)]
+#[derive(Args)]
 pub struct ArmyArgs {
     #[command(subcommand)]
     pub subcommand: Option<ArmySubcommands>,
 }
 
-#[derive(Debug, Subcommand)]
+#[derive(Subcommand)]
 pub enum ArmySubcommands {
     Edit(EditArmyArgs),
 }
 
-#[derive(Debug, Args)]
+#[derive(Args)]
 pub struct EditArmyArgs {
     /// The path to the army file to edit, e.g., ".../B1_01/B101MRC.ARM".
     #[arg(index = 1)]
@@ -34,7 +34,7 @@ pub struct EditArmyArgs {
     pub format: Format,
 }
 
-#[derive(Clone, Debug, ValueEnum)]
+#[derive(Clone, ValueEnum)]
 pub enum Format {
     Json,
     Ron,
