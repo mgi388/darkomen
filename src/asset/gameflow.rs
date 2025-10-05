@@ -1,6 +1,5 @@
 use bevy_app::prelude::*;
 use bevy_asset::{io::Reader, prelude::*, AssetLoader, LoadContext};
-use bevy_derive::Deref;
 use bevy_reflect::prelude::*;
 use derive_more::derive::{Display, Error, From};
 use glam::UVec2;
@@ -18,15 +17,20 @@ impl Plugin for GameflowAssetPlugin {
     }
 }
 
-#[derive(Clone, Debug, Default, Deserialize, Reflect, Serialize)]
-#[reflect(Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Default, Deserialize, Reflect, Serialize)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[reflect(Default, Deserialize, Serialize)]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct GameflowPath {
     /// The control points used to make a curve that represents the path.
     pub control_points: Vec<UVec2>,
 }
 
-#[derive(Asset, Clone, Debug, Deref, Reflect)]
-#[reflect(Debug)]
+#[derive(Asset, Clone)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[cfg_attr(not(feature = "bevy_reflect"), derive(TypePath))]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct GameflowAsset {
     /// The paths that the gameflow follows.
     pub paths: Vec<GameflowPath>,
@@ -35,8 +39,10 @@ pub struct GameflowAsset {
 #[derive(Clone, Default)]
 pub struct GameflowAssetLoader;
 
-#[derive(Clone, Copy, Debug, Default, Deserialize, Reflect, Serialize)]
-#[reflect(Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Copy, Default, Deserialize, Reflect, Serialize)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[reflect(Default, Deserialize, Serialize)]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct GameflowAssetLoaderSettings;
 
 /// Possible errors that can be produced by [`GameflowAssetLoader`].

@@ -11,8 +11,10 @@ use serde::{Deserialize, Serialize};
 pub use decoder::{DecodeError, Decoder};
 pub use encoder::{EncodeError, Encoder};
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Default, Deserialize, Serialize)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct Project {
     /// The base model file name, including the extension e.g., `base.M3D`.
     ///
@@ -74,8 +76,10 @@ impl Project {
     }
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct Instance {
     prev: i32,
     next: i32,
@@ -116,7 +120,8 @@ pub struct Instance {
     pub unknown3: i32,
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Serialize)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 pub enum Heightmap {
     /// The heightmap that includes the base terrain and furniture instances
     /// like buildings.
@@ -125,8 +130,10 @@ pub enum Heightmap {
     Base = 2,
 }
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Default, Deserialize, Serialize)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct Terrain {
     pub width: u32,
     pub height: u32,
@@ -304,8 +311,10 @@ impl Terrain {
     }
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct TerrainBlock {
     /// The base height of all 64 (8x8) values in the block.
     pub base_height: i32,
@@ -331,8 +340,10 @@ fn normalize(value: f32, min: f32, max: f32) -> f32 {
     (value - min) / (max - min)
 }
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Default, Deserialize, Serialize)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct Attributes {
     pub width: u32,
     pub height: u32,
@@ -340,23 +351,29 @@ pub struct Attributes {
     pub unknown: Vec<u8>,
 }
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Default, Deserialize, Serialize)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct Excl {
     pub unknown1: u32, // seems like a count, but unknown
     #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
     pub unknown2: Vec<u8>,
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct Track {
     pub control_points: Vec<TrackControlPoint>,
     pub points: Vec<Vec3>,
 }
 
-#[derive(Clone, Debug, Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct TrackControlPoint {
     pub x: f32,
     pub y: f32,
@@ -366,10 +383,10 @@ pub struct TrackControlPoint {
 
 bitflags! {
     #[repr(transparent)]
-    #[derive(Clone, Copy, Debug, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
-    #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
-    #[cfg_attr(feature = "bevy_reflect", reflect(opaque))]
-    #[cfg_attr(feature = "bevy_reflect", reflect(Debug, Default, Deserialize, Hash, PartialEq, Serialize))]
+    #[derive(Clone, Copy, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
+    #[cfg_attr(feature = "debug", derive(Debug))]
+    #[cfg_attr(feature = "bevy_reflect", derive(Reflect), reflect(opaque), reflect(Default, Deserialize, Hash, PartialEq, Serialize))]
+    #[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
     pub struct TrackControlPointFlags: u32 {
         const NONE = 0;
         const UNKNOWN_FLAG_1 = 1 << 0;

@@ -16,12 +16,14 @@ pub use encoder::{EncodeError, Encoder};
 /// the battle tabletop coordinates by the scale.
 pub const SCALE: f32 = 8.;
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Clone, Deserialize, Serialize)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 #[cfg_attr(
     feature = "bevy_reflect",
     derive(Reflect),
-    reflect(Debug, Deserialize, Serialize)
+    reflect(Deserialize, Serialize)
 )]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct BattleTabletop {
     pub width: u32,
     pub height: u32,
@@ -50,12 +52,14 @@ pub const CRITICAL_REGIMENT_LOSE_CONDITION_ID: i32 = 3;
 /// The ID of the initial regiment orientation objective.
 pub const INITIAL_REGIMENT_ORIENTATION_ID: i32 = 7;
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Default, Deserialize, Serialize)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 #[cfg_attr(
     feature = "bevy_reflect",
     derive(Reflect),
-    reflect(Debug, Default, Deserialize, Serialize)
+    reflect(Default, Deserialize, Serialize)
 )]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct Objective {
     /// The ID of the objective.
     ///
@@ -80,12 +84,14 @@ impl Objective {
     }
 }
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Default, Deserialize, Serialize)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 #[cfg_attr(
     feature = "bevy_reflect",
     derive(Reflect),
-    reflect(Debug, Deserialize, Serialize)
+    reflect(Deserialize, Serialize)
 )]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct Obstacle {
     pub flags: ObstacleFlags,
     /// The position of the obstacle in the horizontal plane.
@@ -115,8 +121,10 @@ impl Obstacle {
 
 bitflags! {
     #[repr(transparent)]
-    #[derive(Clone, Copy, Debug, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
-    #[cfg_attr(feature = "bevy_reflect", derive(Reflect), reflect(opaque), reflect(Debug, Default, Deserialize, Hash, PartialEq, Serialize))]
+    #[derive(Clone, Copy, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
+    #[cfg_attr(feature = "debug", derive(Debug))]
+    #[cfg_attr(feature = "bevy_reflect", derive(Reflect), reflect(opaque), reflect(Default, Deserialize, Hash, PartialEq, Serialize))]
+    #[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
     pub struct ObstacleFlags: u32 {
         const NONE = 0;
         const ACTIVE = 1 << 0;
@@ -138,12 +146,14 @@ bitflags! {
     }
 }
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Default, Deserialize, Serialize)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 #[cfg_attr(
     feature = "bevy_reflect",
     derive(Reflect),
-    reflect(Debug, Default, Deserialize, Serialize)
+    reflect(Default, Deserialize, Serialize)
 )]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct LineSegment {
     /// The start position of the line segment in the horizontal plane.
     pub start: IVec2,
@@ -210,12 +220,14 @@ impl LineSegment {
     }
 }
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Default, Deserialize, Serialize)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 #[cfg_attr(
     feature = "bevy_reflect",
     derive(Reflect),
-    reflect(Debug, Default, Deserialize, Serialize)
+    reflect(Default, Deserialize, Serialize)
 )]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct Region {
     pub display_name: String,
     /// The original game writes over the existing display name with the new
@@ -280,8 +292,10 @@ impl Region {
 
 bitflags! {
     #[repr(transparent)]
-    #[derive(Clone, Copy, Debug, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
-    #[cfg_attr(feature = "bevy_reflect", derive(Reflect), reflect(opaque), reflect(Debug, Default, Deserialize, Hash, PartialEq, Serialize))]
+    #[derive(Clone, Copy, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
+    #[cfg_attr(feature = "debug", derive(Debug))]
+    #[cfg_attr(feature = "bevy_reflect", derive(Reflect), reflect(opaque), reflect(Default, Deserialize, Hash, PartialEq, Serialize))]
+    #[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
     pub struct RegionFlags: u32 {
         const NONE = 0;
         const ACTIVE = 1 << 0;
@@ -307,12 +321,14 @@ bitflags! {
     }
 }
 
-#[derive(Clone, Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Default, Deserialize, Serialize)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 #[cfg_attr(
     feature = "bevy_reflect",
     derive(Reflect),
-    reflect(Debug, Default, Deserialize, Serialize)
+    reflect(Default, Deserialize, Serialize)
 )]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct Node {
     pub flags: NodeFlags,
     /// The position of the node in the horizontal plane.
@@ -383,8 +399,10 @@ impl Node {
 
 bitflags! {
     #[repr(transparent)]
-    #[derive(Clone, Copy, Debug, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
-    #[cfg_attr(feature = "bevy_reflect", derive(Reflect), reflect(opaque), reflect(Debug, Default, Deserialize, Hash, PartialEq, Serialize))]
+    #[derive(Clone, Copy, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
+    #[cfg_attr(feature = "debug", derive(Debug))]
+    #[cfg_attr(feature = "bevy_reflect", derive(Reflect), reflect(opaque), reflect(Default, Deserialize, Hash, PartialEq, Serialize))]
+    #[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
     pub struct NodeFlags: u32 {
         const NONE = 0;
         const ACTIVE = 1 << 0;

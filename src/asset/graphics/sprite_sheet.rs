@@ -31,8 +31,11 @@ impl Plugin for SpriteSheetAssetPlugin {
     }
 }
 
-#[derive(Asset, Clone, Debug, Reflect)]
-#[reflect(Debug)]
+#[derive(Asset, Clone)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[cfg_attr(not(feature = "bevy_reflect"), derive(TypePath))]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct SpriteSheetAsset {
     source: SpriteSheet,
     pub texture: Handle<Image>,
@@ -58,8 +61,9 @@ impl SpriteSheetAsset {
     }
 }
 
-#[derive(Clone, Debug, Reflect)]
-#[reflect(Debug)]
+#[derive(Clone, Reflect)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct TextureDescriptor {
     d: crate::graphics::TextureDescriptor,
     pub width: u32,
@@ -95,8 +99,10 @@ impl std::fmt::Display for TextureDescriptorNotFoundError {
 impl std::error::Error for TextureDescriptorNotFoundError {}
 
 /// A [`Handle`] to a [`SpriteSheetAsset`] asset.
-#[derive(Clone, Component, Debug, Default, Deref, DerefMut, Eq, From, PartialEq, Reflect)]
-#[reflect(Component, Debug, Default, PartialEq)]
+#[derive(Clone, Component, Default, Deref, DerefMut, Eq, From, PartialEq, Reflect)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[reflect(Component, Default, PartialEq)]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct SpriteSheetAssetHandle(pub Handle<SpriteSheetAsset>);
 
 impl From<SpriteSheetAssetHandle> for AssetId<SpriteSheetAsset> {

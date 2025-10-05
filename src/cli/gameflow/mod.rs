@@ -7,18 +7,18 @@ use std::{
 use clap::{Args, Subcommand, ValueEnum};
 use darkomen::gameflow::*;
 
-#[derive(Debug, Args)]
+#[derive(Args)]
 pub struct GameflowArgs {
     #[command(subcommand)]
     pub subcommand: Option<GameflowSubcommands>,
 }
 
-#[derive(Debug, Subcommand)]
+#[derive(Subcommand)]
 pub enum GameflowSubcommands {
     Edit(EditGameflowArgs),
 }
 
-#[derive(Debug, Args)]
+#[derive(Args)]
 pub struct EditGameflowArgs {
     /// The path to the gameflow file to edit, e.g., ".../CH1_ALL.DOT".
     #[arg(index = 1)]
@@ -34,7 +34,7 @@ pub struct EditGameflowArgs {
     pub format: Format,
 }
 
-#[derive(Clone, Debug, ValueEnum)]
+#[derive(Clone, ValueEnum)]
 pub enum Format {
     Json,
     Ron,

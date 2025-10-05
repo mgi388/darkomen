@@ -19,7 +19,8 @@ const STEP_TABLE: [i16; 89] = [
     15289, 16818, 18500, 20350, 22385, 24623, 27086, 29794, 32767,
 ];
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 pub struct AdpcmBlock {
     pub sample: i16,
     pub index: i16,

@@ -27,8 +27,11 @@ impl Plugin for ArmyAssetPlugin {
     }
 }
 
-#[derive(Asset, Clone, Debug, Default, Reflect)]
-#[reflect(Debug, Default)]
+#[derive(Asset, Clone, Default)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[cfg_attr(not(feature = "bevy_reflect"), derive(TypePath))]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect), reflect(Default))]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct ArmyAsset {
     source: Army,
 
@@ -45,8 +48,10 @@ impl ArmyAsset {
 }
 
 /// A [`Handle`] to an [`ArmyAsset`] asset.
-#[derive(Clone, Component, Debug, Default, Deref, DerefMut, Eq, From, Hash, PartialEq, Reflect)]
-#[reflect(Component, Debug, Default, Hash, PartialEq)]
+#[derive(Clone, Component, Default, Deref, DerefMut, Eq, From, Hash, PartialEq, Reflect)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[reflect(Component, Default, Hash, PartialEq)]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct ArmyAssetHandle(pub Handle<ArmyAsset>);
 
 impl From<ArmyAssetHandle> for AssetId<ArmyAsset> {
@@ -66,8 +71,10 @@ pub struct ArmyAssetLoader {
     paths: AssetPaths,
 }
 
-#[derive(Clone, Copy, Debug, Default, Deserialize, Reflect, Serialize)]
-#[reflect(Debug, Default, Deserialize, Serialize)]
+#[derive(Clone, Copy, Default, Deserialize, Reflect, Serialize)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[reflect(Default, Deserialize, Serialize)]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct ArmyAssetLoaderSettings {
     pub load_small_banners: bool,
     pub load_disabled_small_banners: bool,

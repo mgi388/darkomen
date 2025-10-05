@@ -7,18 +7,18 @@ use std::{
 use clap::{Args, Subcommand, ValueEnum};
 use darkomen::project::*;
 
-#[derive(Debug, Args)]
+#[derive(Args)]
 pub struct ProjectArgs {
     #[command(subcommand)]
     pub subcommand: Option<ProjectSubcommands>,
 }
 
-#[derive(Debug, Subcommand)]
+#[derive(Subcommand)]
 pub enum ProjectSubcommands {
     Edit(EditProjectArgs),
 }
 
-#[derive(Debug, Args)]
+#[derive(Args)]
 pub struct EditProjectArgs {
     /// The path to the project file to edit, e.g., ".../B1_01/B1_01.PRJ".
     #[arg(index = 1)]
@@ -34,7 +34,7 @@ pub struct EditProjectArgs {
     pub format: Format,
 }
 
-#[derive(Clone, Debug, ValueEnum)]
+#[derive(Clone, ValueEnum)]
 pub enum Format {
     Json,
     Ron,

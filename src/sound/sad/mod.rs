@@ -8,7 +8,8 @@ use std::io;
 pub use decoder::{DecodeError, Decoder};
 pub use encoder::{EncodeError, Encoder};
 
-#[derive(Debug, Clone, Default)]
+#[derive(Clone, Default)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 pub struct StereoAudio {
     pub left_blocks: Vec<Block>,
     pub right_blocks: Vec<Block>,

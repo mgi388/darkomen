@@ -1,4 +1,4 @@
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub(crate) enum Token {
     OpenBrace {
         line: usize,

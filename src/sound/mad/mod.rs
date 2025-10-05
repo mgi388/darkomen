@@ -8,7 +8,8 @@ use std::io;
 pub use decoder::{DecodeError, Decoder};
 pub use encoder::{EncodeError, Encoder};
 
-#[derive(Debug, Clone, Default)]
+#[derive(Clone, Default)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 pub struct MonoAudio {
     pub blocks: Vec<Block>,
 

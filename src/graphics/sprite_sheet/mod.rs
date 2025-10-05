@@ -12,8 +12,10 @@ pub use decoder::{DecodeError, Decoder};
 pub(crate) use packbits::PackBitsReader;
 pub(crate) use zeroruns::ZeroRunsReader;
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Serialize)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct SpriteSheet {
     #[serde(skip)]
     #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
@@ -21,8 +23,10 @@ pub struct SpriteSheet {
     pub texture_descriptors: Vec<TextureDescriptor>,
 }
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Serialize)]
+#[cfg_attr(feature = "debug", derive(Debug))]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct TextureDescriptor {
     pub x: i16,
     pub y: i16,
