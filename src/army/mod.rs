@@ -325,7 +325,11 @@ pub struct SaveGameFooter {
     ///
     /// This is used to display a message to the player after losing a battle.
     pub defeat_message_index: u32,
-    rng_seed: u32,
+    /// The seed value for the random number generator used by the save game.
+    ///
+    /// The seed is persisted in save games to ensure deterministic behavior
+    /// when loading and replaying from a saved state.
+    pub rng_seed: u32,
     /// A list of aniamted sprites used on the meet screens shown in between
     /// battles.
     pub meet_animated_sprites: Vec<MeetAnimatedSprite>,
