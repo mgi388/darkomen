@@ -30,8 +30,8 @@ impl Plugin for BattleTabletopAssetPlugin {
 pub struct BattleTabletopAsset {
     source: BattleTabletop,
 
-    pub player_army: Option<Handle<ArmyAsset>>,
-    pub enemy_army: Option<Handle<ArmyAsset>>,
+    pub army1: Option<Handle<ArmyAsset>>,
+    pub army2: Option<Handle<ArmyAsset>>,
 }
 
 impl BattleTabletopAsset {
@@ -70,10 +70,10 @@ pub struct BattleTabletopAssetLoader;
 #[reflect(Default, Deserialize, Serialize)]
 #[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct BattleTabletopAssetLoaderSettings {
-    pub load_player_army: bool,
-    pub player_army_loader_settings: Option<ArmyAssetLoaderSettings>,
-    pub load_enemy_army: bool,
-    pub enemy_army_loader_settings: Option<ArmyAssetLoaderSettings>,
+    pub load_army1: bool,
+    pub army1_loader_settings: Option<ArmyAssetLoaderSettings>,
+    pub load_army2: bool,
+    pub army2_loader_settings: Option<ArmyAssetLoaderSettings>,
 }
 
 /// Possible errors that can be produced by [BattleTabletopAssetLoader].
@@ -114,27 +114,27 @@ impl AssetLoader for BattleTabletopAssetLoader {
 
         Ok(BattleTabletopAsset {
             source: btb.clone(),
-            player_army: if settings.load_player_army {
+            army1: if settings.load_army1 {
                 let mut b = load_context.loader();
-                if let Some(ref s) = settings.player_army_loader_settings {
+                if let Some(ref s) = settings.army1_loader_settings {
                     let s = *s;
                     b = b.with_settings(move |settings| {
                         *settings = s;
                     });
                 }
-                Some(b.load(parent_path.join(btb.player_army).with_extension("ARM")))
+                Some(b.load(parent_path.join(btb.army1_file_stem).with_extension("ARM")))
             } else {
                 None
             },
-            enemy_army: if settings.load_enemy_army {
+            army2: if settings.load_army2 {
                 let mut b = load_context.loader();
-                if let Some(ref s) = settings.enemy_army_loader_settings {
+                if let Some(ref s) = settings.army2_loader_settings {
                     let s = *s;
                     b = b.with_settings(move |settings| {
                         *settings = s;
                     });
                 }
-                Some(b.load(parent_path.join(btb.enemy_army).with_extension("ARM")))
+                Some(b.load(parent_path.join(btb.army2_file_stem).with_extension("ARM")))
             } else {
                 None
             },

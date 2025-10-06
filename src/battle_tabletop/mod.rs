@@ -27,14 +27,18 @@ pub const SCALE: f32 = 8.;
 pub struct BattleTabletop {
     pub width: u32,
     pub height: u32,
-    /// The name of the player's army file, without the extension, e.g.,
-    /// `b101mrc`.
-    pub player_army: String,
-    /// The name of the enemy's army file, without the extension, e.g.,
-    /// `b101nme`.
-    pub enemy_army: String,
+    /// The name of the army 1 file, without the extension, e.g., `b101mrc`.
+    ///
+    /// This is used for the player army in singleplayer and player 1's army in
+    /// multiplayer.
+    pub army1_file_stem: String,
+    /// The name of the army 2 file, without the extension, e.g., `b101nme`.
+    ///
+    /// This is used for the enemy army in singleplayer player 2's army in
+    /// multiplayer.
+    pub army2_file_stem: String,
     /// The name of the CTL file, without the extension, e.g., `B101`.
-    pub ctl: String,
+    pub ctl_file_stem: String,
     unknown1: String,
     unknown2: String,
     unknown3: Vec<i32>,
@@ -246,18 +250,18 @@ pub struct Region {
 impl Region {
     /// Returns `true` if the region is a deployment zone.
     pub fn is_deployment_zone(&self) -> bool {
-        self.flags.contains(RegionFlags::PLAYER1_DEPLOYMENT_ZONE)
-            || self.flags.contains(RegionFlags::PLAYER2_DEPLOYMENT_ZONE)
+        self.flags.contains(RegionFlags::ARMY1_DEPLOYMENT_ZONE)
+            || self.flags.contains(RegionFlags::ARMY2_DEPLOYMENT_ZONE)
     }
 
-    /// Returns `true` if the region is a player 1 deployment zone.
-    pub fn is_player1_deployment_zone(&self) -> bool {
-        self.flags.contains(RegionFlags::PLAYER1_DEPLOYMENT_ZONE)
+    /// Returns `true` if the region is an army 1 deployment zone.
+    pub fn is_army1_deployment_zone(&self) -> bool {
+        self.flags.contains(RegionFlags::ARMY1_DEPLOYMENT_ZONE)
     }
 
-    /// Returns `true` if the region is a player 2 deployment zone.
-    pub fn is_player2_deployment_zone(&self) -> bool {
-        self.flags.contains(RegionFlags::PLAYER2_DEPLOYMENT_ZONE)
+    /// Returns `true` if the region is an army 2 deployment zone.
+    pub fn is_army2_deployment_zone(&self) -> bool {
+        self.flags.contains(RegionFlags::ARMY2_DEPLOYMENT_ZONE)
     }
 
     /// Returns `true` if the given point is contained within the region.
@@ -308,10 +312,13 @@ bitflags! {
         const BATTLE_BOUNDARY = 1 << 5;
         const UNKNOWN_FLAG_3 = 1 << 6;
         const BOUNDARY = 1 << 7;
-        /// The region is a deployment zone for player 1, i.e., the main player.
-        const PLAYER1_DEPLOYMENT_ZONE = 1 << 8;
-        /// The region is a deployment zone for player 2, i.e., the enemy.
-        const PLAYER2_DEPLOYMENT_ZONE = 1 << 9;
+        /// The region is a deployment zone for army 1. This is the player
+        /// deployment zone in singleplayer and player 1's deployment zone in
+        /// multiplayer.
+        const ARMY1_DEPLOYMENT_ZONE = 1 << 8;
+        /// The region is a deployment zone for army 2. This is player 2's
+        /// deployment zone in multiplayer.
+        const ARMY2_DEPLOYMENT_ZONE = 1 << 9;
         const VISIBLE_AREA = 1 << 10;
         const UNKNOWN_FLAG_4 = 1 << 11;
         const UNKNOWN_FLAG_5 = 1 << 12;
@@ -386,14 +393,6 @@ impl Node {
     #[inline]
     pub fn rotation_degrees(&self) -> f32 {
         self.rotation_radians().to_degrees()
-    }
-
-    /// Returns `true` if the node belongs to player 1's regiment.
-    ///
-    /// TODO: Is there a more reliable way to determine this?
-    #[inline]
-    pub fn is_player1_regiment(&self) -> bool {
-        self.regiment_id <= 100
     }
 }
 
@@ -555,9 +554,9 @@ mod tests {
 
         assert_eq!(b.width, 1440);
         assert_eq!(b.height, 1600);
-        assert_eq!(b.player_army, "B101mrc");
-        assert_eq!(b.enemy_army, "B101nme");
-        assert_eq!(b.ctl, "B101");
+        assert_eq!(b.army1_file_stem, "B101mrc");
+        assert_eq!(b.army2_file_stem, "B101nme");
+        assert_eq!(b.ctl_file_stem, "B101");
 
         const EPSILON: f32 = 0.0001;
 

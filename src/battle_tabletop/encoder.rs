@@ -87,9 +87,9 @@ impl<W: Write> Encoder<W> {
 
         self.write_int_tuple_property(1, &[bt.width as i32])?;
         self.write_int_tuple_property(2, &[bt.height as i32])?;
-        self.write_string_property(1001, &bt.player_army, None)?;
-        self.write_string_property(1002, &bt.enemy_army, None)?;
-        self.write_string_property(1003, &bt.ctl, None)?;
+        self.write_string_property(1001, &bt.army1_file_stem, None)?;
+        self.write_string_property(1002, &bt.army2_file_stem, None)?;
+        self.write_string_property(1003, &bt.ctl_file_stem, None)?;
         self.write_string_property(1004, &bt.unknown1, None)?;
         self.write_string_property(1005, &bt.unknown2, None)?;
         self.write_int_tuple_property(9, &bt.unknown3)?;
