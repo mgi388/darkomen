@@ -694,6 +694,11 @@ bitflags! {
         /// Set if the regiment is heavily damaged. Heavily damaged regiments
         /// result in the leader's portrait being shown in the campaign with
         /// blood on their face.
+        ///
+        /// This flag is cleared when entering the travel map, likely to
+        /// represent that time has passed during the journey and the regiment
+        /// is no longer visibly heavily damaged, even if it may still be
+        /// under-strength.
         const HEAVILY_DAMAGED = 1 << 5;
         /// Set if the regiment is non-deployable. Non-deployable regiments
         /// cannot be deployed to the battlefield and do not appear in the army
