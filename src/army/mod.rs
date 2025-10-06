@@ -545,9 +545,6 @@ pub struct Regiment {
 }
 
 impl Regiment {
-    /// The maximum threat rating for a regiment.
-    pub const MAX_THREAT_RATING: u8 = 4;
-
     /// Returns the display name of the regiment.
     ///
     /// May be empty. The display name index is the preferred way to get the
@@ -621,13 +618,6 @@ impl Regiment {
     #[inline(always)]
     pub fn rank_count(&self) -> u8 {
         self.unit_profile.rank_count
-    }
-
-    /// A value from 1 to 4, inclusive, that indicates the regiment's threat
-    /// rating.
-    #[inline(always)]
-    pub fn threat_rating(&self) -> u8 {
-        (self.unit_profile.point_value >> 3) + 1
     }
 
     /// Returns `true` if the regiment is a mage.
@@ -1221,26 +1211,6 @@ mod tests {
         fs::File,
         path::{Path, PathBuf},
     };
-
-    #[test]
-    fn test_regiment_threat_rating() {
-        fn make_regiment(point_value: u8) -> Regiment {
-            Regiment {
-                unit_profile: UnitProfile {
-                    point_value,
-                    ..Default::default()
-                },
-                ..Default::default()
-            }
-        }
-
-        assert_eq!(make_regiment(0).threat_rating(), 1);
-        assert_eq!(make_regiment(1).threat_rating(), 1);
-        assert_eq!(make_regiment(7).threat_rating(), 1);
-        assert_eq!(make_regiment(8).threat_rating(), 2);
-        assert_eq!(make_regiment(20).threat_rating(), 3);
-        assert_eq!(make_regiment(31).threat_rating(), 4);
-    }
 
     #[test]
     fn test_regiment_class_is_infantry() {
