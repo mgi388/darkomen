@@ -1011,8 +1011,8 @@ bitflags! {
         const IMPERVIOUS_TO_MAGIC = 1 << 25;
         /// Same as NEVER_ROUTS but the retreat button is enabled (and ignored).
         const NEVER_RETREATS = 1 << 26;
-        /// Regiment has no item slots. Items can still be assigned.
-        const NO_ITEM_SLOTS = 1 << 27;
+        /// Regiment has no magic item slots. Magic items can still be assigned.
+        const NO_MAGIC_ITEM_SLOTS = 1 << 27;
         /// Fanatics have this flag.
         const FANATICS_FLAG = 1 << 28;
         /// Penalty when fighting elves.
