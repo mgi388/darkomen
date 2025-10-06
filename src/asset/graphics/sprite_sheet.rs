@@ -79,6 +79,14 @@ impl TextureDescriptor {
         UVec2::new(self.width, self.height)
     }
 
+    /// Returns the aspect ratio of the texture.
+    ///
+    /// The aspect ratio is defined as the width divided by the height.
+    #[inline(always)]
+    pub fn aspect_ratio(&self) -> f32 {
+        self.width as f32 / self.height as f32
+    }
+
     #[inline(always)]
     pub fn anchor(&self) -> Vec2 {
         self.d.anchor()
