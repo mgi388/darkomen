@@ -53,7 +53,7 @@ pub struct Project {
 
 impl Project {
     /// Get the base model file name, including the extension, but with the
-    /// extension replaced with `.M3X`. E.g. `base.M3D` becomes `base.M3X`.
+    /// extension replaced with `.M3X`, e.g., `base.M3D` becomes `base.M3X`.
     ///
     /// The M3X version is a chunked version of the M3D model and is the one
     /// rendered in game.
@@ -64,7 +64,7 @@ impl Project {
     }
 
     /// Get the water model file name, including the extension, but with the
-    /// extension replaced with `.M3X`. E.g. `_7water.M3D` becomes
+    /// extension replaced with `.M3X`, e.g., `_7water.M3D` becomes
     /// `_7water.M3X`.
     ///
     /// The M3X version is a chunked version of the M3D model and is the one
