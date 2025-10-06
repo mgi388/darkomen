@@ -785,25 +785,25 @@ pub enum RegimentAlignment {
 pub enum RegimentClass {
     #[default]
     None = 0,
-    HumanInfantryman = 8,
-    WoodElfInfantryman = 9,
-    DwarfInfantryman = 10,
-    NightGoblinInfantryman = 11,
-    OrcInfantryman = 12,
-    UndeadInfantryman = 13,
+    HumanInfantry = 8,
+    WoodElfInfantry = 9,
+    DwarfInfantry = 10,
+    NightGoblinInfantry = 11,
+    OrcInfantry = 12,
+    UndeadInfantry = 13,
     Townsfolk = 14,
     Ogre1 = 15,
-    HumanCavalryman = 16,
-    OrcCavalryman = 20,
-    UndeadCavalryman = 21,
+    HumanCavalry = 16,
+    OrcCavalry = 20,
+    UndeadCavalry = 21,
     HumanArcher = 24,
     WoodElfArcher = 25,
     NightGoblinArcher = 27,
     OrcArcher = 28,
     SkeletonArcher = 29,
-    HumanArtilleryUnit = 32,
-    OrcArtilleryUnit = 36,
-    UndeadArtilleryUnit = 37,
+    HumanArtillery = 32,
+    OrcArtillery = 36,
+    UndeadArtillery = 37,
     HumanMage = 40,
     NightGoblinShaman = 43,
     OrcShaman = 44,
@@ -816,32 +816,13 @@ pub enum RegimentClass {
 }
 
 impl RegimentClass {
-    pub fn is_infantry(&self) -> bool {
-        Into::<u8>::into(*self) >> 3 == Into::<u8>::into(RegimentType::Infantryman)
-    }
+    /// The mask used to extract regiment kind (removes race bits).
+    const KIND_MASK: u8 = 0xF8;
 
-    pub fn is_cavalry(&self) -> bool {
-        Into::<u8>::into(*self) >> 3 == Into::<u8>::into(RegimentType::Cavalryman)
-    }
-
-    pub fn is_archer(&self) -> bool {
-        Into::<u8>::into(*self) >> 3 == Into::<u8>::into(RegimentType::Archer)
-    }
-
-    pub fn is_artillery(&self) -> bool {
-        Into::<u8>::into(*self) >> 3 == Into::<u8>::into(RegimentType::ArtilleryUnit)
-    }
-
-    pub fn is_mage(&self) -> bool {
-        Into::<u8>::into(*self) >> 3 == Into::<u8>::into(RegimentType::Mage)
-    }
-
-    pub fn is_monster(&self) -> bool {
-        Into::<u8>::into(*self) >> 3 == Into::<u8>::into(RegimentType::Monster)
-    }
-
-    pub fn is_chariot(&self) -> bool {
-        Into::<u8>::into(*self) >> 3 == Into::<u8>::into(RegimentType::Chariot)
+    /// Get the regiment kind (removes race information from the class).
+    pub fn kind(&self) -> RegimentKind {
+        RegimentKind::try_from(Into::<u8>::into(*self) & Self::KIND_MASK)
+            .unwrap_or(RegimentKind::Unknown)
     }
 
     pub fn is_human(&self) -> bool {
@@ -879,25 +860,37 @@ impl RegimentClass {
 
 #[repr(u8)]
 #[derive(
-    Clone, Copy, Default, Deserialize, IntoPrimitive, PartialEq, Serialize, TryFromPrimitive,
+    Clone,
+    Copy,
+    Default,
+    Deserialize,
+    Eq,
+    Hash,
+    IntoPrimitive,
+    PartialEq,
+    Serialize,
+    TryFromPrimitive,
 )]
 #[cfg_attr(feature = "debug", derive(Debug))]
 #[cfg_attr(
     feature = "bevy_reflect",
     derive(Reflect),
-    reflect(Default, Deserialize, PartialEq, Serialize)
+    reflect(Default, Deserialize, Hash, PartialEq, Serialize)
 )]
 #[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
-pub enum RegimentType {
+pub enum RegimentKind {
     #[default]
-    Unknown,
-    Infantryman,
-    Cavalryman,
-    Archer,
-    ArtilleryUnit,
-    Mage,
-    Monster,
-    Chariot,
+    Unknown = 0,
+    Infantry = 8,
+    Cavalry = 16,
+    Archer = 24,
+    Artillery = 32,
+    Mage = 40,
+    /// Covers [`RegimentClass::DreadKing`], [`RegimentClass::Monster`].
+    Monster = 48,
+    Chariot = 56,
+    /// Covers [`RegimentClass::Fanatic`], [`RegimentClass::Ogre2`].
+    FanaticOgre2 = 64,
 }
 
 #[repr(u8)]
@@ -1111,7 +1104,7 @@ pub enum ProjectileClass {
 #[derive(Debug, Display, Error, From)]
 pub enum DecodeClassError {
     #[error(ignore)]
-    InvalidType(TryFromPrimitiveError<RegimentType>),
+    InvalidKind(TryFromPrimitiveError<RegimentKind>),
     #[error(ignore)]
     InvalidRace(TryFromPrimitiveError<RegimentRace>),
 }
@@ -1213,106 +1206,106 @@ mod tests {
     };
 
     #[test]
-    fn test_regiment_class_is_infantry() {
-        assert!(RegimentClass::HumanInfantryman.is_infantry());
-        assert!(!RegimentClass::HumanCavalryman.is_infantry());
-        assert!(!RegimentClass::HumanArcher.is_infantry());
-        assert!(!RegimentClass::HumanArtilleryUnit.is_infantry());
-        assert!(!RegimentClass::HumanMage.is_infantry());
-        assert!(!RegimentClass::Monster.is_infantry());
-        assert!(!RegimentClass::Fanatic.is_infantry());
+    fn test_regiment_class_infantry() {
+        assert!(RegimentClass::HumanInfantry.kind() == RegimentKind::Infantry);
+        assert!(RegimentClass::HumanCavalry.kind() != RegimentKind::Infantry);
+        assert!(RegimentClass::HumanArcher.kind() != RegimentKind::Infantry);
+        assert!(RegimentClass::HumanArtillery.kind() != RegimentKind::Infantry);
+        assert!(RegimentClass::HumanMage.kind() != RegimentKind::Infantry);
+        assert!(RegimentClass::Monster.kind() != RegimentKind::Infantry);
+        assert!(RegimentClass::Fanatic.kind() != RegimentKind::Infantry);
     }
 
     #[test]
-    fn test_regiment_class_is_cavalry() {
-        assert!(!RegimentClass::HumanInfantryman.is_cavalry());
-        assert!(RegimentClass::HumanCavalryman.is_cavalry());
-        assert!(!RegimentClass::HumanArcher.is_cavalry());
-        assert!(!RegimentClass::HumanArtilleryUnit.is_cavalry());
-        assert!(!RegimentClass::HumanMage.is_cavalry());
-        assert!(!RegimentClass::Monster.is_cavalry());
-        assert!(!RegimentClass::Fanatic.is_cavalry());
+    fn test_regiment_class_cavalry() {
+        assert!(RegimentClass::HumanInfantry.kind() != RegimentKind::Cavalry);
+        assert!(RegimentClass::HumanCavalry.kind() == RegimentKind::Cavalry);
+        assert!(RegimentClass::HumanArcher.kind() != RegimentKind::Cavalry);
+        assert!(RegimentClass::HumanArtillery.kind() != RegimentKind::Cavalry);
+        assert!(RegimentClass::HumanMage.kind() != RegimentKind::Cavalry);
+        assert!(RegimentClass::Monster.kind() != RegimentKind::Cavalry);
+        assert!(RegimentClass::Fanatic.kind() != RegimentKind::Cavalry);
     }
 
     #[test]
-    fn test_regiment_class_is_archer() {
-        assert!(!RegimentClass::HumanInfantryman.is_archer());
-        assert!(!RegimentClass::HumanCavalryman.is_archer());
-        assert!(RegimentClass::HumanArcher.is_archer());
-        assert!(!RegimentClass::HumanArtilleryUnit.is_archer());
-        assert!(!RegimentClass::HumanMage.is_archer());
-        assert!(!RegimentClass::Monster.is_archer());
-        assert!(!RegimentClass::Fanatic.is_archer());
+    fn test_regiment_class_archer() {
+        assert!(RegimentClass::HumanInfantry.kind() != RegimentKind::Archer);
+        assert!(RegimentClass::HumanCavalry.kind() != RegimentKind::Archer);
+        assert!(RegimentClass::HumanArcher.kind() == RegimentKind::Archer);
+        assert!(RegimentClass::HumanArtillery.kind() != RegimentKind::Archer);
+        assert!(RegimentClass::HumanMage.kind() != RegimentKind::Archer);
+        assert!(RegimentClass::Monster.kind() != RegimentKind::Archer);
+        assert!(RegimentClass::Fanatic.kind() != RegimentKind::Archer);
     }
 
     #[test]
-    fn test_regiment_class_is_artillery() {
-        assert!(!RegimentClass::HumanInfantryman.is_artillery());
-        assert!(!RegimentClass::HumanCavalryman.is_artillery());
-        assert!(!RegimentClass::HumanArcher.is_artillery());
-        assert!(RegimentClass::HumanArtilleryUnit.is_artillery());
-        assert!(!RegimentClass::HumanMage.is_artillery());
-        assert!(!RegimentClass::Monster.is_artillery());
-        assert!(!RegimentClass::Fanatic.is_artillery());
+    fn test_regiment_class_artillery() {
+        assert!(RegimentClass::HumanInfantry.kind() != RegimentKind::Artillery);
+        assert!(RegimentClass::HumanCavalry.kind() != RegimentKind::Artillery);
+        assert!(RegimentClass::HumanArcher.kind() != RegimentKind::Artillery);
+        assert!(RegimentClass::HumanArtillery.kind() == RegimentKind::Artillery);
+        assert!(RegimentClass::HumanMage.kind() != RegimentKind::Artillery);
+        assert!(RegimentClass::Monster.kind() != RegimentKind::Artillery);
+        assert!(RegimentClass::Fanatic.kind() != RegimentKind::Artillery);
     }
 
     #[test]
-    fn test_regiment_class_is_mage() {
-        assert!(!RegimentClass::HumanInfantryman.is_mage());
-        assert!(!RegimentClass::HumanCavalryman.is_mage());
-        assert!(!RegimentClass::HumanArcher.is_mage());
-        assert!(!RegimentClass::HumanArtilleryUnit.is_mage());
-        assert!(RegimentClass::HumanMage.is_mage());
-        assert!(!RegimentClass::Monster.is_mage());
-        assert!(!RegimentClass::Fanatic.is_mage());
+    fn test_regiment_class_mage() {
+        assert!(RegimentClass::HumanInfantry.kind() != RegimentKind::Mage);
+        assert!(RegimentClass::HumanCavalry.kind() != RegimentKind::Mage);
+        assert!(RegimentClass::HumanArcher.kind() != RegimentKind::Mage);
+        assert!(RegimentClass::HumanArtillery.kind() != RegimentKind::Mage);
+        assert!(RegimentClass::HumanMage.kind() == RegimentKind::Mage);
+        assert!(RegimentClass::Monster.kind() != RegimentKind::Mage);
+        assert!(RegimentClass::Fanatic.kind() != RegimentKind::Mage);
     }
 
     #[test]
     fn test_regiment_class_is_human() {
-        assert!(RegimentClass::HumanInfantryman.is_human());
-        assert!(RegimentClass::HumanCavalryman.is_human());
-        assert!(!RegimentClass::WoodElfInfantryman.is_human());
+        assert!(RegimentClass::HumanInfantry.is_human());
+        assert!(RegimentClass::HumanCavalry.is_human());
+        assert!(!RegimentClass::WoodElfInfantry.is_human());
     }
 
     #[test]
     fn test_regiment_class_is_wood_elf() {
-        assert!(!RegimentClass::HumanInfantryman.is_wood_elf());
-        assert!(!RegimentClass::HumanCavalryman.is_wood_elf());
-        assert!(RegimentClass::WoodElfInfantryman.is_wood_elf());
+        assert!(!RegimentClass::HumanInfantry.is_wood_elf());
+        assert!(!RegimentClass::HumanCavalry.is_wood_elf());
+        assert!(RegimentClass::WoodElfInfantry.is_wood_elf());
     }
 
     #[test]
     fn test_regiment_class_is_dwarf() {
-        assert!(!RegimentClass::HumanInfantryman.is_dwarf());
-        assert!(!RegimentClass::HumanCavalryman.is_dwarf());
-        assert!(RegimentClass::DwarfInfantryman.is_dwarf());
+        assert!(!RegimentClass::HumanInfantry.is_dwarf());
+        assert!(!RegimentClass::HumanCavalry.is_dwarf());
+        assert!(RegimentClass::DwarfInfantry.is_dwarf());
     }
 
     #[test]
     fn test_regiment_class_is_night_goblin() {
-        assert!(!RegimentClass::HumanInfantryman.is_night_goblin());
-        assert!(!RegimentClass::HumanCavalryman.is_night_goblin());
-        assert!(RegimentClass::NightGoblinInfantryman.is_night_goblin());
+        assert!(!RegimentClass::HumanInfantry.is_night_goblin());
+        assert!(!RegimentClass::HumanCavalry.is_night_goblin());
+        assert!(RegimentClass::NightGoblinInfantry.is_night_goblin());
     }
 
     #[test]
     fn test_regiment_class_is_orc() {
-        assert!(!RegimentClass::HumanInfantryman.is_orc());
-        assert!(!RegimentClass::HumanCavalryman.is_orc());
-        assert!(RegimentClass::OrcInfantryman.is_orc());
+        assert!(!RegimentClass::HumanInfantry.is_orc());
+        assert!(!RegimentClass::HumanCavalry.is_orc());
+        assert!(RegimentClass::OrcInfantry.is_orc());
     }
 
     #[test]
     fn test_regiment_class_is_undead() {
-        assert!(!RegimentClass::HumanInfantryman.is_undead());
-        assert!(!RegimentClass::HumanCavalryman.is_undead());
-        assert!(RegimentClass::UndeadInfantryman.is_undead());
+        assert!(!RegimentClass::HumanInfantry.is_undead());
+        assert!(!RegimentClass::HumanCavalry.is_undead());
+        assert!(RegimentClass::UndeadInfantry.is_undead());
     }
 
     #[test]
     fn test_regiment_class_is_townsfolk() {
-        assert!(!RegimentClass::HumanInfantryman.is_townsfolk());
-        assert!(!RegimentClass::HumanCavalryman.is_townsfolk());
+        assert!(!RegimentClass::HumanInfantry.is_townsfolk());
+        assert!(!RegimentClass::HumanCavalry.is_townsfolk());
         assert!(RegimentClass::Townsfolk.is_townsfolk());
     }
 
@@ -1402,7 +1395,7 @@ mod tests {
         );
         assert_eq!(
             a.regiments[0].unit_profile.class,
-            RegimentClass::HumanCavalryman
+            RegimentClass::HumanCavalry
         );
         assert_eq!(a.regiments[0].unit_profile.mount_class, MountClass::Horse);
         assert_eq!(
@@ -1416,7 +1409,7 @@ mod tests {
         );
         assert_eq!(
             a.regiments[1].unit_profile.class,
-            RegimentClass::HumanInfantryman
+            RegimentClass::HumanInfantry
         );
         assert_eq!(a.regiments[2].id, 3);
         assert_eq!(
@@ -1434,7 +1427,7 @@ mod tests {
         );
         assert_eq!(
             a.regiments[3].unit_profile.class,
-            RegimentClass::HumanArtilleryUnit
+            RegimentClass::HumanArtillery
         );
 
         roundtrip_test(&original_bytes, &a);
