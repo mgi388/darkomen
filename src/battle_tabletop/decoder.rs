@@ -75,8 +75,16 @@ impl<R: Read + Seek> Decoder<R> {
 
     pub fn decode(&mut self) -> Result<BattleTabletop, DecodeError> {
         self.read_btb_file_type()?;
-        let (width, height, player_army, enemy_army, ctl, unknown1, unknown2, unknown3) =
-            self.read_battle_header()?;
+        let (
+            width,
+            height,
+            army1_file_stem,
+            army2_file_stem,
+            ctl_file_stem,
+            unknown1,
+            unknown2,
+            unknown3,
+        ) = self.read_battle_header()?;
         let objectives = self.read_objectives()?;
         let (obstacles, obstacles_unknown1) = self.read_obstacles()?;
         let regions = self.read_regions()?;
@@ -86,9 +94,9 @@ impl<R: Read + Seek> Decoder<R> {
         Ok(BattleTabletop {
             width,
             height,
-            player_army,
-            enemy_army,
-            ctl,
+            army1_file_stem,
+            army2_file_stem,
+            ctl_file_stem,
             unknown1,
             unknown2,
             unknown3,
@@ -113,9 +121,9 @@ impl<R: Read + Seek> Decoder<R> {
 
         let width = self.read_int_tuple_property::<i32>(1, 1)?[0] as u32;
         let height = self.read_int_tuple_property::<i32>(2, 1)?[0] as u32;
-        let (player_army, _) = self.read_string_property(1001)?;
-        let (enemy_army, _) = self.read_string_property(1002)?;
-        let (ctl, _) = self.read_string_property(1003)?;
+        let (army1_file_stem, _) = self.read_string_property(1001)?;
+        let (army2_file_stem, _) = self.read_string_property(1002)?;
+        let (ctl_file_stem, _) = self.read_string_property(1003)?;
         let (unknown1, _) = self.read_string_property(1004)?;
         let (unknown2, _) = self.read_string_property(1005)?;
         let unknown3 = self.read_int_tuple_property::<i32>(9, 2)?;
@@ -123,9 +131,9 @@ impl<R: Read + Seek> Decoder<R> {
         Ok((
             width,
             height,
-            player_army,
-            enemy_army,
-            ctl,
+            army1_file_stem,
+            army2_file_stem,
+            ctl_file_stem,
             unknown1,
             unknown2,
             unknown3,
