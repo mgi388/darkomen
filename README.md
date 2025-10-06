@@ -48,6 +48,15 @@ your `Cargo.toml`:
 darkomen = { version = "0.3.8", features = ["bevy_reflect"] }
 ```
 
+## CLI
+
+Example setting the `--editor` flag on Windows to open the file in Visual Studio
+Code and wait for it to close before exiting the command:
+
+```bash
+darkomen army edit DARKOMEN/GAMEDATA/1PARM/PLYR_ALL.ARM --editor "cmd /C code --wait"
+```
+
 ## Important notes
 
 > [!NOTE]
