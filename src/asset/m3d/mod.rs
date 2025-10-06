@@ -14,7 +14,7 @@ use bevy_image::{
 };
 use bevy_pbr::prelude::*;
 use bevy_reflect::prelude::*;
-use bevy_render::{prelude::*, render_asset::RenderAssetUsages};
+use bevy_render::{mesh::MeshVertexAttribute, prelude::*, render_asset::RenderAssetUsages};
 use derive_more::{Display, Error, From};
 use dyn_clone::DynClone;
 use image::Rgba;
@@ -34,7 +34,7 @@ pub struct M3dAssetPlugin<
     _phantom: PhantomData<MaterialT>,
 
     material_loader: Box<dyn MaterialLoader<MaterialT> + Send + Sync>,
-
+    texture_index_attribute: MeshVertexAttribute,
     textures_path: PathBuf,
     low_resolution_textures_path: PathBuf,
 }
@@ -46,12 +46,14 @@ impl<
 {
     pub fn new(
         material_loader: Box<dyn MaterialLoader<MaterialT> + Send + Sync>,
+        texture_index_attribute: MeshVertexAttribute,
         textures_path: PathBuf,
         low_resolution_textures_path: PathBuf,
     ) -> Self {
         Self {
             _phantom: PhantomData,
             material_loader,
+            texture_index_attribute,
             textures_path,
             low_resolution_textures_path,
         }
@@ -80,6 +82,7 @@ impl<
         app.register_asset_loader(M3dAssetLoader::<MaterialT>::new(
             settings.clone(),
             dyn_clone::clone_box(&*self.material_loader),
+            self.texture_index_attribute,
         ));
     }
 }
@@ -159,6 +162,7 @@ pub struct M3dAssetLoader<
 
     default_settings: M3dAssetLoaderSettings<MaterialT>,
     material_loader: Box<dyn MaterialLoader<MaterialT> + Send + Sync>,
+    texture_index_attribute: MeshVertexAttribute,
 }
 
 #[derive(Clone, Deserialize, Resource, Serialize)]
@@ -291,11 +295,13 @@ impl<
     pub fn new(
         settings: M3dAssetLoaderSettings<MaterialT>,
         material_loader: Box<dyn MaterialLoader<MaterialT> + Send + Sync>,
+        texture_index_attribute: MeshVertexAttribute,
     ) -> Self {
         Self {
             _phantom: PhantomData,
             default_settings: settings,
             material_loader,
+            texture_index_attribute,
         }
     }
 
@@ -340,7 +346,7 @@ impl<
                 continue;
             }
 
-            let mut mesh = mesh_from_m3d_object(object);
+            let mut mesh = mesh_from_m3d_object(&self.texture_index_attribute, object);
 
             let generate_tangents_span = info_span!("generate_tangents", name = file_path);
 

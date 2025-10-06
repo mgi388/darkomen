@@ -4,15 +4,14 @@ use bevy_render::{
     mesh::{Indices, MeshVertexAttribute, PrimitiveTopology},
     prelude::*,
     render_asset::RenderAssetUsages,
-    render_resource::VertexFormat,
 };
 
 use crate::m3d::{Object, ObjectFlags};
 
-pub const ATTRIBUTE_TEXTURE_INDEX: MeshVertexAttribute =
-    MeshVertexAttribute::new("TextureIndex", 988540918, VertexFormat::Uint32);
-
-pub(super) fn mesh_from_m3d_object(object: &Object) -> Mesh {
+pub(super) fn mesh_from_m3d_object(
+    texture_index_attribute: &MeshVertexAttribute,
+    object: &Object,
+) -> Mesh {
     let mut positions: Vec<[f32; 3]> = Default::default();
     let mut uv0s: Vec<[f32; 2]> = Default::default();
     let mut normals: Vec<[f32; 3]> = Default::default();
@@ -104,7 +103,7 @@ pub(super) fn mesh_from_m3d_object(object: &Object) -> Mesh {
     .with_inserted_attribute(Mesh::ATTRIBUTE_UV_1, uv1s)
     .with_inserted_attribute(Mesh::ATTRIBUTE_NORMAL, normals)
     .with_inserted_attribute(Mesh::ATTRIBUTE_COLOR, colors)
-    .with_inserted_attribute(ATTRIBUTE_TEXTURE_INDEX, texture_indices)
+    .with_inserted_attribute(*texture_index_attribute, texture_indices)
     .with_inserted_indices(Indices::U32(indices))
 }
 
@@ -114,11 +113,15 @@ mod tests {
     use bevy_render::{
         mesh::{Indices, MeshVertexAttribute, VertexAttributeValues},
         prelude::*,
+        render_resource::VertexFormat,
     };
 
     use crate::m3d::{Face, Object, ObjectFlags, Vertex};
 
     use super::*;
+
+    const ATTRIBUTE_TEXTURE_INDEX: MeshVertexAttribute =
+        MeshVertexAttribute::new("TextureIndex", 12345678, VertexFormat::Uint32);
 
     fn assert_float32x3_attribute(
         mesh: &Mesh,
@@ -210,7 +213,7 @@ mod tests {
     #[test]
     fn test_mesh_from_m3d_object_simple() {
         let object = create_test_object();
-        let mesh = mesh_from_m3d_object(&object);
+        let mesh = mesh_from_m3d_object(&ATTRIBUTE_TEXTURE_INDEX, &object);
 
         assert_float32x3_attribute(
             &mesh,
@@ -259,7 +262,7 @@ mod tests {
         object.flags |= ObjectFlags::CUSTOM_TRANSLATION_ENABLED;
         object.translation = Vec3::new(1.0, 2.0, 3.0);
 
-        let mesh = mesh_from_m3d_object(&object);
+        let mesh = mesh_from_m3d_object(&ATTRIBUTE_TEXTURE_INDEX, &object);
 
         // Check if the translation is applied to the positions.
         assert_float32x3_attribute(
@@ -292,7 +295,7 @@ mod tests {
     fn test_mesh_from_m3d_object_empty_object() {
         let object = Object::default();
 
-        let mesh = mesh_from_m3d_object(&object);
+        let mesh = mesh_from_m3d_object(&ATTRIBUTE_TEXTURE_INDEX, &object);
 
         assert_float32x3_attribute(&mesh, Mesh::ATTRIBUTE_POSITION, &vec![] as &Vec<[f32; 3]>);
         assert_float32x2_attribute(&mesh, Mesh::ATTRIBUTE_UV_0, &vec![] as &Vec<[f32; 2]>);
