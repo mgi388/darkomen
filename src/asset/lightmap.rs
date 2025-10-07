@@ -15,8 +15,9 @@ pub struct LightmapAssetPlugin;
 impl Plugin for LightmapAssetPlugin {
     fn build(&self, app: &mut App) {
         app.init_asset::<LightmapAsset>()
-            .init_asset_loader::<LightmapAssetLoader>()
-            .register_asset_reflect::<LightmapAsset>();
+            .init_asset_loader::<LightmapAssetLoader>();
+        #[cfg(feature = "bevy_reflect")]
+        app.register_asset_reflect::<LightmapAsset>();
     }
 }
 

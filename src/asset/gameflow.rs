@@ -12,8 +12,9 @@ pub struct GameflowAssetPlugin;
 impl Plugin for GameflowAssetPlugin {
     fn build(&self, app: &mut App) {
         app.init_asset::<GameflowAsset>()
-            .init_asset_loader::<GameflowAssetLoader>()
-            .register_asset_reflect::<GameflowAsset>();
+            .init_asset_loader::<GameflowAssetLoader>();
+        #[cfg(feature = "bevy_reflect")]
+        app.register_asset_reflect::<GameflowAsset>();
     }
 }
 

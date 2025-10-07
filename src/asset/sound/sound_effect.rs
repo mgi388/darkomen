@@ -33,9 +33,10 @@ impl Plugin for SoundEffectAssetPlugin {
         app.init_asset::<PacketAsset>()
             .init_asset_loader::<PacketAssetLoader>();
         #[cfg(feature = "bevy_reflect")]
-        app.register_asset_reflect::<PacketAsset>();
-        #[cfg(feature = "bevy_reflect")]
-        app.register_type::<PacketAssetHandle>();
+        {
+            app.register_asset_reflect::<PacketAsset>();
+            app.register_type::<PacketAssetHandle>();
+        }
     }
 }
 

@@ -18,6 +18,7 @@ asset = [
     "dep:bevy_kira_audio",
     "dep:bevy_math",
     "dep:bevy_pbr",
+    "dep:bevy_reflect",
     "dep:bevy_render",
     "dep:bevy-kira-components",
     "dep:dyn-clone",

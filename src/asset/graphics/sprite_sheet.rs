@@ -23,11 +23,14 @@ impl Plugin for SpriteSheetAssetPlugin {
             use_fallback_image: true,
             ..Default::default()
         })
-        .register_type::<SpriteSheetAssetLoaderSettings>()
         .init_asset::<SpriteSheetAsset>()
-        .init_asset_loader::<SpriteSheetAssetLoader>()
-        .register_asset_reflect::<SpriteSheetAsset>()
-        .register_type::<SpriteSheetAssetHandle>();
+        .init_asset_loader::<SpriteSheetAssetLoader>();
+        #[cfg(feature = "bevy_reflect")]
+        {
+            app.register_type::<SpriteSheetAssetLoaderSettings>();
+            app.register_asset_reflect::<SpriteSheetAsset>();
+            app.register_type::<SpriteSheetAssetHandle>();
+        }
     }
 }
 
@@ -61,8 +64,9 @@ impl SpriteSheetAsset {
     }
 }
 
-#[derive(Clone, Reflect)]
+#[derive(Clone)]
 #[cfg_attr(feature = "debug", derive(Debug))]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 #[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct TextureDescriptor {
     d: crate::graphics::TextureDescriptor,
