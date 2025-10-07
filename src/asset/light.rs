@@ -12,8 +12,9 @@ pub struct LightAssetPlugin;
 impl Plugin for LightAssetPlugin {
     fn build(&self, app: &mut App) {
         app.init_asset::<LightsAsset>()
-            .init_asset_loader::<LightsAssetLoader>()
-            .register_asset_reflect::<LightsAsset>();
+            .init_asset_loader::<LightsAssetLoader>();
+        #[cfg(feature = "bevy_reflect")]
+        app.register_asset_reflect::<LightsAsset>();
     }
 }
 

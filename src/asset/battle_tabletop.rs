@@ -17,8 +17,9 @@ impl Plugin for BattleTabletopAssetPlugin {
         }
 
         app.init_asset::<BattleTabletopAsset>()
-            .init_asset_loader::<BattleTabletopAssetLoader>()
-            .register_asset_reflect::<BattleTabletopAsset>();
+            .init_asset_loader::<BattleTabletopAssetLoader>();
+        #[cfg(feature = "bevy_reflect")]
+        app.register_asset_reflect::<BattleTabletopAsset>();
     }
 }
 

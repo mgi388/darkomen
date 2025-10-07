@@ -70,10 +70,13 @@ impl<
             self.textures_path.clone(),
             self.low_resolution_textures_path.clone(),
         ))
-        .register_type::<M3dAssetLoaderSettings<MaterialT>>()
         .init_asset::<M3dAsset<MaterialT>>()
-        .preregister_asset_loader::<M3dAssetLoader<MaterialT>>(EXTENSIONS)
-        .register_asset_reflect::<M3dAsset<MaterialT>>();
+        .preregister_asset_loader::<M3dAssetLoader<MaterialT>>(EXTENSIONS);
+        #[cfg(feature = "bevy_reflect")]
+        {
+            app.register_type::<M3dAssetLoaderSettings<MaterialT>>();
+            app.register_asset_reflect::<M3dAsset<MaterialT>>();
+        }
     }
 
     fn finish(&self, app: &mut App) {
@@ -173,7 +176,7 @@ pub struct M3dAssetLoaderSettings<
     #[cfg(feature = "debug")] MaterialT: Material + core::fmt::Debug,
     #[cfg(not(feature = "debug"))] MaterialT: Material,
 > {
-    #[reflect(ignore)]
+    #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
     _phantom: PhantomData<MaterialT>,
 
     pub use_low_resolution_textures: bool,

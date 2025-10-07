@@ -22,8 +22,9 @@ impl Plugin for ArmyAssetPlugin {
         }
 
         app.init_asset::<ArmyAsset>()
-            .init_asset_loader::<ArmyAssetLoader>()
-            .register_asset_reflect::<ArmyAsset>();
+            .init_asset_loader::<ArmyAssetLoader>();
+        #[cfg(feature = "bevy_reflect")]
+        app.register_asset_reflect::<ArmyAsset>();
     }
 }
 

@@ -21,13 +21,14 @@ impl Plugin for AssetPathsPlugin {
             music_path: PathBuf::from("DARKOMEN/SOUND/MUSIC"),
             sound_effect_packets_path: PathBuf::from("DARKOMEN/SOUND/H"),
         });
+        #[cfg(feature = "bevy_reflect")]
         app.register_type::<AssetPaths>();
     }
 }
 
-#[derive(Clone, Reflect, Resource)]
+#[derive(Clone, Resource)]
 #[cfg_attr(feature = "debug", derive(Debug))]
-#[reflect(Resource)]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect), reflect(Resource))]
 #[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct AssetPaths {
     pub gameflow_path: PathBuf,

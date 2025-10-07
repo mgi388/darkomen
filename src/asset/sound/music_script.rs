@@ -25,8 +25,9 @@ impl Plugin for MusicScriptAssetPlugin {
         }
 
         app.init_asset::<MusicScriptAsset>()
-            .init_asset_loader::<MusicScriptAssetLoader>()
-            .register_asset_reflect::<MusicScriptAsset>();
+            .init_asset_loader::<MusicScriptAssetLoader>();
+        #[cfg(feature = "bevy_reflect")]
+        app.register_asset_reflect::<MusicScriptAsset>();
     }
 }
 
@@ -38,7 +39,7 @@ impl Plugin for MusicScriptAssetPlugin {
 pub struct MusicScriptAsset {
     script: Script,
 
-    #[reflect(ignore)]
+    #[cfg_attr(feature = "bevy_reflect", reflect(ignore))]
     pub samples: IndexMap<SampleId, Handle<AudioSource>>,
 }
 
