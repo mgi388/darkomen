@@ -712,9 +712,11 @@ bitflags! {
         const TEMPORARY = 1 << 8;
         /// Set if the regiment has departed.
         const DEPARTED = 1 << 9;
-        /// The flag seems to be unused in any .ARM or save games. It's possible
-        /// it's only set during battle.
-        const UNKNOWN_REGIMENT_FLAG_10 = 1 << 10;
+        /// Set when the regiment is purchased during multiplayer army editing.
+        ///
+        /// Displays a red frame around the regiment's banner to highlight the
+        /// new purchase. Cleared when the army is saved. Never used in campaign.
+        const NEWLY_PURCHASED = 1 << 10;
         /// The flag seems to be unused in any .ARM or save games. It's possible
         /// it's only set during battle.
         const UNKNOWN_REGIMENT_FLAG_11 = 1 << 11;
