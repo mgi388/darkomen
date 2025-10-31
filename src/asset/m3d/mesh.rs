@@ -34,10 +34,7 @@ pub(super) fn mesh_from_m3d_object(
             } else {
                 let vertex = object.vertices.get(*index as usize).unwrap();
 
-                let position = if object
-                    .flags
-                    .contains(ObjectFlags::CUSTOM_TRANSLATION_ENABLED)
-                {
+                let position = if object.flags.contains(ObjectFlags::USE_LOCAL_SPACE) {
                     [
                         vertex.position.z + object.translation.z,
                         vertex.position.y + object.translation.y,
@@ -259,7 +256,7 @@ mod tests {
     #[test]
     fn test_mesh_from_m3d_object_with_translation() {
         let mut object = create_test_object();
-        object.flags |= ObjectFlags::CUSTOM_TRANSLATION_ENABLED;
+        object.flags |= ObjectFlags::USE_LOCAL_SPACE;
         object.translation = Vec3::new(1.0, 2.0, 3.0);
 
         let mesh = mesh_from_m3d_object(&ATTRIBUTE_TEXTURE_INDEX, &object);
