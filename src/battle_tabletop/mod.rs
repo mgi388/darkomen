@@ -1,6 +1,8 @@
 mod decoder;
 mod encoder;
 
+use core::f32::consts::*;
+
 #[cfg(feature = "bevy_reflect")]
 use bevy_reflect::prelude::*;
 use bitflags::bitflags;
@@ -50,12 +52,79 @@ pub struct BattleTabletop {
     pub nodes: Vec<Node>,
 }
 
-/// The ID of the critical regiment lose condition objective.
+/// Win condition: Eliminate all enemy regiments.
+pub const ELIMINATE_ALL_ENEMIES_ID: i32 = 1;
+
+/// Win condition: Kill specific enemy regiment (Dread King).
+///
+/// Used in B5_01 and B5_01B.
+pub const KILL_DREAD_KING_ID: i32 = 2;
+
+/// Lose condition: Critical regiment must not be captured/killed.
 pub const CRITICAL_REGIMENT_LOSE_CONDITION_ID: i32 = 3;
 
-/// The ID of the initial regiment orientation objective.
+/// Configuration: Spatial sound effects preset.
+pub const SPATIAL_SOUND_EFFECT_PRESET_ID: i32 = 4;
+
+/// Win condition: Kill specific enemy regiment (Mannfred von Carstein).
+///
+/// Used in B2_08.
+pub const KILL_MANNFRED_VON_CARSTEIN_ID: i32 = 5;
+
+/// Scripted event: Victory fireworks celebration.
+///
+/// Used in B1_05 for end-of-battle celebration.
+pub const FIREWORKS_ID: i32 = 6;
+
+/// Configuration: Initial regiment orientation/facing direction.
 pub const INITIAL_REGIMENT_ORIENTATION_ID: i32 = 7;
 
+/// Win condition: Kill specific enemy regiment (Hand of Nagash).
+///
+/// Used in B3_09.
+pub const KILL_HAND_OF_NAGASH_ID: i32 = 8;
+
+/// Win condition: Kill specific enemy regiment (Black Grail).
+///
+/// Used in B4_10.
+pub const KILL_BLACK_GRAIL_ID: i32 = 9;
+
+/// Post-battle metric: Gold collected by specified alignment.
+///
+/// Evaluates after battle completion, may affect victory rating or rewards.
+///
+/// Typically checks enemy alignment with threshold 0 (did enemies loot
+/// anything?).
+///
+/// TODO: Confirm this objective, it's probably not right. Update docs below
+/// too.
+pub const GOLD_COLLECTION_METRIC_ID: i32 = 10;
+
+/// Win condition: Inflict percentage casualties on enemy forces.
+pub const ENEMY_CASUALTIES_ID: i32 = 11;
+
+/// Lose condition: All player regiments eliminated.
+pub const PLAYER_ELIMINATION_LOSE_CONDITION_ID: i32 = 26;
+
+/// Battle objective/condition definition.
+///
+/// These represent various battle conditions, triggers, and configuration
+/// parameters.
+///
+/// They can be:
+///
+/// - Win conditions (eliminate all enemies, collect treasure).
+/// - Lose conditions (critical unit dies, all units eliminated).
+/// - Configuration (initial facing, spatial sound effects).
+/// - Scripted events (fireworks).
+///
+/// Each condition has an associated handler function that is called with
+/// different trigger codes:
+///
+/// - 1: Initialize (called once at battle start).
+/// - 2: Execute/trigger (called when condition should activate).
+/// - 3: Evaluate (called periodically to check if condition is met).
+/// - 4: Setup (called once for configuration conditions).
 #[derive(Clone, Default, Deserialize, Serialize)]
 #[cfg_attr(feature = "debug", derive(Debug))]
 #[cfg_attr(
@@ -65,17 +134,80 @@ pub const INITIAL_REGIMENT_ORIENTATION_ID: i32 = 7;
 )]
 #[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct Objective {
-    /// The ID of the objective.
+    /// The ID of the objective. This determines which handler function
+    /// processes the objective and what the values mean.
     ///
-    /// Interesting IDs:
+    /// Used objective IDs:
     ///
-    /// - 3: Defines critical regiment lose condition. `value1` is the regiment
-    ///   ID of the player regiment and `value2` is unknown.
-    /// - 7: Defines initial regiment orientation on the battlefield. `value1`
-    ///   is the orientation of player regiments and `value2` is the orientation
-    ///   of enemy regiments.
+    /// - 1: Eliminate all enemy regiments (win condition).
+    ///   - `value1`: Unused.
+    ///   - `value2`: Unused.
+    ///
+    /// - 2, 5, 8, 9: Kill specific enemy regiment (win condition).
+    ///   - `value1`: Target regiment ID (e.g., 257 = "Hand of Nagash', 258 =
+    ///     "Dread King", 260 = "Mannfred von Carstein").
+    ///   - `value2`: Unused.
+    ///   - Note: Different IDs used for different battles/regiments.
+    ///
+    /// - 3: Critical regiment lose condition.
+    ///   - `value1`: Critical regiment ID (e.g., 1 = "Morgan Bernhardt").
+    ///   - `value2`: Unused.
+    ///   - If this regiment dies and is enemy-aligned: player wins.
+    ///   - If this regiment dies and is player-aligned: player loses.
+    ///
+    /// - 4: Spatial sound effect configuration.
+    ///   - `value1`: Indicates the preset of sound effect packets to load. The
+    ///     battle can only spawn spatial sound effects from packets that are
+    ///     part of this preset. Known presets:
+    ///     - 1: "Forest River": Loads STREAM.H, TWITTER.H and WATAFALL.H.
+    ///     - 2: "Grassland": Loads TWITTER.H.
+    ///     - 3: "Evening Water": Loads NIGHT.H, STREAM.H and WATAFALL.H.
+    ///     - 4: "Night": Loads NIGHT.H.
+    ///     - 5: "Underground River": Loads CAVERN.H, STREAM.H and WATAFALL.H.
+    ///     - 6: "Underground": Loads CAVERN.H.
+    ///     - 7: "Mountain Stream": Loads MOUNTAIN.H, STREAM.H and WATAFALL.H.
+    ///     - 8: "Mountain": Loads MOUNTAIN.H.
+    ///   - `value2`: Unused.
+    ///
+    /// - 6: Victory fireworks.
+    ///   - `value1`: Number of firework particle effects to spawn.
+    ///   - `value2`: Starting node index for firework particle effect spawn
+    ///     positions.
+    ///   - Spawns particle effects at consecutive node positions.
+    ///
+    /// - 7: Initial regiment orientation.
+    ///   - `value1`: Player regiment rotation (0-511, 0=north, 256=south).
+    ///   - `value2`: Enemy regiment rotation (0-511, 0=north, 256=south).
+    ///
+    /// - 10: Gold collection metric (post-battle evaluation).
+    ///   - `value1`: Alignment to check (0=Good, 64=Neutral, 128=Evil).
+    ///   - `value2`: Gold threshold.
+    ///   - Evaluates after battle: Checks if specified alignment collected more
+    ///     gold than threshold.
+    ///   - Includes both carried gold and uncollected ground items.
+    ///   - Likely affects victory rating or determines if mission objectives
+    ///     were "perfectly" completed.
+    ///   - Example: Check if enemies looted any treasure (threshold=0) to
+    ///     determine "flawless victory" status.
+    ///
+    /// - 11: Enemy casualties percentage (win condition).
+    ///   - `value1`: Required casualty percentage (e.g., 75 = 75%).
+    ///   - `value2`: Initial enemy count (calculated at battle start).
+    ///
+    /// - 12: Used in B5_01 and B5_01B but the handler does nothing so this was
+    ///   likely unused/unfinished/cut content.
+    ///
+    /// - 26: Player elimination (lose condition).
+    ///   - `value1`: Current alive player regiment count (updated during
+    ///     battle).
+    ///   - `value2`: Initial player regiment count.
+    ///   - Always present in single-player battles.
     pub id: i32,
+
+    /// First parameter value. Meaning depends on objective ID.
     pub value1: i32,
+
+    /// Second parameter value. Meaning depends on objective ID.
     pub value2: i32,
 }
 
@@ -84,7 +216,7 @@ impl Objective {
     /// is south (down), and 3π/2 is west (left).
     #[inline]
     pub fn rotation_radians(value: i32) -> f32 {
-        (value as f32 / 512.0) * std::f32::consts::TAU
+        (value as f32 / 512.0) * TAU
     }
 }
 
@@ -671,11 +803,11 @@ mod tests {
             // Every 1-player battle tabletop should at least have the following
             // objectives.
             for id in [
-                1,
+                ELIMINATE_ALL_ENEMIES_ID,
                 CRITICAL_REGIMENT_LOSE_CONDITION_ID,
-                4,
+                SPATIAL_SOUND_EFFECT_PRESET_ID,
                 INITIAL_REGIMENT_ORIENTATION_ID,
-                26,
+                PLAYER_ELIMINATION_LOSE_CONDITION_ID,
             ] {
                 // Skip if file name is TMPBAT.BTB.
                 if path.file_name().unwrap() == "TMPBAT.BTB" {
@@ -700,7 +832,12 @@ mod tests {
 
             // Every multiplayer battle tabletop should have the following
             // objectives.
-            for id in [1, 4, INITIAL_REGIMENT_ORIENTATION_ID, 26] {
+            for id in [
+                ELIMINATE_ALL_ENEMIES_ID,
+                SPATIAL_SOUND_EFFECT_PRESET_ID,
+                INITIAL_REGIMENT_ORIENTATION_ID,
+                PLAYER_ELIMINATION_LOSE_CONDITION_ID,
+            ] {
                 // Skip non-multiplayer files.
                 if !path.file_name().unwrap().to_str().unwrap().starts_with('M') {
                     continue;
@@ -753,6 +890,133 @@ mod tests {
             let mut output_file = File::create(output_path).unwrap();
             ron::ser::to_writer_pretty(&mut output_file, &b, Default::default()).unwrap();
         });
+    }
+
+    #[test]
+    fn test_summarize_objectives() {
+        use std::collections::{BTreeMap, BTreeSet};
+
+        let d: PathBuf = [
+            std::env::var("DARKOMEN_PATH").unwrap().as_str(),
+            "DARKOMEN",
+            "GAMEDATA",
+        ]
+        .iter()
+        .collect();
+
+        // Map of objective_id -> file -> set of (value1, value2) pairs.
+        let mut objective_data: BTreeMap<i32, BTreeMap<String, BTreeSet<(i32, i32)>>> =
+            BTreeMap::new();
+
+        fn visit_dirs(dir: &Path, cb: &mut dyn FnMut(&Path)) {
+            let mut paths = std::fs::read_dir(dir)
+                .unwrap()
+                .map(|res| res.map(|e| e.path()))
+                .collect::<Result<Vec<_>, std::io::Error>>()
+                .unwrap();
+            paths.sort();
+
+            for path in paths {
+                if path.is_dir() {
+                    visit_dirs(&path, cb);
+                } else {
+                    cb(&path);
+                }
+            }
+        }
+
+        visit_dirs(&d, &mut |path| {
+            let Some(ext) = path.extension() else { return };
+            if ext.to_string_lossy().to_uppercase() != "BTB" {
+                return;
+            }
+
+            let file = File::open(path).unwrap();
+            let b = Decoder::new(file).decode().unwrap();
+            let file_name = path.file_name().unwrap().to_string_lossy().to_string();
+
+            for obj in &b.objectives {
+                objective_data
+                    .entry(obj.id)
+                    .or_default()
+                    .entry(file_name.clone())
+                    .or_default()
+                    .insert((obj.value1, obj.value2));
+            }
+        });
+
+        // Print summary table.
+        println!("\n=== OBJECTIVE SUMMARY ===\n");
+
+        for (obj_id, files) in &objective_data {
+            let obj_name = match *obj_id {
+                ELIMINATE_ALL_ENEMIES_ID => "Eliminate all enemies",
+                KILL_DREAD_KING_ID => "Kill Dread King",
+                CRITICAL_REGIMENT_LOSE_CONDITION_ID => "Critical regiment lose condition",
+                SPATIAL_SOUND_EFFECT_PRESET_ID => "Spatial sound effect preset",
+                KILL_MANNFRED_VON_CARSTEIN_ID => "Kill Mannfred von Carstein",
+                FIREWORKS_ID => "Fireworks",
+                INITIAL_REGIMENT_ORIENTATION_ID => "Initial regiment orientation",
+                KILL_HAND_OF_NAGASH_ID => "Kill Hand of Nagash",
+                KILL_BLACK_GRAIL_ID => "Kill Black Grail",
+                GOLD_COLLECTION_METRIC_ID => "Gold collection metric",
+                ENEMY_CASUALTIES_ID => "Enemy casualties",
+                PLAYER_ELIMINATION_LOSE_CONDITION_ID => "Player elimination lose condition",
+                _ => "Unknown",
+            };
+
+            println!(
+                "Objective ID {}: {} (used in {} files)",
+                obj_id,
+                obj_name,
+                files.len()
+            );
+
+            // Group files by their value pairs.
+            let mut value_to_files: BTreeMap<BTreeSet<(i32, i32)>, Vec<String>> = BTreeMap::new();
+            for (file, values) in files {
+                value_to_files
+                    .entry(values.clone())
+                    .or_default()
+                    .push(file.clone());
+            }
+
+            for (values, file_list) in &value_to_files {
+                let values_str = values
+                    .iter()
+                    .map(|(v1, v2)| format!("({}, {})", v1, v2))
+                    .collect::<Vec<_>>()
+                    .join(", ");
+
+                println!("  Values: {} - Files: {}", values_str, file_list.join(", "));
+            }
+            println!();
+        }
+
+        // Print a simple frequency table.
+        println!("\n=== OBJECTIVE FREQUENCY ===\n");
+        println!("{:<5} {:<45} {:<10}", "ID", "Name", "Count");
+        println!("{}", "-".repeat(60));
+
+        for (obj_id, files) in &objective_data {
+            let obj_name = match *obj_id {
+                ELIMINATE_ALL_ENEMIES_ID => "Eliminate all enemies",
+                KILL_DREAD_KING_ID => "Kill Dread King",
+                CRITICAL_REGIMENT_LOSE_CONDITION_ID => "Critical regiment lose condition",
+                SPATIAL_SOUND_EFFECT_PRESET_ID => "Spatial sound effect preset",
+                KILL_MANNFRED_VON_CARSTEIN_ID => "Kill Mannfred von Carstein",
+                FIREWORKS_ID => "Fireworks",
+                INITIAL_REGIMENT_ORIENTATION_ID => "Initial regiment orientation",
+                KILL_HAND_OF_NAGASH_ID => "Kill Hand of Nagash",
+                KILL_BLACK_GRAIL_ID => "Kill Black Grail",
+                GOLD_COLLECTION_METRIC_ID => "Gold collection metric",
+                ENEMY_CASUALTIES_ID => "Enemy casualties",
+                PLAYER_ELIMINATION_LOSE_CONDITION_ID => "Player elimination lose condition",
+                _ => "Unknown",
+            };
+
+            println!("{:<5} {:<45} {:<10}", obj_id, obj_name, files.len());
+        }
     }
 
     /// Note: We know the battle tabletop always fits within the project
