@@ -91,7 +91,22 @@ bitflags! {
     pub struct ObjectFlags: u32 {
         const NONE = 0;
         const UNKNOWN_FLAG_1 = 1 << 0;
-        const CUSTOM_TRANSLATION_ENABLED = 1 << 1;
+        /// Vertices are in local object space and need the object's translation
+        /// applied to transform them into world space.
+        ///
+        /// When this flag is set:
+        ///
+        /// - Each vertex position should have the object's translation added to
+        ///   it.
+        /// - This is used for instanced objects like furniture that can be
+        ///   placed at different positions in the world.
+        ///
+        /// When this flag is NOT set:
+        ///
+        /// - Vertices are already in world space coordinates.
+        /// - No transformation should be applied.
+        /// - This is typical for terrain/base meshes.
+        const USE_LOCAL_SPACE = 1 << 1;
         const UNKNOWN_FLAG_3 = 1 << 2;
     }
 }
