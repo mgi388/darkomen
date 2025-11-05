@@ -92,18 +92,27 @@ pub struct Instance {
     /// Slot is 1-based, not 0-based. A slot of 1 refers to the first furniture
     /// model and a slot of 0 means the instance is not used.
     pub furniture_model_slot: u32,
-    model_id: i32,
+    pub model_id: i32,
     attackable: i32,
     toughness: i32,
     wounds: i32,
     pub unknown1: i32,
     owner_unit_index: i32,
     burnable: i32,
-    pub sfx_code: u32,
-    /// Instances with a model can have a GFX code set, e.g., for the windmill
-    /// model, it has animated sails and for some building models they have an
-    /// animated flag or sign.
-    pub gfx_code: u32,
+    /// Spatial sound effect code for the instance.
+    ///
+    /// Each code maps to a (sound_effect_packet_id, sound_effect_id) pair
+    /// defined in the executable. For example, in B1_01, the value 1 maps to
+    /// ("[SOUND]\watafall.h", 0) where 0 is `SFX_WATERFALL`.
+    pub spatial_sound_effect_code: u32,
+    /// Instances with a model can have an attachment code, e.g., for the
+    /// windmill model, it has continuously rotating sails and for some building
+    /// models they have a swaying flag or sign.
+    ///
+    /// The behavior of the attachment is defined inside the executable based on
+    /// this code, e.g., the M3D model used to render the attached, the
+    /// translation offset and the rotation speed.
+    pub attachment_code: u32,
     locked: i32,
     pub exclude_from_terrain_shadow: bool,
     pub exclude_from_walk: bool,
@@ -687,14 +696,14 @@ mod tests {
                 assert_eq!(track.control_points.len(), 6);
             }
 
-            // Each instance with a GFX code should have a furniture model slot,
-            // i.e., instances with GFX always have an associated furniture
-            // model.
+            // Each instance with an attachment code should have a furniture
+            // model slot, i.e., instances with attachments always have an
+            // associated furniture model.
             for instance in &project.instances {
                 assert!(
-                    instance.gfx_code == 0 || instance.furniture_model_slot != 0,
-                    "instance with GFX code {} has no furniture model slot",
-                    instance.gfx_code
+                    instance.attachment_code == 0 || instance.furniture_model_slot != 0,
+                    "instance with attachment code {} has no furniture model slot",
+                    instance.attachment_code
                 );
             }
 

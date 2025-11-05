@@ -167,8 +167,9 @@ impl<W: Write> Encoder<W> {
         self.writer.write_all(&i.unknown1.to_le_bytes())?;
         self.writer.write_all(&i.owner_unit_index.to_le_bytes())?;
         self.writer.write_all(&i.burnable.to_le_bytes())?;
-        self.writer.write_all(&i.sfx_code.to_le_bytes())?;
-        self.writer.write_all(&i.gfx_code.to_le_bytes())?;
+        self.writer
+            .write_all(&i.spatial_sound_effect_code.to_le_bytes())?;
+        self.writer.write_all(&i.attachment_code.to_le_bytes())?;
         self.writer.write_all(&i.locked.to_le_bytes())?;
         self.writer.write_all(
             &(if i.exclude_from_terrain_shadow {
