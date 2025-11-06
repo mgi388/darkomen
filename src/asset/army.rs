@@ -134,10 +134,29 @@ impl AssetLoader for ArmyAssetLoader {
 
     fn extensions(&self) -> &[&str] {
         // - "ARM" is the extension for army files.
+        //
         // - "ARE" is the extension for empty army files used in multiplayer.
-        //   Empty army files' `regiment` field is empty.
-        // - "AUD" extension is used in multiplayer, but not clear what it is
-        //   used for.
+        //
+        //   They contain:
+        //
+        //   - The army header/metadata (race, banner paths, etc.).
+        //   - Starting gold amount.
+        //   - An empty regiments list.
+        //   - The starting point for creating a new multiplayer army.
+        //
+        // - "AUD" is the extension for catalog/template files used in
+        //   multiplayer.
+        //
+        //   They contain:
+        //
+        //   - All available regiment types for a race.
+        //   - Multiple experience tier variants of each unit (0, 1000, 3000,
+        //     6000 XP).
+        //   - Different cost tiers based on experience level.
+        //
+        //  They are essentially the "shopping catalog" for multiplayer army
+        //  building.
+        //
         // - "{xxx}", not included here, (where `{xxx}` is a 3-digit number) is
         //   the extension for save games, but they are not able to be
         //   automatically loaded by this loader.
