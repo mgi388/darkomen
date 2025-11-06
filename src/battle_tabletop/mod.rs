@@ -508,7 +508,12 @@ pub struct Node {
     ///
     /// The rotation represents a 2D rotation around the horizontal plane.
     ///
-    /// Note: The rotation does not seem to be used for player regiments.
+    /// Note: This rotation value is used for enemy regiments to determine their
+    /// initial facing direction. For player regiments, the initial facing
+    /// direction is instead determined by the
+    /// [`INITIAL_REGIMENT_ORIENTATION_ID`] battle condition. Use
+    /// [`Node::rotation_radians`] or [`Node::rotation_degrees`] to convert the
+    /// raw objective rotation values to radians or degrees.
     pub rotation: i32,
     pub node_id: u32,
     /// The ID of the regiment the node belongs to. Corresponds to the ID field
