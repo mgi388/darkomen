@@ -183,9 +183,9 @@ impl<R: Read + Seek> Decoder<R> {
             obstacles.push(Obstacle {
                 flags: ObstacleFlags::from_bits(flags).expect("obstacle flags should be valid"),
                 position: IVec2::new(x, y),
-                z,
+                height: z,
                 radius: radius as u32,
-                dir,
+                unknown: dir,
             });
         }
 

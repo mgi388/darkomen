@@ -229,12 +229,33 @@ impl Objective {
 )]
 #[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct Obstacle {
+    /// Obstacle flags.
+    ///
+    /// When the regiment obstacle is spawned, this is assigned a value of 9
+    /// which corresponds to [ObstacleFlags::ACTIVE] |
+    /// [ObstacleFlags::UNKNOWN_FLAG_1].
     pub flags: ObstacleFlags,
     /// The position of the obstacle in the horizontal plane.
     pub position: IVec2,
-    pub z: i32,
+    /// The height of the obstacle's collision volume in battle tabletop
+    /// coordinates. Combined with `radius`, this defines a vertical collision
+    /// volume (likely a cylinder) that blocks movement and projectiles (e.g.,
+    /// cannonballs).
+    ///
+    /// This value is also reused by some particle effect scripts to determine
+    /// the range of random vertical positions when spawning particle effects
+    /// within the obstacle's volume. Particles spawn at heights between
+    /// `-height/2` and `+height/2` relative to the obstacle's base position.
+    ///
+    /// For example, large trees/forests in B1_04 have a height value of 128 (16
+    /// in world space after dividing by [SCALE]), which blocks projectiles at
+    /// tree-top height.
+    ///
+    /// When the regiment obstacle is spawned, this is assigned a value of 16.
+    pub height: i32,
+    /// When the regiment obstacle is spawned, this is assigned a value of 12.
     pub radius: u32,
-    pub dir: i32,
+    pub unknown: i32,
 }
 
 impl Obstacle {
@@ -246,6 +267,12 @@ impl Obstacle {
             self.position.x as f32 / SCALE,
             self.position.y as f32 / SCALE,
         )
+    }
+
+    /// Returns the height of the obstacle in world space.
+    #[inline]
+    pub fn world_height(&self) -> f32 {
+        self.height as f32 / SCALE
     }
 
     /// Returns the radius of the obstacle in world space.

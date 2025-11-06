@@ -122,9 +122,9 @@ impl<W: Write> Encoder<W> {
             self.write_int_tuple_property(5, &[obstacle.flags.bits()])?;
             self.write_int_tuple_property(1, &[obstacle.position.x])?;
             self.write_int_tuple_property(2, &[obstacle.position.y])?;
-            self.write_int_tuple_property(4, &[obstacle.z])?;
+            self.write_int_tuple_property(4, &[obstacle.height])?;
             self.write_int_tuple_property(6, &[obstacle.radius as i32])?;
-            self.write_int_tuple_property(7, &[obstacle.dir])?;
+            self.write_int_tuple_property(7, &[obstacle.unknown])?;
         }
         Ok(())
     }
