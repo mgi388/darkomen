@@ -161,12 +161,14 @@ impl<W: Write> Encoder<W> {
         self.writer
             .write_all(&i.furniture_model_slot.to_le_bytes())?;
         self.writer.write_all(&i.model_id.to_le_bytes())?;
-        self.writer.write_all(&i.attackable.to_le_bytes())?;
+        self.writer
+            .write_all(&(if i.attackable { 1u32 } else { 0u32 }).to_le_bytes())?;
         self.writer.write_all(&i.toughness.to_le_bytes())?;
         self.writer.write_all(&i.wounds.to_le_bytes())?;
         self.writer.write_all(&i.unknown1.to_le_bytes())?;
         self.writer.write_all(&i.owner_unit_index.to_le_bytes())?;
-        self.writer.write_all(&i.burnable.to_le_bytes())?;
+        self.writer
+            .write_all(&(if i.burnable { 1u32 } else { 0u32 }).to_le_bytes())?;
         self.writer
             .write_all(&i.spatial_sound_effect_code.to_le_bytes())?;
         self.writer.write_all(&i.attachment_code.to_le_bytes())?;

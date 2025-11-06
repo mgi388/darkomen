@@ -76,9 +76,9 @@ impl Project {
     }
 }
 
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone, Default, Deserialize, Serialize)]
 #[cfg_attr(feature = "debug", derive(Debug))]
-#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect), reflect(Default))]
 #[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct Instance {
     prev: i32,
@@ -90,15 +90,19 @@ pub struct Instance {
     pub aabb_min: DVec3,
     pub aabb_max: DVec3,
     /// Slot is 1-based, not 0-based. A slot of 1 refers to the first furniture
-    /// model and a slot of 0 means the instance is not used.
+    /// model and a slot of 0 means the instance does not use a furniture model.
     pub furniture_model_slot: u32,
     pub model_id: i32,
-    attackable: i32,
+    /// Instances can be attackable, e.g., huts, buildings, rocks and stone
+    /// statues.
+    attackable: bool,
     toughness: i32,
     wounds: i32,
     pub unknown1: i32,
     owner_unit_index: i32,
-    burnable: i32,
+    /// Instances can be attackable but not burnable, e.g., in B3_02 there is a
+    /// stone statue that can be attacked but it doesn't burn.
+    burnable: bool,
     /// Spatial sound effect code for the instance.
     ///
     /// Each code maps to a (sound_effect_packet_id, sound_effect_id) pair
@@ -119,7 +123,8 @@ pub struct Instance {
     pub magic_item_id: u32,
     pub particle_effect_code: u32,
     /// Slot is 1-based, not 0-based. A slot of 1 refers to the first furniture
-    /// model and a slot of 0 means the instance is not used.
+    /// model and a slot of 0 means the instance does not use a furniture dead
+    /// model.
     pub furniture_dead_model_slot: u32,
     dead_model_id: i32,
     pub light: i32,
