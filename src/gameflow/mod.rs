@@ -19,9 +19,16 @@ pub use encoder::{EncodeError, Encoder};
 pub struct Gameflow {
     /// The paths that the gameflow follows.
     pub paths: Vec<Path>,
+    /// Always 103 in the original game.
     pub(crate) unknown1: u32,
-    /// Always 40. Possibly an animation duration.
-    pub(crate) unknown2: u16,
+    /// The animation frame interval in milliseconds, multiplied by 2. Divided
+    /// by 2 at runtime to get the actual frame time (e,g., 40 / 2 = 20ms per
+    /// frame).
+    ///
+    /// Used for animating the points along the path.
+    ///
+    /// Always 40 in the original game.
+    pub animation_frame_interval_millis_x2: u16,
     pub(crate) unknown3: u16,
     /// Notes is probably a relic from the gameflow editor. In `CH1_ALL.DOT.ron`
     /// it looks like the first note is truncated, so this field probably
@@ -45,8 +52,12 @@ pub struct Gameflow {
 pub struct Path {
     /// The control points used to make a curve that represents the path.
     pub control_points: Vec<Point>,
-    /// Always 5.
-    pub unknown1: i32,
+    /// The number of animation frames between revealing each point along this
+    /// path. With the default 20ms frame time, a value of 5 means points appear
+    /// every 100ms.
+    ///
+    /// Always 5 in the original game.
+    pub frames_per_point: i32,
     /// Distance in pixels between interpolated points along the path's curve.
     ///
     /// Used by the curve generation algorithm to determine rendering
@@ -98,6 +109,14 @@ pub struct Point {
     pub y: u32,
     /// Sometimes 1, usually 0. Each gameflow file has one point with a value of
     /// 1 for this field.
+    ///
+    /// - In CH1_ALL.DOT, this point is located near Altdorf.
+    /// - In CH2_ALL.DOT, this point is located near Altdorf.
+    /// - In CH3_ALL.DOT, this point is located between Altdorf and Kislev.
+    /// - In CH4_ALL.DOT, this point is located near Paravon.
+    ///
+    /// This doesn't seem to be used at runtime. It might be editor metadata,
+    /// e.g., it may mark the currently selected point in the gameflow editor.
     pub(crate) unknown1: u32,
     /// Always 0 in the game files.
     pub(crate) unknown2: u32,
@@ -187,7 +206,7 @@ mod tests {
 
         assert_eq!(gameflow.paths.len(), 11);
         assert_eq!(gameflow.unknown1, 103);
-        assert_eq!(gameflow.unknown2, 40);
+        assert_eq!(gameflow.animation_frame_interval_millis_x2, 40);
         assert_eq!(gameflow.unknown3, 6);
         assert_eq!(
             gameflow.notes,

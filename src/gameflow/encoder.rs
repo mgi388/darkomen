@@ -56,7 +56,8 @@ impl<W: Write> Encoder<W> {
     fn write_header(&mut self, gameflow: &Gameflow) -> Result<(), EncodeError> {
         self.writer.write_all(FORMAT)?;
         self.writer.write_all(&gameflow.unknown1.to_le_bytes())?;
-        self.writer.write_all(&gameflow.unknown2.to_le_bytes())?;
+        self.writer
+            .write_all(&gameflow.animation_frame_interval_millis_x2.to_le_bytes())?;
         self.writer.write_all(&gameflow.unknown3.to_le_bytes())?;
         self.writer
             .write_all(&(gameflow.paths.len() as u32).to_le_bytes())?;
@@ -79,7 +80,8 @@ impl<W: Write> Encoder<W> {
                 self.writer.write_all(&point.unknown2.to_le_bytes())?;
             }
 
-            self.writer.write_all(&path.unknown1.to_le_bytes())?;
+            self.writer
+                .write_all(&path.frames_per_point.to_le_bytes())?;
             self.writer
                 .write_all(&path.curve_point_spacing.to_le_bytes())?;
             self.writer.write_all(&path.unknown3.to_le_bytes())?;

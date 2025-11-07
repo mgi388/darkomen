@@ -62,14 +62,15 @@ impl<R: Read + Seek> Decoder<R> {
     }
 
     pub fn decode(&mut self) -> Result<Gameflow, DecodeError> {
-        let (unknown1, unknown2, unknown3, path_count) = self.decode_header()?;
+        let (unknown1, animation_frame_interval_millis_x2, unknown3, path_count) =
+            self.decode_header()?;
         let paths = self.read_paths(path_count)?;
         let (notes, map_file_name, unknown4) = self.read_footer()?;
 
         Ok(Gameflow {
             paths,
             unknown1,
-            unknown2,
+            animation_frame_interval_millis_x2,
             unknown3,
             notes,
             map_file_name,
@@ -117,7 +118,7 @@ impl<R: Read + Seek> Decoder<R> {
 
             let mut tail_buf = [0; 44];
             self.reader.read_exact(&mut tail_buf)?;
-            let unknown1 = i32::from_le_bytes(tail_buf[0..4].try_into()?);
+            let frames_per_point = i32::from_le_bytes(tail_buf[0..4].try_into()?);
             let curve_point_spacing = i32::from_le_bytes(tail_buf[4..8].try_into()?);
             let unknown3 = i32::from_le_bytes(tail_buf[8..12].try_into()?);
             let unknown4 = i32::from_le_bytes(tail_buf[12..16].try_into()?);
@@ -129,7 +130,7 @@ impl<R: Read + Seek> Decoder<R> {
 
             paths.push(Path {
                 control_points,
-                unknown1,
+                frames_per_point,
                 curve_point_spacing,
                 unknown3,
                 unknown4,
