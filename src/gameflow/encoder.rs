@@ -13,6 +13,7 @@ pub enum EncodeError {
     IoError(std::io::Error),
     InvalidString,
     StringTooLong,
+    TooManyControlPoints,
 }
 
 impl std::error::Error for EncodeError {}
@@ -29,6 +30,7 @@ impl std::fmt::Display for EncodeError {
             EncodeError::IoError(e) => write!(f, "IO error: {e}"),
             EncodeError::InvalidString => write!(f, "invalid string"),
             EncodeError::StringTooLong => write!(f, "string too long"),
+            EncodeError::TooManyControlPoints => write!(f, "too many control points"),
         }
     }
 }
@@ -63,6 +65,10 @@ impl<W: Write> Encoder<W> {
 
     fn write_paths(&mut self, paths: &[Path]) -> Result<(), EncodeError> {
         for path in paths {
+            if path.control_points.len() > MAX_CONTROL_POINTS {
+                return Err(EncodeError::TooManyControlPoints);
+            }
+
             self.writer
                 .write_all(&(path.control_points.len() as u32).to_le_bytes())?;
 

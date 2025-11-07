@@ -8,12 +8,12 @@ use serde::{Deserialize, Serialize};
 pub use decoder::{DecodeError, Decoder};
 pub use encoder::{EncodeError, Encoder};
 
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone, Default, Deserialize, Serialize)]
 #[cfg_attr(feature = "debug", derive(Debug))]
 #[cfg_attr(
     feature = "bevy_reflect",
     derive(Reflect),
-    reflect(Deserialize, Serialize)
+    reflect(Default, Deserialize, Serialize)
 )]
 #[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct Gameflow {
@@ -34,12 +34,12 @@ pub struct Gameflow {
     pub(crate) unknown4: Vec<u8>,
 }
 
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone, Default, Deserialize, Serialize)]
 #[cfg_attr(feature = "debug", derive(Debug))]
 #[cfg_attr(
     feature = "bevy_reflect",
     derive(Reflect),
-    reflect(Deserialize, Serialize)
+    reflect(Default, Deserialize, Serialize)
 )]
 #[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct Path {
@@ -83,12 +83,12 @@ pub struct Path {
     pub unknown8: Vec<u8>,
 }
 
-#[derive(Clone, Deserialize, Serialize)]
+#[derive(Clone, Default, Deserialize, Serialize)]
 #[cfg_attr(feature = "debug", derive(Debug))]
 #[cfg_attr(
     feature = "bevy_reflect",
     derive(Reflect),
-    reflect(Deserialize, Serialize)
+    reflect(Default, Deserialize, Serialize)
 )]
 #[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct Point {
@@ -114,6 +114,29 @@ mod tests {
     use pretty_assertions::assert_eq;
 
     use super::*;
+
+    #[test]
+    fn test_encode_too_many_control_points() {
+        let gameflow = Gameflow {
+            paths: vec![super::Path {
+                control_points: vec![
+                    Point::default();
+                    11 // more than MAX_CONTROL_POINTS
+                ],
+                ..Default::default()
+            }],
+            ..Default::default()
+        };
+
+        let mut encoded_bytes = Vec::new();
+        let result = Encoder::new(&mut encoded_bytes).encode(&gameflow);
+
+        assert!(result.is_err());
+        match result {
+            Err(EncodeError::TooManyControlPoints) => (),
+            _ => panic!("Expected TooManyControlPoints error"),
+        }
+    }
 
     fn roundtrip_test(original_bytes: &[u8], gameflow: &Gameflow) {
         let mut encoded_bytes = Vec::new();

@@ -14,6 +14,7 @@ pub(crate) const HEADER_SIZE_BYTES: usize = 16;
 pub(crate) const FOOTER_SIZE_BYTES: usize = 152;
 pub(crate) const NOTES_SIZE_BYTES: usize = 80;
 pub(crate) const MAP_FILE_NAME_SIZE_BYTES: usize = 40;
+pub(crate) const MAX_CONTROL_POINTS: usize = 10;
 
 #[derive(Debug)]
 pub enum DecodeError {
