@@ -25,6 +25,15 @@ impl Plugin for GameflowAssetPlugin {
 pub struct GameflowPath {
     /// The control points used to make a curve that represents the path.
     pub control_points: Vec<UVec2>,
+
+    pub frames_per_point: u64,
+
+    /// The distance in pixels between interpolated points along the path's
+    /// curve.
+    ///
+    /// Used by the curve generation algorithm to determine rendering
+    /// granularity.
+    pub curve_point_spacing: u32,
 }
 
 #[derive(Asset, Clone)]
@@ -35,6 +44,7 @@ pub struct GameflowPath {
 pub struct GameflowAsset {
     /// The paths that the gameflow follows.
     pub paths: Vec<GameflowPath>,
+    pub animation_frame_interval_millis_x2: u64,
 }
 
 #[derive(Clone, Default)]
@@ -86,8 +96,11 @@ impl AssetLoader for GameflowAssetLoader {
                         .into_iter()
                         .map(|p| UVec2::new(p.x, p.y))
                         .collect(),
+                    frames_per_point: p.frames_per_point as u64,
+                    curve_point_spacing: p.curve_point_spacing as u32,
                 })
                 .collect(),
+            animation_frame_interval_millis_x2: g.animation_frame_interval_millis_x2 as u64,
         })
     }
 
