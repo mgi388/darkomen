@@ -69,7 +69,7 @@ bevy_ecs = { version = "0.16", optional = true }
 bevy_image = { version = "0.16", optional = true }
 bevy_math = { version = "0.16", optional = true }
 bevy_pbr = { version = "0.16", optional = true }
-bevy_reflect = { version = "0.16", default-features = false, features = [
+bevy_reflect = { version = "0.17", default-features = false, features = [
     "glam",
     "std",
 ], optional = true }
