@@ -392,7 +392,7 @@ checksum = "4491cc4c718ae76b4c6883df58b94cc88b32dcd894ea8d5b603c7c7da72ca967"
 dependencies = [
  "bevy_derive",
  "bevy_ecs",
- "bevy_platform",
+ "bevy_platform 0.16.1",
  "bevy_reflect",
  "bevy_tasks",
  "bevy_utils",
@@ -420,7 +420,7 @@ dependencies = [
  "bevy_app",
  "bevy_asset_macros",
  "bevy_ecs",
- "bevy_platform",
+ "bevy_platform 0.16.1",
  "bevy_reflect",
  "bevy_tasks",
  "bevy_utils",
@@ -506,7 +506,7 @@ dependencies = [
  "bevy_ecs",
  "bevy_image",
  "bevy_math",
- "bevy_platform",
+ "bevy_platform 0.16.1",
  "bevy_reflect",
  "bevy_render",
  "bevy_transform",
@@ -541,7 +541,7 @@ checksum = "48797366f312a8f31e237d08ce3ee70162591282d2bfe7c5ad8be196fb263e55"
 dependencies = [
  "bevy_app",
  "bevy_ecs",
- "bevy_platform",
+ "bevy_platform 0.16.1",
  "bevy_tasks",
  "bevy_time",
  "bevy_utils",
@@ -558,7 +558,7 @@ checksum = "3c2bf6521aae57a0ec3487c4bfb59e36c4a378e834b626a4bea6a885af2fdfe7"
 dependencies = [
  "arrayvec",
  "bevy_ecs_macros",
- "bevy_platform",
+ "bevy_platform 0.16.1",
  "bevy_ptr",
  "bevy_reflect",
  "bevy_tasks",
@@ -643,7 +643,7 @@ dependencies = [
  "bevy_asset",
  "bevy_color",
  "bevy_math",
- "bevy_platform",
+ "bevy_platform 0.16.1",
  "bevy_reflect",
  "bevy_utils",
  "bitflags 2.9.4",
@@ -668,7 +668,7 @@ dependencies = [
  "bevy_app",
  "bevy_ecs",
  "bevy_math",
- "bevy_platform",
+ "bevy_platform 0.16.1",
  "bevy_reflect",
  "bevy_utils",
  "derive_more 1.0.0",
@@ -711,7 +711,7 @@ dependencies = [
  "bevy_input_focus",
  "bevy_log",
  "bevy_math",
- "bevy_platform",
+ "bevy_platform 0.16.1",
  "bevy_ptr",
  "bevy_reflect",
  "bevy_state",
@@ -799,7 +799,7 @@ dependencies = [
  "bevy_image",
  "bevy_math",
  "bevy_mikktspace",
- "bevy_platform",
+ "bevy_platform 0.16.1",
  "bevy_reflect",
  "bevy_transform",
  "bevy_utils",
@@ -836,7 +836,7 @@ dependencies = [
  "bevy_ecs",
  "bevy_image",
  "bevy_math",
- "bevy_platform",
+ "bevy_platform 0.16.1",
  "bevy_reflect",
  "bevy_render",
  "bevy_transform",
@@ -863,14 +863,33 @@ checksum = "f7573dc824a1b08b4c93fdbe421c53e1e8188e9ca1dd74a414455fe571facb47"
 dependencies = [
  "cfg-if",
  "critical-section",
- "foldhash",
+ "foldhash 0.1.5",
  "getrandom 0.2.16",
  "hashbrown 0.15.5",
  "portable-atomic",
  "portable-atomic-util",
  "serde",
- "spin",
+ "spin 0.9.8",
  "web-time",
+]
+
+[[package]]
+name = "bevy_platform"
+version = "0.17.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "10cf8cda162688c95250e74cffaa1c3a04597f105d4ca35554106f107308ea57"
+dependencies = [
+ "critical-section",
+ "foldhash 0.2.0",
+ "futures-channel",
+ "hashbrown 0.16.0",
+ "js-sys",
+ "portable-atomic",
+ "portable-atomic-util",
+ "serde",
+ "spin 0.10.0",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
 ]
 
 [[package]]
@@ -886,7 +905,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "daeb91a63a1a4df00aa58da8cc4ddbd4b9f16ab8bb647c5553eb156ce36fa8c2"
 dependencies = [
  "assert_type_match",
- "bevy_platform",
+ "bevy_platform 0.16.1",
  "bevy_ptr",
  "bevy_reflect_derive",
  "bevy_utils",
@@ -894,7 +913,7 @@ dependencies = [
  "disqualified",
  "downcast-rs",
  "erased-serde",
- "foldhash",
+ "foldhash 0.1.5",
  "glam",
  "serde",
  "smallvec",
@@ -935,7 +954,7 @@ dependencies = [
  "bevy_image",
  "bevy_math",
  "bevy_mesh",
- "bevy_platform",
+ "bevy_platform 0.16.1",
  "bevy_reflect",
  "bevy_render_macros",
  "bevy_tasks",
@@ -989,7 +1008,7 @@ checksum = "155d3cd97b900539008cdcaa702f88b724d94b08977b8e591a32536ce66faa8c"
 dependencies = [
  "bevy_app",
  "bevy_ecs",
- "bevy_platform",
+ "bevy_platform 0.16.1",
  "bevy_reflect",
  "bevy_state_macros",
  "bevy_utils",
@@ -1018,7 +1037,7 @@ dependencies = [
  "async-executor",
  "async-task",
  "atomic-waker",
- "bevy_platform",
+ "bevy_platform 0.16.1",
  "cfg-if",
  "crossbeam-queue",
  "derive_more 1.0.0",
@@ -1037,7 +1056,7 @@ checksum = "bc98eb356c75be04fbbc77bb3d8ffa24c8bacd99f76111cee23d444be6ac8c9c"
 dependencies = [
  "bevy_app",
  "bevy_ecs",
- "bevy_platform",
+ "bevy_platform 0.16.1",
  "bevy_reflect",
  "crossbeam-channel",
  "log",
@@ -1068,7 +1087,7 @@ version = "0.16.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94f7a8905a125d2017e8561beefb7f2f5e67e93ff6324f072ad87c5fd6ec3b99"
 dependencies = [
- "bevy_platform",
+ "bevy_platform 0.16.1",
  "thread_local",
 ]
 
@@ -1083,7 +1102,7 @@ dependencies = [
  "bevy_ecs",
  "bevy_input",
  "bevy_math",
- "bevy_platform",
+ "bevy_platform 0.16.1",
  "bevy_reflect",
  "bevy_utils",
  "log",
@@ -1645,7 +1664,7 @@ dependencies = [
  "bevy_kira_audio",
  "bevy_math",
  "bevy_pbr",
- "bevy_platform",
+ "bevy_platform 0.17.2",
  "bevy_reflect",
  "bevy_render",
  "bitflags 2.9.4",
@@ -1994,6 +2013,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d9c4f5dac5e15c24eb999c26181a6ca40b39fe946cbe4c263c7209467bc83af2"
 
 [[package]]
+name = "foldhash"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "77ce24cb58228fbb8aa041425bb1050850ac19177686ea6e0f41a70416f56fdb"
+
+[[package]]
 name = "foreign-types"
 version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2237,7 +2262,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9229cfe53dfd69f0609a49f65461bd93001ea1ef889cd5529dd176593f5338a1"
 dependencies = [
  "equivalent",
- "foldhash",
+ "foldhash 0.1.5",
  "serde",
 ]
 
@@ -2246,6 +2271,9 @@ name = "hashbrown"
 version = "0.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5419bdc4f6a9207fbeba6d11b604d481addf78ecd10c11ad51e76c2f6482748d"
+dependencies = [
+ "equivalent",
+]
 
 [[package]]
 name = "heapless"
@@ -3685,6 +3713,15 @@ name = "spin"
 version = "0.9.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6980e8d7511241f8acf4aebddbb1ff938df5eebe98691418c4468d0b72a96a67"
+dependencies = [
+ "portable-atomic",
+]
+
+[[package]]
+name = "spin"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d5fe4ccb98d9c292d56fec89a5e07da7fc4cf0dc11e156b41793132775d3e591"
 dependencies = [
  "portable-atomic",
 ]
