@@ -79,7 +79,7 @@ bevy_platform = { version = "0.16", default-features = false, features = [
 ], optional = true }
 
 # Bevy ecosystem plugins.
-bevy_kira_audio = { version = "0.23", default-features = false, features = [
+bevy_kira_audio = { version = "0.24", default-features = false, features = [
     "wav",
 ], optional = true }
 bevy-kira-components = { git = "https://github.com/mgi388/bevy-kira-components.git", branch = "bevy-0.16-fixes1", default-features = false, optional = true }
