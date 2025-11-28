@@ -22,6 +22,7 @@ The following table shows the game file support in this library:
 | [Lights](src/light)                                  | .LIT                   | ✅   | ✅    |                                                                         |
 | Movies                                               | .TGQ                   | ❌   | ❌    |                                                                         |
 | Particle effects                                     | .PLB, .H               | ❌   | ❌    |                                                                         |
+| [Portrait heads](src/portrait/heads)                 | HEADS.DB               | ✅   | ✅    | ⚠️ All fields not completely understood                                 |
 | Portrait scripts                                     | .KEY, .SEQ             | ❌   | ❌    |                                                                         |
 | [Projects](src/project)                              | .PRJ                   | ✅   | ✅    |                                                                         |
 | [Shadows](src/shadow)                                | .SHD                   | ✅   | ✅    |                                                                         |
