@@ -109,48 +109,16 @@ impl<R: Read + Seek> Decoder<R> {
         self.reader.read_exact(&mut buf)?;
 
         let path_buf = &buf[0..TEXTURE_DESCRIPTOR_PATH_SIZE_BYTES];
-        let (path_buf, path_residual_bytes) = path_buf
-            .iter()
-            .enumerate()
-            .find(|(_, &b)| b == 0)
-            .map(|(i, _)| path_buf.split_at(i + 1))
-            .unwrap_or((path_buf, &[]));
+        let (path_buf, path_residual_bytes) = Self::split_at_null(path_buf);
 
         let file_name_buf = &buf[TEXTURE_DESCRIPTOR_PATH_SIZE_BYTES..];
-        let (file_name_buf, file_name_residual_bytes) = file_name_buf
-            .iter()
-            .enumerate()
-            .find(|(_, &b)| b == 0)
-            .map(|(i, _)| file_name_buf.split_at(i + 1))
-            .unwrap_or((file_name_buf, &[]));
+        let (file_name_buf, file_name_residual_bytes) = Self::split_at_null(file_name_buf);
 
         Ok(M3dTextureDescriptor {
             path: self.read_string(path_buf)?,
-            path_residual_bytes: if path_residual_bytes.iter().all(|&b| b == 0) {
-                None
-            } else {
-                Some(
-                    path_residual_bytes
-                        .iter()
-                        .rposition(|&b| b != 0) // find the last non-zero byte
-                        .map(|pos| &path_residual_bytes[..=pos]) // include the last non-zero byte
-                        .unwrap_or(path_residual_bytes)
-                        .to_vec(),
-                )
-            },
+            path_residual_bytes: Self::extract_residual_bytes(path_residual_bytes),
             file_name: self.read_string(file_name_buf)?,
-            file_name_residual_bytes: if file_name_residual_bytes.iter().all(|&b| b == 0) {
-                None
-            } else {
-                Some(
-                    file_name_residual_bytes
-                        .iter()
-                        .rposition(|&b| b != 0) // find the last non-zero byte
-                        .map(|pos| &file_name_residual_bytes[..=pos]) // include the last non-zero byte
-                        .unwrap_or(file_name_residual_bytes)
-                        .to_vec(),
-                )
-            },
+            file_name_residual_bytes: Self::extract_residual_bytes(file_name_residual_bytes),
         })
     }
 
@@ -256,5 +224,36 @@ impl<R: Read + Seek> Decoder<R> {
             .map_err(|_| DecodeError::InvalidString)?
             .to_string_lossy()
             .into_owned())
+    }
+
+    /// Splits a buffer at the first null byte.
+    ///
+    /// Returns a tuple of (string_buffer, residual_bytes) where string_buffer
+    /// includes the null terminator and residual_bytes is everything after.
+    fn split_at_null(buf: &[u8]) -> (&[u8], &[u8]) {
+        buf.iter()
+            .enumerate()
+            .find(|(_, &b)| b == 0)
+            .map(|(i, _)| buf.split_at(i + 1))
+            .unwrap_or((buf, &[]))
+    }
+
+    /// Extracts residual bytes from a buffer, trimming trailing zeros.
+    ///
+    /// Returns [None] if all bytes are zero, otherwise returns the bytes up to
+    /// and including the last non-zero byte.
+    fn extract_residual_bytes(residual_bytes: &[u8]) -> Option<Vec<u8>> {
+        if residual_bytes.iter().all(|&b| b == 0) {
+            None
+        } else {
+            Some(
+                residual_bytes
+                    .iter()
+                    .rposition(|&b| b != 0) // find the last non-zero byte
+                    .map(|pos| &residual_bytes[..=pos]) // include the last non-zero byte
+                    .unwrap_or(residual_bytes)
+                    .to_vec(),
+            )
+        }
     }
 }

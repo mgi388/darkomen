@@ -325,28 +325,43 @@ impl<R: Read + Seek> Decoder<R> {
         self.reader.read_exact(&mut buf)?;
 
         let str_buf = &buf[0..MAX_STRING_SIZE_BYTES];
-        let (str_buf, str_residual_bytes) = str_buf
-            .iter()
-            .enumerate()
-            .find(|(_, &b)| b == 0)
-            .map(|(i, _)| str_buf.split_at(i + 1))
-            .unwrap_or((str_buf, &[]));
+        let (str_buf, str_residual_bytes) = Self::split_at_null(str_buf);
 
         let str = self.read_string(str_buf)?;
-        let str_residual_bytes = if str_residual_bytes.iter().all(|&b| b == 0) {
+        let str_residual_bytes = Self::extract_residual_bytes(str_residual_bytes);
+
+        Ok((str, str_residual_bytes))
+    }
+
+    /// Splits a buffer at the first null byte.
+    ///
+    /// Returns a tuple of (string_buffer, residual_bytes) where string_buffer
+    /// includes the null terminator and residual_bytes is everything after.
+    fn split_at_null(buf: &[u8]) -> (&[u8], &[u8]) {
+        buf.iter()
+            .enumerate()
+            .find(|(_, &b)| b == 0)
+            .map(|(i, _)| buf.split_at(i + 1))
+            .unwrap_or((buf, &[]))
+    }
+
+    /// Extracts residual bytes, trimming trailing zeros.
+    ///
+    /// Returns None if all bytes are zero, otherwise returns the residual bytes
+    /// up to and including the last non-zero byte.
+    fn extract_residual_bytes(residual_bytes: &[u8]) -> Option<Vec<u8>> {
+        if residual_bytes.iter().all(|&b| b == 0) {
             None
         } else {
             Some(
-                str_residual_bytes
+                residual_bytes
                     .iter()
                     .rposition(|&b| b != 0) // find the last non-zero byte
-                    .map(|pos| &str_residual_bytes[..=pos]) // include the last non-zero byte
-                    .unwrap_or(str_residual_bytes)
+                    .map(|pos| &residual_bytes[..=pos]) // include the last non-zero byte
+                    .unwrap_or(residual_bytes)
                     .to_vec(),
             )
-        };
-
-        Ok((str, str_residual_bytes))
+        }
     }
 
     fn peek_u32(&mut self) -> Result<u32, DecodeError> {

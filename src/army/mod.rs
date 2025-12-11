@@ -207,21 +207,21 @@ pub struct ScriptVariables {
 pub struct SaveGameHeader {
     /// The name displayed when loading the save game.
     pub display_name: String,
-    /// The original game writes over the existing display name with the new
-    /// path but the old bytes are not cleared first. This field is used to
-    /// store the residual bytes, if there are any. If it's `None` then there
-    /// are no residual bytes / all bytes are zero after the null-terminated
-    /// string. If it's `Some`, then it contains the residual bytes, up to, but
-    /// not including, the last nul-terminated string.
+    /// The original game writes over the existing value with the new value but
+    /// the old bytes are not cleared first. This field is used to store the
+    /// residual bytes, if there are any. If it's `None` then there are no
+    /// residual bytes / all bytes are zero after the null-terminated string. If
+    /// it's `Some`, then it contains the residual bytes, up to, but not
+    /// including, the last nul-terminated string.
     display_name_residual_bytes: Option<Vec<u8>>,
     /// The name suggested when saving the game.
     pub suggested_display_name: String,
-    /// The original game writes over the existing suggested display name with
-    /// the new path but the old bytes are not cleared first. This field is used
-    /// to store the residual bytes, if there are any. If it's `None` then there
-    /// are no residual bytes / all bytes are zero after the null-terminated
-    /// string. If it's `Some`, then it contains the residual bytes, up to, but
-    /// not including, the last nul-terminated string.
+    /// The original game writes over the existing value with the new value but
+    /// the old bytes are not cleared first. This field is used to store the
+    /// residual bytes, if there are any. If it's `None` then there are no
+    /// residual bytes / all bytes are zero after the null-terminated string. If
+    /// it's `Some`, then it contains the residual bytes, up to, but not
+    /// including, the last nul-terminated string.
     suggested_display_name_residual_bytes: Option<Vec<u8>>,
     pub unknown_bool1: bool,
     pub unknown_bool2: bool,
@@ -306,12 +306,12 @@ pub struct SaveGameFooter {
     pub travel_path_history: Vec<i32>,
     /// The path to the background image file, e.g., "[PICTURES]\m_empn.bmp".
     pub background_image_path: Option<String>,
-    /// The original game writes over the existing background image path with
-    /// the new path but the old bytes are not cleared first. This field is used
-    /// to store the residual bytes, if there are any. If it's `None` then there
-    /// are no residual bytes / all bytes are zero after the null-terminated
-    /// string. If it's `Some`, then it contains the residual bytes, up to, but
-    /// not including, the last nul-terminated string.
+    /// The original game writes over the existing value with the new value but
+    /// the old bytes are not cleared first. This field is used to store the
+    /// residual bytes, if there are any. If it's `None` then there are no
+    /// residual bytes / all bytes are zero after the null-terminated string. If
+    /// it's `Some`, then it contains the residual bytes, up to, but not
+    /// including, the last nul-terminated string.
     background_image_path_residual_bytes: Option<Vec<u8>>,
     /// Always 0.
     unknown2: u32,
