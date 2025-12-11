@@ -295,22 +295,12 @@ impl<R: Read + Seek> Decoder<R> {
             self.reader.read_exact(&mut buf)?;
 
             let display_name_buf = &buf[0..SAVE_GAME_DISPLAY_NAME_SIZE_BYTES];
-            let (display_name_buf, display_name_residual_bytes) = display_name_buf
-                .iter()
-                .enumerate()
-                .find(|(_, &b)| b == 0)
-                .map(|(i, _)| display_name_buf.split_at(i + 1))
-                .unwrap_or((display_name_buf, &[]));
+            let (display_name_buf, display_name_residual_bytes) = Self::split_at_null(display_name_buf);
 
             let suggested_display_name_buf =
                 &buf[SAVE_GAME_DISPLAY_NAME_SIZE_BYTES..SAVE_GAME_DISPLAY_NAME_SIZE_BYTES * 2];
             let (suggested_display_name_buf, suggested_display_name_residual_bytes) =
-                suggested_display_name_buf
-                    .iter()
-                    .enumerate()
-                    .find(|(_, &b)| b == 0)
-                    .map(|(i, _)| suggested_display_name_buf.split_at(i + 1))
-                    .unwrap_or((suggested_display_name_buf, &[]));
+                Self::split_at_null(suggested_display_name_buf);
 
             const SCRIPT_STATE_OFFSET_END: usize = 188 + SCRIPT_STATE_SIZE_BYTES;
 
@@ -330,37 +320,9 @@ impl<R: Read + Seek> Decoder<R> {
                 SAVE_GAME_HEADER_SIZE_BYTES as u64,
                 Some(SaveGameHeader {
                     display_name: self.read_string(display_name_buf)?,
-                    display_name_residual_bytes: if display_name_residual_bytes
-                        .iter()
-                        .all(|&b| b == 0)
-                    {
-                        None
-                    } else {
-                        Some(
-                            display_name_residual_bytes
-                                .iter()
-                                .rposition(|&b| b != 0) // find the last non-zero byte
-                                .map(|pos| &display_name_residual_bytes[..=pos]) // include the last non-zero byte
-                                .unwrap_or(display_name_residual_bytes)
-                                .to_vec(),
-                        )
-                    },
+                    display_name_residual_bytes: Self::extract_residual_bytes(display_name_residual_bytes),
                     suggested_display_name: self.read_string(suggested_display_name_buf)?,
-                    suggested_display_name_residual_bytes: if suggested_display_name_residual_bytes
-                        .iter()
-                        .all(|&b| b == 0)
-                    {
-                        None
-                    } else {
-                        Some(
-                            suggested_display_name_residual_bytes
-                                .iter()
-                                .rposition(|&b| b != 0) // find the last non-zero byte
-                                .map(|pos| &suggested_display_name_residual_bytes[..=pos]) // include the last non-zero byte
-                                .unwrap_or(suggested_display_name_residual_bytes)
-                                .to_vec(),
-                        )
-                    },
+                    suggested_display_name_residual_bytes: Self::extract_residual_bytes(suggested_display_name_residual_bytes),
                     unknown_bool1: buf[180] != 0,
                     unknown_bool2: buf[184] != 0,
                     script_state_hex: script_state_buf
@@ -422,12 +384,7 @@ impl<R: Read + Seek> Decoder<R> {
         let background_image_path_buf =
             &buf[TRAVEL_PATH_HISTORY_OFFSET_END..BACKGROUND_IMAGE_PATH_OFFSET_END];
         let (background_image_path_buf, background_image_path_residual_bytes) =
-            background_image_path_buf
-                .iter()
-                .enumerate()
-                .find(|(_, &b)| b == 0)
-                .map(|(i, _)| background_image_path_buf.split_at(i + 1))
-                .unwrap_or((background_image_path_buf, &[]));
+            Self::split_at_null(background_image_path_buf);
         let background_image_path = self.read_string(background_image_path_buf)?;
 
         let unknown2 = u32::from_le_bytes(
@@ -516,21 +473,7 @@ impl<R: Read + Seek> Decoder<R> {
             } else {
                 Some(background_image_path)
             },
-            background_image_path_residual_bytes: if background_image_path_residual_bytes
-                .iter()
-                .all(|&b| b == 0)
-            {
-                None
-            } else {
-                Some(
-                    background_image_path_residual_bytes
-                        .iter()
-                        .rposition(|&b| b != 0) // find the last non-zero byte
-                        .map(|pos| &background_image_path_residual_bytes[..=pos]) // include the last non-zero byte
-                        .unwrap_or(background_image_path_residual_bytes)
-                        .to_vec(),
-                )
-            },
+            background_image_path_residual_bytes: Self::extract_residual_bytes(background_image_path_residual_bytes),
             unknown2,
             victory_message_index,
             defeat_message_index,
@@ -792,6 +735,37 @@ impl<R: Read + Seek> Decoder<R> {
             kill_count: u16::from_le_bytes(buf[4..6].try_into().unwrap()),
             experience: u16::from_le_bytes(buf[6..8].try_into().unwrap()),
         })
+    }
+
+    /// Splits a buffer at the first null byte.
+    ///
+    /// Returns a tuple of (string_buffer, residual_bytes) where string_buffer
+    /// includes the null terminator and residual_bytes is everything after.
+    fn split_at_null(buf: &[u8]) -> (&[u8], &[u8]) {
+        buf.iter()
+            .enumerate()
+            .find(|(_, &b)| b == 0)
+            .map(|(i, _)| buf.split_at(i + 1))
+            .unwrap_or((buf, &[]))
+    }
+
+    /// Extracts residual bytes, trimming trailing zeros.
+    ///
+    /// Returns None if all bytes are zero, otherwise returns the residual bytes
+    /// up to and including the last non-zero byte.
+    fn extract_residual_bytes(residual_bytes: &[u8]) -> Option<Vec<u8>> {
+        if residual_bytes.iter().all(|&b| b == 0) {
+            None
+        } else {
+            Some(
+                residual_bytes
+                    .iter()
+                    .rposition(|&b| b != 0) // find the last non-zero byte
+                    .map(|pos| &residual_bytes[..=pos]) // include the last non-zero byte
+                    .unwrap_or(residual_bytes)
+                    .to_vec(),
+            )
+        }
     }
 
     fn read_string(&mut self, buf: &[u8]) -> Result<String, DecodeError> {

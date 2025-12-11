@@ -393,12 +393,12 @@ impl LineSegment {
 #[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct Region {
     pub display_name: String,
-    /// The original game writes over the existing display name with the new
-    /// path but the old bytes are not cleared first. This field is used to
-    /// store the residual bytes, if there are any. If it's `None` then there
-    /// are no residual bytes / all bytes are zero after the null-terminated
-    /// string. If it's `Some`, then it contains the residual bytes, up to, but
-    /// not including, the last nul-terminated string.
+    /// The original game writes over the existing value with the new value but
+    /// the old bytes are not cleared first. This field is used to store the
+    /// residual bytes, if there are any. If it's `None` then there are no
+    /// residual bytes / all bytes are zero after the null-terminated string. If
+    /// it's `Some`, then it contains the residual bytes, up to, but not
+    /// including, the last nul-terminated string.
     display_name_residual_bytes: Option<Vec<u8>>,
     pub flags: RegionFlags,
     /// The position of the region in the horizontal plane.
