@@ -14,6 +14,7 @@ pub(crate) const FORMAT: &str = "PD3M";
 
 const HEADER_SIZE_BYTES: usize = 24;
 const TEXTURE_DESCRIPTOR_SIZE_BYTES: usize = 96;
+pub(crate) const TEXTURE_DESCRIPTOR_PATH_SIZE_BYTES: usize = 64;
 const VECTOR_SIZE_BYTES: usize = 12;
 const OBJECT_HEADER_SIZE_BYTES: usize = 52 + VECTOR_SIZE_BYTES;
 const OBJECT_FACE_SIZE_BYTES: usize = 16 + VECTOR_SIZE_BYTES;
@@ -107,16 +108,16 @@ impl<R: Read + Seek> Decoder<R> {
         let mut buf = [0; TEXTURE_DESCRIPTOR_SIZE_BYTES];
         self.reader.read_exact(&mut buf)?;
 
-        let path_buf = &buf[0..64];
-        let (path_buf, path_remainder) = path_buf
+        let path_buf = &buf[0..TEXTURE_DESCRIPTOR_PATH_SIZE_BYTES];
+        let (path_buf, path_residual_bytes) = path_buf
             .iter()
             .enumerate()
             .find(|(_, &b)| b == 0)
             .map(|(i, _)| path_buf.split_at(i + 1))
             .unwrap_or((path_buf, &[]));
 
-        let file_name_buf = &buf[64..];
-        let (file_name_buf, file_name_remainder) = file_name_buf
+        let file_name_buf = &buf[TEXTURE_DESCRIPTOR_PATH_SIZE_BYTES..];
+        let (file_name_buf, file_name_residual_bytes) = file_name_buf
             .iter()
             .enumerate()
             .find(|(_, &b)| b == 0)
@@ -125,9 +126,31 @@ impl<R: Read + Seek> Decoder<R> {
 
         Ok(M3dTextureDescriptor {
             path: self.read_string(path_buf)?,
-            path_remainder: path_remainder.to_vec(),
+            path_residual_bytes: if path_residual_bytes.iter().all(|&b| b == 0) {
+                None
+            } else {
+                Some(
+                    path_residual_bytes
+                        .iter()
+                        .rposition(|&b| b != 0) // find the last non-zero byte
+                        .map(|pos| &path_residual_bytes[..=pos]) // include the last non-zero byte
+                        .unwrap_or(path_residual_bytes)
+                        .to_vec(),
+                )
+            },
             file_name: self.read_string(file_name_buf)?,
-            file_name_remainder: file_name_remainder.to_vec(),
+            file_name_residual_bytes: if file_name_residual_bytes.iter().all(|&b| b == 0) {
+                None
+            } else {
+                Some(
+                    file_name_residual_bytes
+                        .iter()
+                        .rposition(|&b| b != 0) // find the last non-zero byte
+                        .map(|pos| &file_name_residual_bytes[..=pos]) // include the last non-zero byte
+                        .unwrap_or(file_name_residual_bytes)
+                        .to_vec(),
+                )
+            },
         })
     }
 
