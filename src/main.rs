@@ -15,6 +15,8 @@ pub enum Subcommands {
     Army(cli::army::ArmyArgs),
     BattleTabletop(cli::battle_tabletop::BattleTabletopArgs),
     Gameflow(cli::gameflow::GameflowArgs),
+    M3d(cli::m3d::M3dArgs),
+    Portrait(cli::portrait::PortraitArgs),
     Project(cli::project::ProjectArgs),
 }
 
@@ -25,6 +27,8 @@ fn main() -> Result<()> {
         Subcommands::Army(args) => cli::army::run(&args)?,
         Subcommands::BattleTabletop(args) => cli::battle_tabletop::run(&args)?,
         Subcommands::Gameflow(args) => cli::gameflow::run(&args)?,
+        Subcommands::M3d(args) => cli::m3d::run(&args)?,
+        Subcommands::Portrait(args) => cli::portrait::run(&args)?,
         Subcommands::Project(args) => cli::project::run(&args)?,
     }
 
