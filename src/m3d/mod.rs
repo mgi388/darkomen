@@ -58,14 +58,22 @@ pub struct M3dTextureDescriptor {
     /// machine. It does not seem to be used for anything useful and might best
     /// be treated as an Easter Egg.
     pub path: String,
-    /// There are some bytes after the null-terminated string. Not sure what
-    /// they are for.
-    path_remainder: Vec<u8>,
+    /// The original game writes over the existing value with the new value but
+    /// the old bytes are not cleared first. This field is used to store the
+    /// residual bytes, if there are any. If it's `None` then there are no
+    /// residual bytes / all bytes are zero after the null-terminated string. If
+    /// it's `Some`, then it contains the residual bytes, up to, but not
+    /// including, the last nul-terminated string.
+    path_residual_bytes: Option<Vec<u8>>,
     /// The name of the texture image file, e.g., "nflgrs01.bmp".
     pub file_name: String,
-    /// There are some bytes after the null-terminated string. Not sure what
-    /// they are for.
-    file_name_remainder: Vec<u8>,
+    /// The original game writes over the existing value with the new value but
+    /// the old bytes are not cleared first. This field is used to store the
+    /// residual bytes, if there are any. If it's `None` then there are no
+    /// residual bytes / all bytes are zero after the null-terminated string. If
+    /// it's `Some`, then it contains the residual bytes, up to, but not
+    /// including, the last nul-terminated string.
+    file_name_residual_bytes: Option<Vec<u8>>,
 }
 
 /// Texture flags embedded in the prefix of the file name, e.g., `_1WOOD8.bmp`,
@@ -235,6 +243,55 @@ mod tests {
         assert_eq!(m3d.objects.len(), 4);
 
         roundtrip_test(&original_bytes, &m3d);
+    }
+
+    #[test]
+    fn test_modify_texture_filename() {
+        let d: PathBuf = [
+            std::env::var("DARKOMEN_PATH").unwrap().as_str(),
+            "DARKOMEN",
+            "GAMEDATA",
+            "1PBAT",
+            "B1_01",
+            "_7WATER.M3X",
+        ]
+        .iter()
+        .collect();
+
+        let file = File::open(d).unwrap();
+        let mut m3d = Decoder::new(file).decode().unwrap();
+
+        // Find and modify a texture descriptor.
+        let texture_desc = m3d
+            .texture_descriptors
+            .iter_mut()
+            .find(|desc| desc.file_name == "_2wtrivr.bmp")
+            .expect("Texture '_2wtrivr.bmp' not found");
+
+        texture_desc.file_name = "wtrivr.bmp".to_string();
+
+        let mut encoded_bytes = Vec::new();
+        Encoder::new(&mut encoded_bytes).encode(&m3d).unwrap();
+
+        let decoded_m3d = Decoder::new(std::io::Cursor::new(&encoded_bytes))
+            .decode()
+            .unwrap();
+
+        let modified_texture = decoded_m3d
+            .texture_descriptors
+            .iter()
+            .find(|desc| desc.file_name == "wtrivr.bmp")
+            .expect("Modified texture 'wtrivr.bmp' not found after re-decoding");
+
+        assert_eq!(modified_texture.file_name, "wtrivr.bmp");
+
+        assert!(
+            !decoded_m3d
+                .texture_descriptors
+                .iter()
+                .any(|desc| desc.file_name == "_2wtrivr.bmp"),
+            "Old texture filename '_2wtrivr.bmp' should not exist after modification"
+        );
     }
 
     #[test]

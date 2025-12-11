@@ -78,10 +78,18 @@ impl<W: Write> Encoder<W> {
         &mut self,
         descriptor: &M3dTextureDescriptor,
     ) -> Result<(), EncodeError> {
-        self.write_string(&descriptor.path)?;
-        self.writer.write_all(&descriptor.path_remainder)?;
-        self.write_string(&descriptor.file_name)?;
-        self.writer.write_all(&descriptor.file_name_remainder)?;
+        self.write_padded_string(
+            &descriptor.path,
+            descriptor.path_residual_bytes.as_ref(),
+            TEXTURE_DESCRIPTOR_PATH_SIZE_BYTES,
+        )?;
+
+        self.write_padded_string(
+            &descriptor.file_name,
+            descriptor.file_name_residual_bytes.as_ref(),
+            32,
+        )?;
+
         Ok(())
     }
 
@@ -147,6 +155,28 @@ impl<W: Write> Encoder<W> {
         self.writer.write_all(&vec.x.to_le_bytes())?;
         self.writer.write_all(&vec.y.to_le_bytes())?;
         self.writer.write_all(&vec.z.to_le_bytes())?;
+        Ok(())
+    }
+
+    fn write_padded_string(
+        &mut self,
+        s: &str,
+        residual_bytes: Option<&Vec<u8>>,
+        total_size: usize,
+    ) -> Result<(), EncodeError> {
+        let bytes_written = self.write_string(s)?;
+
+        if let Some(residual) = residual_bytes {
+            let padding_size = total_size - (bytes_written + residual.len());
+            let padding = vec![0; padding_size];
+            self.writer.write_all(residual)?;
+            self.writer.write_all(&padding)?;
+        } else {
+            let padding_size = total_size - bytes_written;
+            let padding = vec![0; padding_size];
+            self.writer.write_all(&padding)?;
+        }
+
         Ok(())
     }
 
