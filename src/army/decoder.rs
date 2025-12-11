@@ -295,7 +295,8 @@ impl<R: Read + Seek> Decoder<R> {
             self.reader.read_exact(&mut buf)?;
 
             let display_name_buf = &buf[0..SAVE_GAME_DISPLAY_NAME_SIZE_BYTES];
-            let (display_name_buf, display_name_residual_bytes) = Self::split_at_null(display_name_buf);
+            let (display_name_buf, display_name_residual_bytes) =
+                Self::split_at_null(display_name_buf);
 
             let suggested_display_name_buf =
                 &buf[SAVE_GAME_DISPLAY_NAME_SIZE_BYTES..SAVE_GAME_DISPLAY_NAME_SIZE_BYTES * 2];
@@ -320,9 +321,13 @@ impl<R: Read + Seek> Decoder<R> {
                 SAVE_GAME_HEADER_SIZE_BYTES as u64,
                 Some(SaveGameHeader {
                     display_name: self.read_string(display_name_buf)?,
-                    display_name_residual_bytes: Self::extract_residual_bytes(display_name_residual_bytes),
+                    display_name_residual_bytes: Self::extract_residual_bytes(
+                        display_name_residual_bytes,
+                    ),
                     suggested_display_name: self.read_string(suggested_display_name_buf)?,
-                    suggested_display_name_residual_bytes: Self::extract_residual_bytes(suggested_display_name_residual_bytes),
+                    suggested_display_name_residual_bytes: Self::extract_residual_bytes(
+                        suggested_display_name_residual_bytes,
+                    ),
                     unknown_bool1: buf[180] != 0,
                     unknown_bool2: buf[184] != 0,
                     script_state_hex: script_state_buf
@@ -473,7 +478,9 @@ impl<R: Read + Seek> Decoder<R> {
             } else {
                 Some(background_image_path)
             },
-            background_image_path_residual_bytes: Self::extract_residual_bytes(background_image_path_residual_bytes),
+            background_image_path_residual_bytes: Self::extract_residual_bytes(
+                background_image_path_residual_bytes,
+            ),
             unknown2,
             victory_message_index,
             defeat_message_index,
