@@ -6,6 +6,7 @@ pub mod gameflow;
 pub mod graphics;
 pub mod light;
 pub mod m3d;
+pub mod portrait;
 pub mod project;
 pub mod shadow;
 pub mod sound;

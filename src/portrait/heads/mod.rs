@@ -4,6 +4,7 @@ mod encoder;
 #[cfg(feature = "bevy_reflect")]
 use bevy_reflect::prelude::*;
 use bitflags::bitflags;
+use glam::{U8Vec2, U8Vec3};
 use serde::{Deserialize, Serialize};
 
 pub use decoder::{DecodeError, Decoder};
@@ -17,12 +18,24 @@ bitflags! {
     #[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
     pub struct HeadFlags: u8 {
         const NONE = 0;
-        const UNKNOWN_HEAD_FLAG_0 = 1 << 0;
-        const UNKNOWN_HEAD_FLAG_1 = 1 << 1;
-        const UNKNOWN_HEAD_FLAG_2 = 1 << 2;
-        const UNKNOWN_HEAD_FLAG_3 = 1 << 3;
-        const UNKNOWN_HEAD_FLAG_4 = 1 << 4;
-        const UNKNOWN_HEAD_FLAG_5 = 1 << 5;
+        /// The character has no mouth model, e.g., because they wear a helmet
+        /// (i.e., no BITS texture).
+        const NO_MOUTH = 1 << 0;
+        /// Hide accessory slot 1 in meet (non-battle) portraits. Slots are
+        /// 0-indexed.
+        const HIDE_ACCESSORY_1_IN_MEET = 1 << 1;
+        /// Hide accessory slot 2 in meet (non-battle) portraits. Slots are
+        /// 0-indexed.
+        const HIDE_ACCESSORY_2_IN_MEET = 1 << 2;
+        /// Hide accessory slot 3 in meet (non-battle) portraits. Slots are
+        /// 0-indexed.
+        const HIDE_ACCESSORY_3_IN_MEET = 1 << 3;
+        /// The character does not have an injured variant (i.e., no HEADI or
+        /// BITSI textures).
+        const NO_INJURED_VARIANT = 1 << 4;
+        /// The character does not have a death variant (i.e., no DEATH
+        /// texture).
+        const NO_DEATH_VARIANT = 1 << 5;
         const UNKNOWN_HEAD_FLAG_6 = 1 << 6;
         const UNKNOWN_HEAD_FLAG_7 = 1 << 7;
     }
@@ -52,21 +65,23 @@ pub struct HeadEntry {
     /// 2-character ASCII identifier for the head (e.g., "KZ", "MB", "GS").
     /// Used to load textures like "{name}_HEAD.BMP", "{name}_BODY.BMP".
     pub name: String,
-    pub(crate) unknown1: u8,
     /// Feature flags that control which accessories are valid.
     pub flags: HeadFlags,
-    /// Likely RGB color or classification data.
-    pub(crate) unknown2: Vec<u8>,
-    pub(crate) unknown3: u8,
-    /// Facial feature meshes (eyes, nose, mouth, etc.). 2 slots available.
-    /// Position values are scaled by 0.05 at runtime to get world coordinates.
-    pub features: [FeatureSlot; 2],
-    pub(crate) unknown4: u8,
-    pub(crate) unknown5: u8,
-    /// Equipment/accessory meshes (helmets, hats, facial hair, etc.). 4 slots
-    /// available. Position values are scaled by 0.05 at runtime to get world
+    pub(crate) unknown1: u8,
+    pub(crate) unknown2: u8,
+    pub mouth: Mouth,
+    pub eyes: Eyes,
+    /// Body model. Position values are scaled by 0.05 at runtime to get world
     /// coordinates.
-    pub accessories: [AccessorySlot; 4],
+    pub body: ModelSlot,
+    /// Head model. Position values are scaled by 0.05 at runtime to get world
+    /// coordinates.
+    pub head: ModelSlot,
+    pub(crate) unknown3: u8,
+    pub(crate) unknown4: u8,
+    /// Equipment/accessory models (swords, staffs, etc.). 4 slots available.
+    /// Position values are scaled by 0.05 at runtime to get world coordinates.
+    pub accessories: [ModelSlot; 4],
 }
 
 #[derive(Clone, Default, Deserialize, Serialize)]
@@ -77,12 +92,12 @@ pub struct HeadEntry {
     reflect(Default, Deserialize, Serialize)
 )]
 #[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
-pub struct FeatureSlot {
-    /// Mesh ID (1-63). 0 means no mesh in this slot.
-    pub mesh_id: u8,
+pub struct ModelSlot {
+    /// Model ID (1-63). 0 means no model in this slot.
+    pub model_id: u8,
     /// Position offset [x, y, z] in integer format. Multiply by 0.05 to get
     /// world coordinates.
-    pub position: [u8; 3],
+    pub position: U8Vec3,
 }
 
 #[derive(Clone, Default, Deserialize, Serialize)]
@@ -93,12 +108,28 @@ pub struct FeatureSlot {
     reflect(Default, Deserialize, Serialize)
 )]
 #[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
-pub struct AccessorySlot {
-    /// Mesh ID (1-63). 0 means no mesh in this slot.
-    pub mesh_id: u8,
-    /// Position offset [x, y, z] in integer format. Multiply by 0.05 to get
-    /// world coordinates.
-    pub position: [u8; 3],
+pub struct Mouth {
+    /// The size [width, height] of the mouth. Combine with the position to
+    /// determine the mouth rectangle in the head texture.
+    pub size: U8Vec2,
+    /// The top left position [x, y] to position the mouth in the head texture.
+    pub position: U8Vec2,
+}
+
+#[derive(Clone, Default, Deserialize, Serialize)]
+#[cfg_attr(feature = "debug", derive(Debug))]
+#[cfg_attr(
+    feature = "bevy_reflect",
+    derive(Reflect),
+    reflect(Default, Deserialize, Serialize)
+)]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
+pub struct Eyes {
+    /// The size [width, height] of the eyes. Combine with the position to
+    /// determine the eyes rectangle in the head texture.
+    pub size: U8Vec2,
+    /// The top left position [x, y] to position the eyes in the head texture.
+    pub position: U8Vec2,
 }
 
 #[cfg(test)]
@@ -165,10 +196,10 @@ mod tests {
         assert_eq!(heads.entries.first().unwrap().name, "MB");
         assert_eq!(
             heads.entries.first().unwrap().flags,
-            HeadFlags::UNKNOWN_HEAD_FLAG_0
+            HeadFlags::HIDE_ACCESSORY_1_IN_MEET | HeadFlags::HIDE_ACCESSORY_2_IN_MEET
         );
-        assert_eq!(heads.entries.first().unwrap().features[0].mesh_id, 2);
-        assert_eq!(heads.entries.first().unwrap().features[1].mesh_id, 13);
+        assert_eq!(heads.entries.first().unwrap().body.model_id, 2);
+        assert_eq!(heads.entries.first().unwrap().head.model_id, 13);
 
         roundtrip_test(&original_bytes, &heads);
     }
@@ -267,9 +298,23 @@ mod tests {
             let output_dir = root_output_dir.join(parent_dir);
             std::fs::create_dir_all(&output_dir).unwrap();
 
+            // Write the complete database.
             let output_path = append_ext("ron", output_dir.join(path.file_name().unwrap()));
             let mut output_file = File::create(output_path).unwrap();
             ron::ser::to_writer_pretty(&mut output_file, &heads, Default::default()).unwrap();
+
+            // Write individual head entries.
+            let db_name = path.file_stem().unwrap().to_string_lossy();
+            let individual_dir = output_dir.join(db_name.as_ref());
+            std::fs::create_dir_all(&individual_dir).unwrap();
+
+            for (index, entry) in heads.entries.iter().enumerate() {
+                let individual_path =
+                    individual_dir.join(format!("{:02}_{}.ron", index, entry.name));
+                let mut individual_file = File::create(individual_path).unwrap();
+                ron::ser::to_writer_pretty(&mut individual_file, entry, Default::default())
+                    .unwrap();
+            }
         });
     }
 

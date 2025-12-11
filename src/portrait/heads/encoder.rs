@@ -75,24 +75,50 @@ impl<W: Write> Encoder<W> {
             name_bytes[..windows_1252_bytes.len()].copy_from_slice(&windows_1252_bytes);
             self.writer.write_all(&name_bytes)?;
 
-            self.writer.write_all(&[entry.unknown1])?;
             self.writer.write_all(&[entry.flags.bits()])?;
-            self.writer.write_all(&entry.unknown2)?;
+            self.writer.write_all(&[entry.unknown1])?;
+            self.writer.write_all(&[entry.unknown2])?;
+
+            self.write_mouth(&entry.mouth)?;
+            self.write_eyes(&entry.eyes)?;
+
+            self.write_model_slot(&entry.body)?;
+            self.write_model_slot(&entry.head)?;
+
             self.writer.write_all(&[entry.unknown3])?;
-
-            for feature in &entry.features {
-                self.writer.write_all(&[feature.mesh_id])?;
-                self.writer.write_all(&feature.position)?;
-            }
-
             self.writer.write_all(&[entry.unknown4])?;
-            self.writer.write_all(&[entry.unknown5])?;
 
             for accessory in &entry.accessories {
-                self.writer.write_all(&[accessory.mesh_id])?;
-                self.writer.write_all(&accessory.position)?;
+                self.write_model_slot(accessory)?;
             }
         }
+        Ok(())
+    }
+
+    fn write_model_slot(&mut self, model_slot: &ModelSlot) -> Result<(), EncodeError> {
+        self.writer.write_all(&[model_slot.model_id])?;
+        self.writer
+            .write_all(&model_slot.position.x.to_le_bytes())?;
+        self.writer
+            .write_all(&model_slot.position.y.to_le_bytes())?;
+        self.writer
+            .write_all(&model_slot.position.z.to_le_bytes())?;
+        Ok(())
+    }
+
+    fn write_mouth(&mut self, mouth: &Mouth) -> Result<(), EncodeError> {
+        self.writer.write_all(&mouth.size.x.to_le_bytes())?;
+        self.writer.write_all(&mouth.size.y.to_le_bytes())?;
+        self.writer.write_all(&mouth.position.x.to_le_bytes())?;
+        self.writer.write_all(&mouth.position.y.to_le_bytes())?;
+        Ok(())
+    }
+
+    fn write_eyes(&mut self, eyes: &Eyes) -> Result<(), EncodeError> {
+        self.writer.write_all(&eyes.size.x.to_le_bytes())?;
+        self.writer.write_all(&eyes.size.y.to_le_bytes())?;
+        self.writer.write_all(&eyes.position.x.to_le_bytes())?;
+        self.writer.write_all(&eyes.position.y.to_le_bytes())?;
         Ok(())
     }
 }

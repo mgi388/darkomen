@@ -6,6 +6,7 @@ use std::{
 
 use encoding_rs::WINDOWS_1252;
 use encoding_rs_io::DecodeReaderBytesBuilder;
+use glam::{U8Vec2, U8Vec3};
 
 use super::*;
 
@@ -86,85 +87,63 @@ impl<R: Read + Seek> Decoder<R> {
             let mut name = String::new();
             decoder.read_to_string(&mut name)?;
 
-            let unknown1 = buf[2];
-            let flags_u8 = buf[3];
+            let flags_u8 = buf[2];
             let flags =
                 HeadFlags::from_bits(flags_u8).ok_or(DecodeError::InvalidHeadFlags(flags_u8))?;
-            let unknown2 = buf[4..12].to_vec();
-            let unknown3 = buf[12];
 
-            let feature_mesh_id_0 = buf[13];
-            let feature_pos_0_x = buf[14];
-            let feature_pos_0_y = buf[15];
-            let feature_pos_0_z = buf[16];
+            let unknown1 = buf[3];
+            let unknown2 = buf[4];
 
-            let feature_mesh_id_1 = buf[17];
-            let feature_pos_1_x = buf[18];
-            let feature_pos_1_y = buf[19];
-            let feature_pos_1_z = buf[20];
+            let mouth = Self::read_mouth(&buf[5..9])?;
+            let eyes = Self::read_eyes(&buf[9..13])?;
 
-            let unknown4 = buf[21];
-            let unknown5 = buf[22];
+            let body = Self::read_model_slot(&buf[13..17])?;
+            let head = Self::read_model_slot(&buf[17..21])?;
 
-            let accessory_mesh_id_0 = buf[23];
-            let accessory_pos_0_x = buf[24];
-            let accessory_pos_0_y = buf[25];
-            let accessory_pos_0_z = buf[26];
+            let unknown3 = buf[21];
+            let unknown4 = buf[22];
 
-            let accessory_mesh_id_1 = buf[27];
-            let accessory_pos_1_x = buf[28];
-            let accessory_pos_1_y = buf[29];
-            let accessory_pos_1_z = buf[30];
-
-            let accessory_mesh_id_2 = buf[31];
-            let accessory_pos_2_x = buf[32];
-            let accessory_pos_2_y = buf[33];
-            let accessory_pos_2_z = buf[34];
-
-            let accessory_mesh_id_3 = buf[35];
-            let accessory_pos_3_x = buf[36];
-            let accessory_pos_3_y = buf[37];
-            let accessory_pos_3_z = buf[38];
+            let accessory_0 = Self::read_model_slot(&buf[23..27])?;
+            let accessory_1 = Self::read_model_slot(&buf[27..31])?;
+            let accessory_2 = Self::read_model_slot(&buf[31..35])?;
+            let accessory_3 = Self::read_model_slot(&buf[35..39])?;
 
             entries.push(HeadEntry {
                 name,
-                unknown1,
                 flags,
+                unknown1,
                 unknown2,
+                mouth,
+                eyes,
+                body,
+                head,
                 unknown3,
-                features: [
-                    FeatureSlot {
-                        mesh_id: feature_mesh_id_0,
-                        position: [feature_pos_0_x, feature_pos_0_y, feature_pos_0_z],
-                    },
-                    FeatureSlot {
-                        mesh_id: feature_mesh_id_1,
-                        position: [feature_pos_1_x, feature_pos_1_y, feature_pos_1_z],
-                    },
-                ],
                 unknown4,
-                unknown5,
-                accessories: [
-                    AccessorySlot {
-                        mesh_id: accessory_mesh_id_0,
-                        position: [accessory_pos_0_x, accessory_pos_0_y, accessory_pos_0_z],
-                    },
-                    AccessorySlot {
-                        mesh_id: accessory_mesh_id_1,
-                        position: [accessory_pos_1_x, accessory_pos_1_y, accessory_pos_1_z],
-                    },
-                    AccessorySlot {
-                        mesh_id: accessory_mesh_id_2,
-                        position: [accessory_pos_2_x, accessory_pos_2_y, accessory_pos_2_z],
-                    },
-                    AccessorySlot {
-                        mesh_id: accessory_mesh_id_3,
-                        position: [accessory_pos_3_x, accessory_pos_3_y, accessory_pos_3_z],
-                    },
-                ],
+                accessories: [accessory_0, accessory_1, accessory_2, accessory_3],
             });
         }
 
         Ok(entries)
+    }
+
+    fn read_model_slot(buf: &[u8]) -> Result<ModelSlot, DecodeError> {
+        Ok(ModelSlot {
+            model_id: buf[0],
+            position: U8Vec3::new(buf[1], buf[2], buf[3]),
+        })
+    }
+
+    fn read_mouth(buf: &[u8]) -> Result<Mouth, DecodeError> {
+        Ok(Mouth {
+            size: U8Vec2::new(buf[0], buf[1]),
+            position: U8Vec2::new(buf[2], buf[3]),
+        })
+    }
+
+    fn read_eyes(buf: &[u8]) -> Result<Eyes, DecodeError> {
+        Ok(Eyes {
+            size: U8Vec2::new(buf[0], buf[1]),
+            position: U8Vec2::new(buf[2], buf[3]),
+        })
     }
 }
