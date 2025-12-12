@@ -4,6 +4,7 @@ mod encoder;
 use bevy_derive::{Deref, DerefMut};
 #[cfg(feature = "bevy_reflect")]
 use bevy_reflect::prelude::*;
+use glam::{EulerRot, Quat};
 use serde::{Deserialize, Serialize};
 
 pub use decoder::{DecodeError, Decoder};
@@ -59,6 +60,19 @@ pub struct Rotation {
     pub yaw: RotationValue,
     /// Roll rotation (rotation around Z axis).
     pub roll: RotationValue,
+}
+
+impl Rotation {
+    /// Converts the rotation to a quaternion.
+    ///
+    /// Uses the ZYX Euler rotation order (roll, yaw, pitch).
+    #[inline]
+    pub fn to_quat(&self) -> Quat {
+        let pitch = self.pitch.as_radians();
+        let yaw = self.yaw.as_radians();
+        let roll = self.roll.as_radians();
+        Quat::from_euler(EulerRot::ZYX, roll, yaw, pitch)
+    }
 }
 
 /// A single rotation value stored as two bytes.
@@ -239,9 +253,48 @@ mod tests {
             let output_dir = root_output_dir.join(parent_dir);
             std::fs::create_dir_all(&output_dir).unwrap();
 
+            // Write RON file.
             let output_path = append_ext("ron", output_dir.join(path.file_name().unwrap()));
             let mut output_file = File::create(output_path).unwrap();
             ron::ser::to_writer_pretty(&mut output_file, &keyframes, Default::default()).unwrap();
+
+            // Write TXT file with radians.
+            let txt_path = append_ext("txt", output_dir.join(path.file_name().unwrap()));
+            let mut txt_output = String::new();
+
+            txt_output.push_str(&format!("File: {}\n", file_name));
+            txt_output.push_str(&format!("Keyframe count: {}\n\n", keyframes.0.len()));
+
+            for (i, keyframe) in keyframes.0.iter().enumerate() {
+                txt_output.push_str(&format!("Keyframe {}:\n", i));
+                txt_output.push_str(&format!(
+                    "  Body rotation:\n    pitch: {} rad ({:02X} {:02X})\n    yaw:   {} rad ({:02X} {:02X})\n    roll:  {} rad ({:02X} {:02X})\n",
+                    keyframe.body_rotation.pitch.as_radians(),
+                    keyframe.body_rotation.pitch.0[0],
+                    keyframe.body_rotation.pitch.0[1],
+                    keyframe.body_rotation.yaw.as_radians(),
+                    keyframe.body_rotation.yaw.0[0],
+                    keyframe.body_rotation.yaw.0[1],
+                    keyframe.body_rotation.roll.as_radians(),
+                    keyframe.body_rotation.roll.0[0],
+                    keyframe.body_rotation.roll.0[1],
+                ));
+                txt_output.push_str(&format!(
+                    "  Head rotation:\n    pitch: {} rad ({:02X} {:02X})\n    yaw:   {} rad ({:02X} {:02X})\n    roll:  {} rad ({:02X} {:02X})\n",
+                    keyframe.head_rotation.pitch.as_radians(),
+                    keyframe.head_rotation.pitch.0[0],
+                    keyframe.head_rotation.pitch.0[1],
+                    keyframe.head_rotation.yaw.as_radians(),
+                    keyframe.head_rotation.yaw.0[0],
+                    keyframe.head_rotation.yaw.0[1],
+                    keyframe.head_rotation.roll.as_radians(),
+                    keyframe.head_rotation.roll.0[0],
+                    keyframe.head_rotation.roll.0[1],
+                ));
+                txt_output.push('\n');
+            }
+
+            std::fs::write(txt_path, txt_output).unwrap();
         });
     }
 
@@ -268,5 +321,33 @@ mod tests {
         let component = RotationValue::new([0x01, 0x04]);
         let expected = 90.0 + (22.5 / 256.0);
         assert!((component.as_degrees() - expected).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_rotation_to_quat() {
+        use glam::EulerRot;
+
+        // Test a rotation with specific pitch, yaw, and roll values.
+        let rotation = Rotation {
+            pitch: RotationValue::new([0x00, 0x04]), // 90 degrees
+            yaw: RotationValue::new([0x00, 0x08]),   // 180 degrees
+            roll: RotationValue::new([0x00, 0x02]),  // 45 degrees
+        };
+
+        let quat = rotation.to_quat();
+
+        // Verify by reconstructing from expected euler angles.
+        let expected_quat = Quat::from_euler(
+            EulerRot::ZYX,
+            rotation.roll.as_radians(),
+            rotation.yaw.as_radians(),
+            rotation.pitch.as_radians(),
+        );
+
+        // Quaternions should be equal (allowing for floating point error).
+        assert!((quat.x - expected_quat.x).abs() < 0.001);
+        assert!((quat.y - expected_quat.y).abs() < 0.001);
+        assert!((quat.z - expected_quat.z).abs() < 0.001);
+        assert!((quat.w - expected_quat.w).abs() < 0.001);
     }
 }
