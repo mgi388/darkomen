@@ -76,8 +76,8 @@ impl<W: Write> Encoder<W> {
             self.writer.write_all(&name_bytes)?;
 
             self.writer.write_all(&[entry.flags.bits()])?;
-            self.writer.write_all(&[entry.unknown1])?;
-            self.writer.write_all(&[entry.unknown2])?;
+            self.writer.write_all(&[entry.battle_sequences_id])?;
+            self.writer.write_all(&[entry.meet_sequences_id])?;
 
             self.write_mouth(&entry.mouth)?;
             self.write_eyes(&entry.eyes)?;
@@ -85,12 +85,16 @@ impl<W: Write> Encoder<W> {
             self.write_model_slot(&entry.body)?;
             self.write_model_slot(&entry.head)?;
 
-            self.writer.write_all(&[entry.unknown3])?;
-            self.writer.write_all(&[entry.unknown4])?;
+            self.writer.write_all(&[entry.battle_keyframes_id])?;
+            self.writer.write_all(&[entry.meet_keyframes_id])?;
+
+            self.write_model_slot(&entry.neck)?;
 
             for accessory in &entry.accessories {
                 self.write_model_slot(accessory)?;
             }
+
+            self.write_model_slot(&entry.head_accessory)?;
         }
         Ok(())
     }
@@ -106,7 +110,11 @@ impl<W: Write> Encoder<W> {
         Ok(())
     }
 
-    fn write_mouth(&mut self, mouth: &Mouth) -> Result<(), EncodeError> {
+    fn write_mouth(&mut self, mouth: &Option<Mouth>) -> Result<(), EncodeError> {
+        let mouth = mouth.as_ref().unwrap_or(&Mouth {
+            size: U8Vec2::ZERO,
+            position: U8Vec2::ZERO,
+        });
         self.writer.write_all(&mouth.size.x.to_le_bytes())?;
         self.writer.write_all(&mouth.size.y.to_le_bytes())?;
         self.writer.write_all(&mouth.position.x.to_le_bytes())?;
@@ -114,7 +122,11 @@ impl<W: Write> Encoder<W> {
         Ok(())
     }
 
-    fn write_eyes(&mut self, eyes: &Eyes) -> Result<(), EncodeError> {
+    fn write_eyes(&mut self, eyes: &Option<Eyes>) -> Result<(), EncodeError> {
+        let eyes = eyes.as_ref().unwrap_or(&Eyes {
+            size: U8Vec2::ZERO,
+            position: U8Vec2::ZERO,
+        });
         self.writer.write_all(&eyes.size.x.to_le_bytes())?;
         self.writer.write_all(&eyes.size.y.to_le_bytes())?;
         self.writer.write_all(&eyes.position.x.to_le_bytes())?;

@@ -91,8 +91,8 @@ impl<R: Read + Seek> Decoder<R> {
             let flags =
                 HeadFlags::from_bits(flags_u8).ok_or(DecodeError::InvalidHeadFlags(flags_u8))?;
 
-            let unknown1 = buf[3];
-            let unknown2 = buf[4];
+            let battle_sequences_id = buf[3];
+            let meet_sequences_id = buf[4];
 
             let mouth = Self::read_mouth(&buf[5..9])?;
             let eyes = Self::read_eyes(&buf[9..13])?;
@@ -100,26 +100,30 @@ impl<R: Read + Seek> Decoder<R> {
             let body = Self::read_model_slot(&buf[13..17])?;
             let head = Self::read_model_slot(&buf[17..21])?;
 
-            let unknown3 = buf[21];
-            let unknown4 = buf[22];
+            let battle_keyframes_id = buf[21];
+            let meet_keyframes_id = buf[22];
 
-            let accessory_0 = Self::read_model_slot(&buf[23..27])?;
-            let accessory_1 = Self::read_model_slot(&buf[27..31])?;
-            let accessory_2 = Self::read_model_slot(&buf[31..35])?;
-            let accessory_3 = Self::read_model_slot(&buf[35..39])?;
+            let neck = Self::read_model_slot(&buf[23..27])?;
+
+            let accessory_0 = Self::read_model_slot(&buf[27..31])?;
+            let accessory_1 = Self::read_model_slot(&buf[31..35])?;
+
+            let helmet_accessory = Self::read_model_slot(&buf[35..39])?;
 
             entries.push(HeadEntry {
                 name,
                 flags,
-                unknown1,
-                unknown2,
+                battle_sequences_id,
+                meet_sequences_id,
                 mouth,
                 eyes,
                 body,
                 head,
-                unknown3,
-                unknown4,
-                accessories: [accessory_0, accessory_1, accessory_2, accessory_3],
+                battle_keyframes_id,
+                meet_keyframes_id,
+                neck,
+                accessories: [accessory_0, accessory_1],
+                head_accessory: helmet_accessory,
             });
         }
 
@@ -133,17 +137,25 @@ impl<R: Read + Seek> Decoder<R> {
         })
     }
 
-    fn read_mouth(buf: &[u8]) -> Result<Mouth, DecodeError> {
-        Ok(Mouth {
+    fn read_mouth(buf: &[u8]) -> Result<Option<Mouth>, DecodeError> {
+        let mouth = Mouth {
             size: U8Vec2::new(buf[0], buf[1]),
             position: U8Vec2::new(buf[2], buf[3]),
-        })
+        };
+        if mouth.size == U8Vec2::ZERO && mouth.position == U8Vec2::ZERO {
+            return Ok(None);
+        }
+        Ok(Some(mouth))
     }
 
-    fn read_eyes(buf: &[u8]) -> Result<Eyes, DecodeError> {
-        Ok(Eyes {
+    fn read_eyes(buf: &[u8]) -> Result<Option<Eyes>, DecodeError> {
+        let eyes = Eyes {
             size: U8Vec2::new(buf[0], buf[1]),
             position: U8Vec2::new(buf[2], buf[3]),
-        })
+        };
+        if eyes.size == U8Vec2::ZERO && eyes.position == U8Vec2::ZERO {
+            return Ok(None);
+        }
+        Ok(Some(eyes))
     }
 }
