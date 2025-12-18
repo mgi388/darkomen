@@ -19,21 +19,20 @@ bitflags! {
     pub struct HeadFlags: u8 {
         const NONE = 0;
         /// The character has no mouth model, e.g., because they wear a helmet
-        /// (i.e., no BITS texture).
+        /// (i.e., no "BITS" texture).
         const NO_MOUTH = 1 << 0;
-        /// Hide accessory slot 1 in meet (non-battle) portraits. Slots are
+        /// Hide accessory slot 0 in meet (non-battle) scenes. Slots are
         /// 0-indexed.
-        const HIDE_ACCESSORY_1_IN_MEET = 1 << 1;
-        /// Hide accessory slot 2 in meet (non-battle) portraits. Slots are
+        const HIDE_ACCESSORY_0_IN_MEET = 1 << 1;
+        /// Hide accessory slot 1 in meet (non-battle) scenes. Slots are
         /// 0-indexed.
-        const HIDE_ACCESSORY_2_IN_MEET = 1 << 2;
-        /// Hide accessory slot 3 in meet (non-battle) portraits. Slots are
-        /// 0-indexed.
-        const HIDE_ACCESSORY_3_IN_MEET = 1 << 3;
-        /// The character does not have an injured variant (i.e., no HEADI or
-        /// BITSI textures).
+        const HIDE_ACCESSORY_1_IN_MEET = 1 << 2;
+        /// Hide head accessory in meet (non-battle) scenes.
+        const HIDE_HEAD_ACCESSORY_IN_MEET = 1 << 3;
+        /// The character does not have an injured variant (i.e., no "HEADI" or
+        /// "BITSI" textures).
         const NO_INJURED_VARIANT = 1 << 4;
-        /// The character does not have a death variant (i.e., no DEATH
+        /// The character does not have a death variant (i.e., no "DEATH"
         /// texture).
         const NO_DEATH_VARIANT = 1 << 5;
         const UNKNOWN_HEAD_FLAG_6 = 1 << 6;
@@ -62,26 +61,85 @@ pub struct HeadsDatabase {
 )]
 #[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct HeadEntry {
-    /// 2-character ASCII identifier for the head (e.g., "KZ", "MB", "GS").
-    /// Used to load textures like "{name}_HEAD.BMP", "{name}_BODY.BMP".
+    /// 2-character ASCII identifier for the head (e.g., "KZ", "MB", "GS"). Used
+    /// to load textures like `{name}_HEAD.BMP`, `{name}_BODY.BMP`.
     pub name: String,
-    /// Feature flags that control which accessories are valid.
+    /// Flags.
     pub flags: HeadFlags,
-    pub(crate) unknown1: u8,
-    pub(crate) unknown2: u8,
-    pub mouth: Mouth,
-    pub eyes: Eyes,
-    /// Body model. Position values are scaled by 0.05 at runtime to get world
-    /// coordinates.
-    pub body: ModelSlot,
-    /// Head model. Position values are scaled by 0.05 at runtime to get world
-    /// coordinates.
-    pub head: ModelSlot,
-    pub(crate) unknown3: u8,
-    pub(crate) unknown4: u8,
-    /// Equipment/accessory models (swords, staffs, etc.). 4 slots available.
-    /// Position values are scaled by 0.05 at runtime to get world coordinates.
-    pub accessories: [ModelSlot; 4],
+    /// Animation sequences ID for battles. References which .SEQ file to use
+    /// (0-63 maps to `{id}.SEQ`).
+    pub battle_sequences_id: u8,
+    /// Animation sequences ID for meets. References which .SEQ file to use
+    /// (0-63 maps to `{id}.SEQ`).
+    pub meet_sequences_id: u8,
+    pub mouth: Option<Mouth>,
+    pub eyes: Option<Eyes>,
+    /// Body model.
+    body: ModelSlot,
+    /// Head model.
+    head: ModelSlot,
+    /// Animation keyframes ID for battles. References which .KEY file to use
+    /// (0-63 maps to `{id}.KEY`).
+    pub battle_keyframes_id: u8,
+    /// Animation keyframes ID for meets. References which .KEY file to use
+    /// (0-63 maps to `{id}.KEY`).
+    pub meet_keyframes_id: u8,
+    /// Neck model.
+    neck: ModelSlot,
+    /// Equipment/accessory models (e.g., sword, staff, shield). 2 slots
+    /// available.
+    accessories: [ModelSlot; 2],
+    /// Head accessory model (e.g., horns on helmet, laurel wreath on helmet).
+    head_accessory: ModelSlot,
+}
+
+impl HeadEntry {
+    pub fn body(&self) -> Option<ModelSlot> {
+        if self.body.model_id == 0 {
+            None
+        } else {
+            Some(self.body.clone())
+        }
+    }
+
+    pub fn head(&self) -> Option<ModelSlot> {
+        if self.head.model_id == 0 {
+            None
+        } else {
+            Some(self.head.clone())
+        }
+    }
+
+    pub fn head_accessory(&self) -> Option<ModelSlot> {
+        if self.head_accessory.model_id == 0 {
+            None
+        } else {
+            Some(self.head_accessory.clone())
+        }
+    }
+
+    pub fn neck(&self) -> Option<ModelSlot> {
+        if self.neck.model_id == 0 {
+            None
+        } else {
+            Some(self.neck.clone())
+        }
+    }
+
+    pub fn accessories(&self) -> [Option<ModelSlot>; 2] {
+        [
+            if self.accessories[0].model_id == 0 {
+                None
+            } else {
+                Some(self.accessories[0].clone())
+            },
+            if self.accessories[1].model_id == 0 {
+                None
+            } else {
+                Some(self.accessories[1].clone())
+            },
+        ]
+    }
 }
 
 #[derive(Clone, Default, Deserialize, Serialize)]
@@ -196,7 +254,7 @@ mod tests {
         assert_eq!(heads.entries.first().unwrap().name, "MB");
         assert_eq!(
             heads.entries.first().unwrap().flags,
-            HeadFlags::HIDE_ACCESSORY_1_IN_MEET | HeadFlags::HIDE_ACCESSORY_2_IN_MEET
+            HeadFlags::HIDE_ACCESSORY_0_IN_MEET | HeadFlags::HIDE_ACCESSORY_1_IN_MEET
         );
         assert_eq!(heads.entries.first().unwrap().body.model_id, 2);
         assert_eq!(heads.entries.first().unwrap().head.model_id, 13);
@@ -264,14 +322,10 @@ mod tests {
             if ext.to_string_lossy().to_uppercase() != "DB" {
                 return;
             }
-            // Skip BACKUP.DB files because they don't start with the head count
-            // so we can't decode them properly.
-            if path
-                .file_stem()
-                .unwrap()
-                .to_string_lossy()
-                .ends_with("BACKUP")
-            {
+            // Just decode HEADS.DB because BACKUP.DB doesn't start with the
+            // head count and HEADSBU.DB seems corrupted so we can't decode them
+            // properly.
+            if path.file_stem().unwrap().to_string_lossy() != "HEADS" {
                 return;
             }
 
