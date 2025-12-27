@@ -12,7 +12,6 @@ default = ["cli", "debug"]
 asset = [
     "dep:bevy_app",
     "dep:bevy_asset",
-    "dep:bevy_derive",
     "dep:bevy_ecs",
     "dep:bevy_image",
     "dep:bevy_kira_audio",
@@ -64,7 +63,7 @@ bevy_asset = { version = "0.16", optional = true }
 bevy_audio = { version = "0.16", default-features = false, features = [
     "wav",
 ], optional = true }
-bevy_derive = { version = "0.16", optional = true }
+bevy_derive = { version = "0.16" }
 bevy_ecs = { version = "0.16", optional = true }
 bevy_image = { version = "0.16", optional = true }
 bevy_math = { version = "0.16", optional = true }
