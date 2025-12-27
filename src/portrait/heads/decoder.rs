@@ -6,7 +6,7 @@ use std::{
 
 use encoding_rs::WINDOWS_1252;
 use encoding_rs_io::DecodeReaderBytesBuilder;
-use glam::{U8Vec2, U8Vec3};
+use glam::U8Vec2;
 
 use super::*;
 
@@ -133,7 +133,7 @@ impl<R: Read + Seek> Decoder<R> {
     fn read_model_slot(buf: &[u8]) -> Result<ModelSlot, DecodeError> {
         Ok(ModelSlot {
             model_id: buf[0],
-            position: U8Vec3::new(buf[1], buf[2], buf[3]),
+            translation: I8Vec3::new(buf[1] as i8, buf[2] as i8, buf[3] as i8),
         })
     }
 

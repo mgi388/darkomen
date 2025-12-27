@@ -102,11 +102,11 @@ impl<W: Write> Encoder<W> {
     fn write_model_slot(&mut self, model_slot: &ModelSlot) -> Result<(), EncodeError> {
         self.writer.write_all(&[model_slot.model_id])?;
         self.writer
-            .write_all(&model_slot.position.x.to_le_bytes())?;
+            .write_all(&model_slot.translation.x.to_le_bytes())?;
         self.writer
-            .write_all(&model_slot.position.y.to_le_bytes())?;
+            .write_all(&model_slot.translation.y.to_le_bytes())?;
         self.writer
-            .write_all(&model_slot.position.z.to_le_bytes())?;
+            .write_all(&model_slot.translation.z.to_le_bytes())?;
         Ok(())
     }
 
