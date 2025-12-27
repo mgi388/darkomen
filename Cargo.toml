@@ -73,7 +73,7 @@ bevy_reflect = { version = "0.16", default-features = false, features = [
     "std",
 ], optional = true }
 bevy_render = { version = "0.16", optional = true }
-bevy_platform = { version = "0.16", default-features = false, features = [
+bevy_platform = { version = "0.17", default-features = false, features = [
     "std",
 ], optional = true }
 
