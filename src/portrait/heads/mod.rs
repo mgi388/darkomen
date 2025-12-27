@@ -4,7 +4,7 @@ mod encoder;
 #[cfg(feature = "bevy_reflect")]
 use bevy_reflect::prelude::*;
 use bitflags::bitflags;
-use glam::{U8Vec2, U8Vec3};
+use glam::{I8Vec3, U8Vec2};
 use serde::{Deserialize, Serialize};
 
 pub use decoder::{DecodeError, Decoder};
@@ -153,9 +153,9 @@ impl HeadEntry {
 pub struct ModelSlot {
     /// Model ID (1-63). 0 means no model in this slot.
     pub model_id: u8,
-    /// Position offset [x, y, z] in integer format. Multiply by 0.05 to get
-    /// world coordinates.
-    pub position: U8Vec3,
+    /// Translation offset [x, y, z] in integer format. Multiply by 0.05 to
+    /// get world coordinates.
+    pub translation: I8Vec3,
 }
 
 #[derive(Clone, Default, Deserialize, Serialize)]
