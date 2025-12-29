@@ -58,7 +58,7 @@ tempfile = { version = "3.16", optional = true }
 tracing = { version = "0.1", optional = true }
 
 # Bevy engine.
-bevy_app = { version = "0.16", optional = true }
+bevy_app = { version = "0.17", optional = true }
 bevy_asset = { version = "0.16", optional = true }
 bevy_audio = { version = "0.16", default-features = false, features = [
     "wav",
