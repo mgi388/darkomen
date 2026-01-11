@@ -16,12 +16,8 @@ asset = [
     "dep:bevy_image",
     "dep:bevy_kira_audio",
     "dep:bevy_math",
-    "dep:bevy_pbr",
     "dep:bevy_reflect",
-    "dep:bevy_render",
     "dep:bevy-kira-components",
-    "dep:dyn-clone",
-    "dep:tracing",
 ]
 bevy_audio = ["dep:bevy_audio", "dep:bevy_platform"]
 bevy_kira_audio = ["dep:bevy_kira_audio", "dep:bevy_platform"]
@@ -32,17 +28,16 @@ debug = []
 
 [dependencies]
 anyhow = { version = "1.0", optional = true }
-bitflags = { version = "2.9", features = ["serde"] }
+bitflags = { version = "2.10", features = ["serde"] }
 clap = { version = "4.5", features = ["derive"], optional = true }
-derive_more = { version = "2.0", default-features = false, features = [
+derive_more = { version = "2", default-features = false, features = [
     "display",
     "error",
     "from",
 ] }
-dyn-clone = { version = "1", optional = true }
 encoding_rs = "0.8"
 encoding_rs_io = "0.1"
-glam = { version = "0.29.3", default-features = false, features = [
+glam = { version = "0.30.1", default-features = false, features = [
     "serde",
     "std",
 ] }
@@ -51,46 +46,43 @@ image = "0.25"
 indexmap = { version = "2", features = ["serde"] }
 num_enum = "0.7"
 rand = "0.9"
-ron = { version = "0.8", optional = true }
-serde = { version = "1.0", features = ["derive"] }
-serde_json = { version = "1.0", optional = true }
-tempfile = { version = "3.16", optional = true }
-tracing = { version = "0.1", optional = true }
+ron = { version = "0.12", optional = true }
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", optional = true }
+tempfile = { version = "3", optional = true }
 
 # Bevy engine.
-bevy_app = { version = "0.16", optional = true }
-bevy_asset = { version = "0.16", optional = true }
-bevy_audio = { version = "0.16", default-features = false, features = [
+bevy_app = { version = "0.17", optional = true }
+bevy_asset = { version = "0.17", optional = true }
+bevy_audio = { version = "0.17", default-features = false, features = [
     "wav",
 ], optional = true }
-bevy_derive = { version = "0.16" }
-bevy_ecs = { version = "0.16", optional = true }
-bevy_image = { version = "0.16", optional = true }
-bevy_math = { version = "0.16", optional = true }
-bevy_pbr = { version = "0.16", optional = true }
-bevy_reflect = { version = "0.16", default-features = false, features = [
+bevy_derive = { version = "0.17" }
+bevy_ecs = { version = "0.17", optional = true }
+bevy_image = { version = "0.17", optional = true }
+bevy_math = { version = "0.17", optional = true }
+bevy_reflect = { version = "0.17", default-features = false, features = [
     "glam",
     "std",
 ], optional = true }
-bevy_render = { version = "0.16", optional = true }
-bevy_platform = { version = "0.16", default-features = false, features = [
+bevy_platform = { version = "0.17", default-features = false, features = [
     "std",
 ], optional = true }
 
 # Bevy ecosystem plugins.
-bevy_kira_audio = { version = "0.23", default-features = false, features = [
+bevy_kira_audio = { version = "0.24", default-features = false, features = [
     "wav",
 ], optional = true }
-bevy-kira-components = { git = "https://github.com/mgi388/bevy-kira-components.git", branch = "bevy-0.16-fixes1", default-features = false, optional = true }
+bevy-kira-components = { git = "https://github.com/mgi388/bevy-kira-components.git", branch = "bevy-0.17-fixes1", default-features = false, optional = true }
 
 [dev-dependencies]
 # Enable the `bevy_reflect` feature when testing.
 darkomen = { path = ".", features = ["bevy_reflect"] }
-imageproc = "0.25"
+imageproc = "0.26"
 pretty_assertions = "1.4"
 rand_chacha = "0.9"
 regex = "1.11"
-ron = "0.8"
+ron = "0.12"
 sha2 = "0.10"
 
 [package.metadata.docs.rs]

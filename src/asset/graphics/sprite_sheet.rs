@@ -1,13 +1,12 @@
 use std::io::Cursor;
 
 use bevy_app::prelude::*;
-use bevy_asset::{io::Reader, prelude::*, AssetLoader, LoadContext};
+use bevy_asset::{io::Reader, prelude::*, AssetLoader, LoadContext, RenderAssetUsages};
 use bevy_derive::{Deref, DerefMut};
 use bevy_ecs::prelude::*;
 use bevy_image::{Image, TextureAtlasBuilder, TextureAtlasBuilderError, TextureAtlasLayout};
 use bevy_math::UVec2;
 use bevy_reflect::prelude::*;
-use bevy_render::render_asset::RenderAssetUsages;
 use derive_more::derive::{Display, Error, From};
 use glam::Vec2;
 use image::GenericImageView;
@@ -159,6 +158,9 @@ pub enum SpriteSheetAssetLoaderError {
     /// A texture atlas builder error.
     #[display("could not build texture atlas: {_0}")]
     TextureAtlasBuilderError(TextureAtlasBuilderError),
+    /// An error caused when converting the image to an asset.
+    #[display("could not convert image to asset")]
+    ImageConversion,
 }
 
 impl AssetLoader for SpriteSheetAssetLoader {
@@ -213,13 +215,16 @@ impl AssetLoader for SpriteSheetAssetLoader {
                         RenderAssetUsages::RENDER_WORLD | RenderAssetUsages::MAIN_WORLD,
                     )
                 };
-                (
+                Ok::<_, SpriteSheetAssetLoaderError>((
                     load_context
-                        .labeled_asset_scope(format!("{i}_texture").to_string(), |_| x.clone()),
+                        .labeled_asset_scope::<_, ()>(format!("{i}_texture").to_string(), |_| {
+                            Ok(x.clone())
+                        })
+                        .map_err(|_| SpriteSheetAssetLoaderError::ImageConversion)?,
                     x,
-                )
+                ))
             })
-            .collect::<Vec<_>>();
+            .collect::<Result<Vec<_>, _>>()?;
 
         let mut texture_atlas_builder = TextureAtlasBuilder::default();
         texture_atlas_builder.padding(if let Some(padding) = padding {
@@ -235,8 +240,13 @@ impl AssetLoader for SpriteSheetAssetLoader {
         let (texture_atlas_layout, _, texture) = texture_atlas_builder.build()?;
 
         let texture_atlas_layout = load_context
-            .labeled_asset_scope("texture_atlas_layout".to_string(), |_| texture_atlas_layout);
-        let texture = load_context.labeled_asset_scope("texture".to_string(), |_| texture);
+            .labeled_asset_scope::<_, ()>("texture_atlas_layout".to_string(), |_| {
+                Ok(texture_atlas_layout)
+            })
+            .map_err(|_| SpriteSheetAssetLoaderError::ImageConversion)?;
+        let texture = load_context
+            .labeled_asset_scope::<_, ()>("texture".to_string(), |_| Ok(texture))
+            .map_err(|_| SpriteSheetAssetLoaderError::ImageConversion)?;
 
         Ok(SpriteSheetAsset {
             source: sprite_sheet.clone(),

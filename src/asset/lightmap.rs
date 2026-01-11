@@ -1,8 +1,7 @@
 use bevy_app::prelude::*;
-use bevy_asset::{io::Reader, prelude::*, AssetLoader, LoadContext};
+use bevy_asset::{io::Reader, prelude::*, AssetLoader, LoadContext, RenderAssetUsages};
 use bevy_image::Image;
 use bevy_reflect::prelude::*;
-use bevy_render::render_asset::RenderAssetUsages;
 use derive_more::derive::{Display, Error, From};
 use image::DynamicImage;
 use serde::{Deserialize, Serialize};
@@ -106,6 +105,9 @@ pub enum LightmapAssetLoaderError {
     /// A [DecodeError] error.
     #[display("could not decode lightmap: {_0}")]
     DecodeError(DecodeError),
+    /// An error caused when converting the image to an asset.
+    #[display("could not convert image to asset")]
+    ImageConversion,
 }
 
 impl AssetLoader for LightmapAssetLoader {
@@ -131,13 +133,15 @@ impl AssetLoader for LightmapAssetLoader {
             lightmap.image(),
         );
 
-        let texture = load_context.labeled_asset_scope("texture".to_string(), |_| {
-            Image::from_dynamic(
-                image.clone(),
-                true,
-                RenderAssetUsages::RENDER_WORLD | RenderAssetUsages::MAIN_WORLD,
-            )
-        });
+        let texture = load_context
+            .labeled_asset_scope::<_, ()>("texture".to_string(), |_| {
+                Ok(Image::from_dynamic(
+                    image.clone(),
+                    true,
+                    RenderAssetUsages::RENDER_WORLD | RenderAssetUsages::MAIN_WORLD,
+                ))
+            })
+            .map_err(|_| LightmapAssetLoaderError::ImageConversion)?;
 
         Ok(LightmapAsset {
             source: lightmap,

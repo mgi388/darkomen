@@ -1,31 +1,21 @@
-use std::{marker::PhantomData, path::PathBuf};
+use std::path::PathBuf;
 
 use bevy_app::prelude::*;
 use bevy_asset::{io::Reader, prelude::*, AssetLoader, LoadContext};
 use bevy_ecs::prelude::*;
-use bevy_pbr::prelude::*;
 use bevy_reflect::prelude::*;
 use derive_more::derive::{Display, Error, From};
 use serde::{Deserialize, Serialize};
 
 use crate::project::*;
 
-use super::{
-    battle_tabletop::*, light::*, lightmap::*, m3d::M3dAsset, paths::*, sound::music_script::*,
-};
+use super::{battle_tabletop::*, light::*, lightmap::*, paths::*, sound::music_script::*};
 
 #[derive(Default)]
 #[cfg_attr(feature = "debug", derive(Debug))]
-pub struct ProjectPlugin<
-    #[cfg(feature = "debug")] MaterialT: Material + core::fmt::Debug,
-    #[cfg(not(feature = "debug"))] MaterialT: Material,
->(PhantomData<MaterialT>);
+pub struct ProjectPlugin;
 
-impl<
-        #[cfg(feature = "debug")] MaterialT: Material + core::fmt::Debug,
-        #[cfg(not(feature = "debug"))] MaterialT: Material,
-    > Plugin for ProjectPlugin<MaterialT>
-{
+impl Plugin for ProjectPlugin {
     fn build(&self, app: &mut App) {
         if !app.is_plugin_added::<AssetPathsPlugin>() {
             app.add_plugins(AssetPathsPlugin);
@@ -43,10 +33,10 @@ impl<
             app.add_plugins(BattleTabletopAssetPlugin);
         }
 
-        app.init_asset::<ProjectAsset<MaterialT>>()
-            .init_asset_loader::<ProjectAssetLoader<MaterialT>>();
+        app.init_asset::<ProjectAsset>()
+            .init_asset_loader::<ProjectAssetLoader>();
         #[cfg(feature = "bevy_reflect")]
-        app.register_asset_reflect::<ProjectAsset<MaterialT>>();
+        app.register_asset_reflect::<ProjectAsset>();
     }
 }
 
@@ -55,20 +45,11 @@ impl<
 #[cfg_attr(not(feature = "bevy_reflect"), derive(TypePath))]
 #[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
 #[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
-pub struct ProjectAsset<
-    #[cfg(feature = "debug")] MaterialT: Material + core::fmt::Debug,
-    #[cfg(not(feature = "debug"))] MaterialT: Material,
-> {
+pub struct ProjectAsset {
     source: Project,
     /// The ID of the project, e.g., `B1_01`. This is the same as the directory
     /// that the project file is in.
     pub id: String,
-    /// The base model. This is always the chunked M3X version.
-    pub base_model: Handle<M3dAsset<MaterialT>>,
-    /// The water model, if any. This is always the chunked M3X version.
-    pub water_model: Option<Handle<M3dAsset<MaterialT>>>,
-    /// A list of furniture models required for instances in the project.
-    pub furniture_models: Vec<Handle<M3dAsset<MaterialT>>>,
     /// The music script to play for the project.
     pub music_script: Handle<MusicScriptAsset>,
     /// The lights for the project.
@@ -79,11 +60,7 @@ pub struct ProjectAsset<
     pub battle_tabletop: Handle<BattleTabletopAsset>,
 }
 
-impl<
-        #[cfg(feature = "debug")] MaterialT: Material + core::fmt::Debug,
-        #[cfg(not(feature = "debug"))] MaterialT: Material,
-    > ProjectAsset<MaterialT>
-{
+impl ProjectAsset {
     #[inline(always)]
     pub fn get(&self) -> &Project {
         &self.source
@@ -125,12 +102,7 @@ impl<
 
 #[derive(Clone)]
 #[cfg_attr(feature = "debug", derive(Debug))]
-pub struct ProjectAssetLoader<
-    #[cfg(feature = "debug")] MaterialT: Material + core::fmt::Debug,
-    #[cfg(not(feature = "debug"))] MaterialT: Material,
-> {
-    _phantom: PhantomData<MaterialT>,
-
+pub struct ProjectAssetLoader {
     asset_paths: AssetPaths,
 }
 
@@ -160,12 +132,8 @@ pub enum ProjectAssetLoaderError {
     DecodeError(DecodeError),
 }
 
-impl<
-        #[cfg(feature = "debug")] MaterialT: Material + core::fmt::Debug,
-        #[cfg(not(feature = "debug"))] MaterialT: Material,
-    > AssetLoader for ProjectAssetLoader<MaterialT>
-{
-    type Asset = ProjectAsset<MaterialT>;
+impl AssetLoader for ProjectAssetLoader {
+    type Asset = ProjectAsset;
     type Settings = ProjectAssetLoaderSettings;
     type Error = ProjectAssetLoaderError;
     async fn load(
@@ -202,16 +170,6 @@ impl<
         Ok(ProjectAsset {
             source: project.clone(),
             id: id.clone(),
-            base_model: load_context.load(parent_path.join(project.get_base_m3x_model_file_name())),
-            water_model: project
-                .get_water_m3x_model_file_name()
-                .as_ref()
-                .map(|file_name| load_context.load(parent_path.join(file_name))),
-            furniture_models: project
-                .furniture_model_file_names
-                .iter()
-                .map(|file_name| load_context.load(parent_path.join(file_name)))
-                .collect(),
             music_script: load_context.load(music_script_path.join(project.music_script_file_name)),
             lights: load_context.load(parent_path.join(&id).with_extension("LIT")),
             lightmap: {
@@ -242,16 +200,11 @@ impl<
     }
 }
 
-impl<
-        #[cfg(feature = "debug")] MaterialT: Material + core::fmt::Debug,
-        #[cfg(not(feature = "debug"))] MaterialT: Material,
-    > FromWorld for ProjectAssetLoader<MaterialT>
-{
+impl FromWorld for ProjectAssetLoader {
     fn from_world(world: &mut World) -> Self {
         let asset_paths = world.resource::<AssetPaths>();
 
         Self {
-            _phantom: PhantomData,
             asset_paths: asset_paths.clone(),
         }
     }
