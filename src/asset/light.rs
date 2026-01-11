@@ -42,7 +42,7 @@ pub enum LightsAssetLoaderError {
     #[display("could not load asset: {_0}")]
     Io(std::io::Error),
     /// A [DecodeError] error.
-    #[display("could not decode light: {_0}")]
+    #[display("could not decode lights: {_0}")]
     DecodeError(DecodeError),
 }
 

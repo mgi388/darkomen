@@ -424,9 +424,9 @@ mod tests {
                 // RON.
                 let output_path =
                     append_ext("ron", root_output_dir.join(path.file_name().unwrap()));
-                let mut output_file = File::create(output_path).unwrap();
-                ron::ser::to_writer_pretty(&mut output_file, &lightmap, Default::default())
-                    .unwrap();
+                let mut buffer = String::new();
+                ron::ser::to_writer_pretty(&mut buffer, &lightmap, Default::default()).unwrap();
+                std::fs::write(output_path, buffer).unwrap();
 
                 // Image.
                 let output_dir = root_output_dir.join("lightmaps");

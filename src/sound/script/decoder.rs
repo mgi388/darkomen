@@ -514,9 +514,9 @@ mod tests {
                 assert_eq!(script, decoded);
 
                 let output_path = append_ext("ron", output_path);
-                let mut output_file = File::create(output_path).unwrap();
-                ron::ser::to_writer_pretty(&mut output_file, &script, Default::default())
-                    .unwrap();
+                let mut buffer = String::new();
+                ron::ser::to_writer_pretty(&mut buffer, &script, Default::default()).unwrap();
+                std::fs::write(output_path, buffer).unwrap();
             }
         )*
         }
@@ -589,8 +589,9 @@ mod tests {
             std::fs::create_dir_all(&output_dir).unwrap();
 
             let output_path = append_ext("ron", output_dir.join(path.file_name().unwrap()));
-            let mut output_file = File::create(output_path).unwrap();
-            ron::ser::to_writer_pretty(&mut output_file, &script, Default::default()).unwrap();
+            let mut buffer = String::new();
+            ron::ser::to_writer_pretty(&mut buffer, &script, Default::default()).unwrap();
+            std::fs::write(output_path, buffer).unwrap();
         });
     }
 

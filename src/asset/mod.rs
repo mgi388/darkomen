@@ -7,14 +7,13 @@ use crate::asset::{
     sound::SoundAssetPlugin,
 };
 
-mod army;
-mod battle_tabletop;
+pub mod army;
+pub mod battle_tabletop;
 pub mod gameflow;
 pub mod graphics;
-mod light;
-mod lightmap;
-pub mod m3d;
-mod paths;
+pub mod light;
+pub mod lightmap;
+pub mod paths;
 pub mod project;
 pub mod sound;
 
@@ -31,8 +30,6 @@ pub mod prelude {
     pub use crate::asset::light::*;
     #[doc(hidden)]
     pub use crate::asset::lightmap::*;
-    #[doc(hidden)]
-    pub use crate::asset::m3d::*;
     #[doc(hidden)]
     pub use crate::asset::paths::*;
     #[doc(hidden)]

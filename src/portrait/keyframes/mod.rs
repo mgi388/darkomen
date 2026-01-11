@@ -255,8 +255,9 @@ mod tests {
 
             // Write RON file.
             let output_path = append_ext("ron", output_dir.join(path.file_name().unwrap()));
-            let mut output_file = File::create(output_path).unwrap();
-            ron::ser::to_writer_pretty(&mut output_file, &keyframes, Default::default()).unwrap();
+            let mut buffer = String::new();
+            ron::ser::to_writer_pretty(&mut buffer, &keyframes, Default::default()).unwrap();
+            std::fs::write(output_path, buffer).unwrap();
 
             // Write TXT file with radians.
             let txt_path = append_ext("txt", output_dir.join(path.file_name().unwrap()));

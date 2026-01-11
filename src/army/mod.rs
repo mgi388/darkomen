@@ -1708,8 +1708,9 @@ mod tests {
             std::fs::create_dir_all(&output_dir).unwrap();
 
             let output_path = append_ext("ron", output_dir.join(path.file_name().unwrap()));
-            let mut output_file = File::create(output_path).unwrap();
-            ron::ser::to_writer_pretty(&mut output_file, &army, Default::default()).unwrap();
+            let mut buffer = String::new();
+            ron::ser::to_writer_pretty(&mut buffer, &army, Default::default()).unwrap();
+            std::fs::write(output_path, buffer).unwrap();
         });
     }
 
@@ -1795,8 +1796,9 @@ mod tests {
             std::fs::create_dir_all(&output_dir).unwrap();
 
             let output_path = append_ext("ron", output_dir.join(path.file_name().unwrap()));
-            let mut output_file = File::create(output_path).unwrap();
-            ron::ser::to_writer_pretty(&mut output_file, &army, Default::default()).unwrap();
+            let mut buffer = String::new();
+            ron::ser::to_writer_pretty(&mut buffer, &army, Default::default()).unwrap();
+            std::fs::write(output_path, buffer).unwrap();
 
             roundtrip_test(&original_bytes, &army);
         });

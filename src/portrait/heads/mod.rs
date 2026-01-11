@@ -354,8 +354,9 @@ mod tests {
 
             // Write the complete database.
             let output_path = append_ext("ron", output_dir.join(path.file_name().unwrap()));
-            let mut output_file = File::create(output_path).unwrap();
-            ron::ser::to_writer_pretty(&mut output_file, &heads, Default::default()).unwrap();
+            let mut buffer = String::new();
+            ron::ser::to_writer_pretty(&mut buffer, &heads, Default::default()).unwrap();
+            std::fs::write(output_path, buffer).unwrap();
 
             // Write individual head entries.
             let db_name = path.file_stem().unwrap().to_string_lossy();
@@ -365,9 +366,9 @@ mod tests {
             for (index, entry) in heads.entries.iter().enumerate() {
                 let individual_path =
                     individual_dir.join(format!("{:02}_{}.ron", index, entry.name));
-                let mut individual_file = File::create(individual_path).unwrap();
-                ron::ser::to_writer_pretty(&mut individual_file, entry, Default::default())
-                    .unwrap();
+                let mut buffer = String::new();
+                ron::ser::to_writer_pretty(&mut buffer, entry, Default::default()).unwrap();
+                std::fs::write(individual_path, buffer).unwrap();
             }
         });
     }
