@@ -14,14 +14,9 @@ asset = [
     "dep:bevy_asset",
     "dep:bevy_ecs",
     "dep:bevy_image",
-    "dep:bevy_kira_audio",
     "dep:bevy_math",
     "dep:bevy_reflect",
-    "dep:bevy-kira-components",
 ]
-bevy_audio = ["dep:bevy_audio", "dep:bevy_platform"]
-bevy_kira_audio = ["dep:bevy_kira_audio", "dep:bevy_platform"]
-bevy-kira-components = ["dep:bevy-kira-components", "dep:bevy_platform"]
 bevy_reflect = ["dep:bevy_reflect"]
 cli = ["dep:anyhow", "dep:clap", "dep:ron", "dep:serde_json", "dep:tempfile"]
 debug = []
@@ -54,9 +49,6 @@ tempfile = { version = "3", optional = true }
 # Bevy engine.
 bevy_app = { version = "0.17", optional = true }
 bevy_asset = { version = "0.17", optional = true }
-bevy_audio = { version = "0.17", default-features = false, features = [
-    "wav",
-], optional = true }
 bevy_derive = { version = "0.17" }
 bevy_ecs = { version = "0.17", optional = true }
 bevy_image = { version = "0.17", optional = true }
@@ -65,15 +57,6 @@ bevy_reflect = { version = "0.17", default-features = false, features = [
     "glam",
     "std",
 ], optional = true }
-bevy_platform = { version = "0.17", default-features = false, features = [
-    "std",
-], optional = true }
-
-# Bevy ecosystem plugins.
-bevy_kira_audio = { version = "0.24", default-features = false, features = [
-    "wav",
-], optional = true }
-bevy-kira-components = { git = "https://github.com/mgi388/bevy-kira-components.git", branch = "bevy-0.17-fixes1", default-features = false, optional = true }
 
 [dev-dependencies]
 # Enable the `bevy_reflect` feature when testing.

@@ -4,7 +4,6 @@ use crate::asset::{
     army::ArmyAssetPlugin, battle_tabletop::BattleTabletopAssetPlugin,
     gameflow::GameflowAssetPlugin, graphics::sprite_sheet::SpriteSheetAssetPlugin,
     light::LightAssetPlugin, lightmap::LightmapAssetPlugin, paths::AssetPathsPlugin,
-    sound::SoundAssetPlugin,
 };
 
 pub mod army;
@@ -14,8 +13,6 @@ pub mod graphics;
 pub mod light;
 pub mod lightmap;
 pub mod paths;
-pub mod project;
-pub mod sound;
 
 pub mod prelude {
     #[doc(hidden)]
@@ -32,18 +29,6 @@ pub mod prelude {
     pub use crate::asset::lightmap::*;
     #[doc(hidden)]
     pub use crate::asset::paths::*;
-    #[doc(hidden)]
-    pub use crate::asset::project::*;
-    #[doc(hidden)]
-    pub use crate::asset::sound::mad::*;
-    #[doc(hidden)]
-    pub use crate::asset::sound::music_script::*;
-    #[doc(hidden)]
-    pub use crate::asset::sound::sad::*;
-    #[doc(hidden)]
-    pub use crate::asset::sound::sound_effect::*;
-    #[doc(hidden)]
-    pub use crate::asset::sound::*;
 }
 
 pub struct AssetPlugin;
@@ -55,9 +40,6 @@ impl Plugin for AssetPlugin {
         }
         if !app.is_plugin_added::<SpriteSheetAssetPlugin>() {
             app.add_plugins(SpriteSheetAssetPlugin);
-        }
-        if !app.is_plugin_added::<SoundAssetPlugin>() {
-            app.add_plugins(SoundAssetPlugin);
         }
         if !app.is_plugin_added::<LightAssetPlugin>() {
             app.add_plugins(LightAssetPlugin);
