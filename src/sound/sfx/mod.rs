@@ -1,6 +1,8 @@
 mod decoder;
 mod lexer;
 
+use core::num::NonZeroU32;
+
 #[cfg(feature = "bevy_reflect")]
 use bevy_reflect::prelude::*;
 use bitflags::bitflags;
@@ -203,11 +205,11 @@ impl Sound {
     /// A playback rate of 1.0 means the sound is played at its original
     /// frequency. A playback rate of 2.0 means the sound is played at twice its
     /// original frequency.
-    pub fn random_playback_rate(&self, rng: &mut impl Rng, sample_rate: u32) -> f32 {
+    pub fn random_playback_rate(&self, rng: &mut impl Rng, sample_rate: NonZeroU32) -> f32 {
         let frequency = self.frequency as f32;
 
         // Calculate the base playback rate from the frequency and sample rate.
-        let base_playback_rate = frequency / sample_rate as f32;
+        let base_playback_rate = frequency / sample_rate.get() as f32;
 
         if self.frequency_deviation == 0 {
             return base_playback_rate;
@@ -244,7 +246,7 @@ mod tests {
             ..Default::default()
         };
 
-        let playback_rate = sound.random_playback_rate(&mut rng, 16_000); // 16 kHz is the sample rate of APPEAR01.WAV
+        let playback_rate = sound.random_playback_rate(&mut rng, 16_000.try_into().unwrap()); // 16 kHz is the sample rate of APPEAR01.WAV
 
         assert_eq!(playback_rate, 2.75625);
     }
@@ -258,7 +260,7 @@ mod tests {
             ..Default::default()
         };
 
-        let playback_rate = sound.random_playback_rate(&mut rng, 44_100);
+        let playback_rate = sound.random_playback_rate(&mut rng, 44_100.try_into().unwrap());
 
         assert!(
             (0.0..=1.0).contains(&playback_rate),
