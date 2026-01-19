@@ -49,7 +49,7 @@ tempfile = { version = "3", optional = true }
 # Bevy engine.
 bevy_app = { version = "0.17", optional = true }
 bevy_asset = { version = "0.17", optional = true }
-bevy_derive = { version = "0.17" }
+bevy_derive = { version = "0.18" }
 bevy_ecs = { version = "0.17", optional = true }
 bevy_image = { version = "0.17", optional = true }
 bevy_math = { version = "0.17", optional = true }
