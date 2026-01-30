@@ -47,7 +47,7 @@ through the `bevy_reflect` feature. To enable it, add the following line to
 your `Cargo.toml`:
 
 ```toml
-darkomen = { version = "0.4.1", features = ["bevy_reflect"] }
+darkomen = { version = "0.5.0", features = ["bevy_reflect"] }
 ```
 
 ## CLI
