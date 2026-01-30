@@ -32,7 +32,7 @@ derive_more = { version = "2", default-features = false, features = [
 ] }
 encoding_rs = "0.8"
 encoding_rs_io = "0.1"
-glam = { version = "0.30.7", default-features = false, features = [
+glam = { version = "0.31.0", default-features = false, features = [
     "serde",
     "std",
 ] }
