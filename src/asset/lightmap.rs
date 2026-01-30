@@ -32,7 +32,7 @@ pub struct LightmapAsset {
 }
 
 /// An asset loader for loading lightmaps into a [`LightmapAsset`].
-#[derive(Clone, Default)]
+#[derive(Clone, Default, TypePath)]
 #[cfg_attr(feature = "debug", derive(Debug))]
 pub struct LightmapAssetLoader;
 

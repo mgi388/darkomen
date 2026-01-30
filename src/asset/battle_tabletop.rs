@@ -62,7 +62,7 @@ impl BattleTabletopAsset {
     }
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, TypePath)]
 #[cfg_attr(feature = "debug", derive(Debug))]
 pub struct BattleTabletopAssetLoader;
 
@@ -100,6 +100,7 @@ impl AssetLoader for BattleTabletopAssetLoader {
         load_context: &mut LoadContext<'_>,
     ) -> Result<Self::Asset, Self::Error> {
         let parent_path = load_context
+            .path()
             .path()
             .parent()
             .expect("parent path should exist")

@@ -2,6 +2,7 @@ use std::{collections::HashMap, path::PathBuf};
 
 use bevy_app::prelude::*;
 use bevy_ecs::prelude::*;
+#[cfg(feature = "bevy_reflect")]
 use bevy_reflect::prelude::*;
 
 pub struct AssetPathsPlugin;

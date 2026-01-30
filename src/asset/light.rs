@@ -25,7 +25,7 @@ impl Plugin for LightAssetPlugin {
 #[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct LightsAsset(pub Vec<Light>);
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, TypePath)]
 pub struct LightsAssetLoader;
 
 #[derive(Clone, Copy, Default, Deserialize, Reflect, Serialize)]

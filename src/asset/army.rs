@@ -67,7 +67,7 @@ impl From<&ArmyAssetHandle> for AssetId<ArmyAsset> {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, TypePath)]
 pub struct ArmyAssetLoader {
     paths: AssetPaths,
 }
