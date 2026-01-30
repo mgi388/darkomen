@@ -47,7 +47,7 @@ pub struct GameflowAsset {
     pub animation_frame_interval_millis_x2: u64,
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone, Default, TypePath)]
 pub struct GameflowAssetLoader;
 
 #[derive(Clone, Copy, Default, Deserialize, Reflect, Serialize)]

@@ -128,7 +128,7 @@ impl From<&SpriteSheetAssetHandle> for AssetId<SpriteSheetAsset> {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, TypePath)]
 pub struct SpriteSheetAssetLoader {
     default_settings: SpriteSheetAssetLoaderSettings,
 }

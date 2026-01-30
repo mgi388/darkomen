@@ -32,7 +32,7 @@ derive_more = { version = "2", default-features = false, features = [
 ] }
 encoding_rs = "0.8"
 encoding_rs_io = "0.1"
-glam = { version = "0.30.1", default-features = false, features = [
+glam = { version = "0.30.7", default-features = false, features = [
     "serde",
     "std",
 ] }
@@ -47,13 +47,13 @@ serde_json = { version = "1", optional = true }
 tempfile = { version = "3", optional = true }
 
 # Bevy engine.
-bevy_app = { version = "0.17", optional = true }
-bevy_asset = { version = "0.17", optional = true }
-bevy_derive = { version = "0.17" }
-bevy_ecs = { version = "0.17", optional = true }
-bevy_image = { version = "0.17", optional = true }
-bevy_math = { version = "0.17", optional = true }
-bevy_reflect = { version = "0.17", default-features = false, features = [
+bevy_app = { version = "0.18", optional = true }
+bevy_asset = { version = "0.18", optional = true }
+bevy_derive = { version = "0.18" }
+bevy_ecs = { version = "0.18", optional = true }
+bevy_image = { version = "0.18", optional = true }
+bevy_math = { version = "0.18", optional = true }
+bevy_reflect = { version = "0.18", default-features = false, features = [
     "glam",
     "std",
 ], optional = true }
