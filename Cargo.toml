@@ -63,7 +63,7 @@ bevy_reflect = { version = "0.18", default-features = false, features = [
 darkomen = { path = ".", features = ["bevy_reflect"] }
 imageproc = "0.26"
 pretty_assertions = "1.4"
-rand_chacha = "0.9"
+rand_chacha = "0.10"
 regex = "1.11"
 ron = "0.12"
 sha2 = "0.10"
