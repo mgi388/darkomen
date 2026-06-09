@@ -7,6 +7,8 @@ use std::{
 use clap::{Args, Subcommand, ValueEnum};
 use darkomen::m3d::*;
 
+use super::io::{read_input_to_string, write_output_string};
+
 #[derive(Args)]
 pub struct M3dArgs {
     #[command(subcommand)]
@@ -16,6 +18,10 @@ pub struct M3dArgs {
 #[derive(Subcommand)]
 pub enum M3dSubcommands {
     Edit(EditM3dArgs),
+    /// Decode a binary M3D file and print its serialized form.
+    Dump(DumpM3dArgs),
+    /// Encode a serialized M3D description into the binary format.
+    Write(WriteM3dArgs),
 }
 
 #[derive(Args)]
@@ -34,16 +40,85 @@ pub struct EditM3dArgs {
     pub format: Format,
 }
 
+#[derive(Args)]
+pub struct DumpM3dArgs {
+    /// The path to the M3D/M3X file to read.
+    #[arg(index = 1)]
+    pub m3d_file: String,
+
+    /// Output path. Use "-" or omit for stdout.
+    #[arg(short, long)]
+    pub output: Option<String>,
+
+    /// Serialization format.
+    #[arg(short, long, default_value_t = Format::Json)]
+    #[clap(value_enum)]
+    pub format: Format,
+}
+
+#[derive(Args)]
+pub struct WriteM3dArgs {
+    /// The destination binary M3D file to write.
+    #[arg(index = 1)]
+    pub m3d_file: String,
+
+    /// Input path containing serialized data. Use "-" for stdin.
+    #[arg(short, long)]
+    pub input: String,
+
+    /// Serialization format of the input.
+    #[arg(short, long, default_value_t = Format::Json)]
+    #[clap(value_enum)]
+    pub format: Format,
+}
+
 #[derive(Clone, ValueEnum)]
 pub enum Format {
     Json,
     Ron,
 }
 
-pub fn run(args: &M3dArgs) -> anyhow::Result<()> {
-    if let Some(M3dSubcommands::Edit(edit_args)) = &args.subcommand {
-        edit_m3d_file(edit_args)?;
+impl std::fmt::Display for Format {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Format::Json => f.write_str("json"),
+            Format::Ron => f.write_str("ron"),
+        }
     }
+}
+
+pub fn run(args: &M3dArgs) -> anyhow::Result<()> {
+    match &args.subcommand {
+        Some(M3dSubcommands::Edit(edit_args)) => edit_m3d_file(edit_args)?,
+        Some(M3dSubcommands::Dump(dump_args)) => dump_m3d_file(dump_args)?,
+        Some(M3dSubcommands::Write(write_args)) => write_m3d_file(write_args)?,
+        None => {}
+    }
+
+    Ok(())
+}
+
+fn dump_m3d_file(args: &DumpM3dArgs) -> anyhow::Result<()> {
+    let file = File::open(&args.m3d_file)?;
+    let m3d = Decoder::new(file).decode()?;
+
+    let as_string = match args.format {
+        Format::Ron => ron::ser::to_string_pretty(&m3d, ron::ser::PrettyConfig::default())?,
+        Format::Json => serde_json::to_string_pretty(&m3d)?,
+    };
+
+    write_output_string(args.output.as_deref(), &as_string)
+}
+
+fn write_m3d_file(args: &WriteM3dArgs) -> anyhow::Result<()> {
+    let s = read_input_to_string(&args.input)?;
+    let m3d: M3d = match args.format {
+        Format::Ron => ron::de::from_str(&s)?,
+        Format::Json => serde_json::from_str(&s)?,
+    };
+
+    let file = File::create(&args.m3d_file)?;
+    Encoder::new(file).encode(&m3d)?;
 
     Ok(())
 }

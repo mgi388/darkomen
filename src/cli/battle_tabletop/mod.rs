@@ -7,6 +7,8 @@ use std::{
 use clap::{Args, Subcommand, ValueEnum};
 use darkomen::battle_tabletop::*;
 
+use super::io::{read_input_to_string, write_output_string};
+
 #[derive(Args)]
 pub struct BattleTabletopArgs {
     #[command(subcommand)]
@@ -16,6 +18,10 @@ pub struct BattleTabletopArgs {
 #[derive(Subcommand)]
 pub enum BattleTabletopSubcommands {
     Edit(EditBattleTabletopArgs),
+    /// Decode a binary battle tabletop file and print its serialized form.
+    Dump(DumpBattleTabletopArgs),
+    /// Encode a serialized battle tabletop description into the binary format.
+    Write(WriteBattleTabletopArgs),
 }
 
 #[derive(Args)]
@@ -34,16 +40,89 @@ pub struct EditBattleTabletopArgs {
     pub format: Format,
 }
 
+#[derive(Args)]
+pub struct DumpBattleTabletopArgs {
+    /// The path to the battle tabletop file to read.
+    #[arg(index = 1)]
+    pub battle_tabletop_file: String,
+
+    /// Output path. Use "-" or omit for stdout.
+    #[arg(short, long)]
+    pub output: Option<String>,
+
+    /// Serialization format.
+    #[arg(short, long, default_value_t = Format::Json)]
+    #[clap(value_enum)]
+    pub format: Format,
+}
+
+#[derive(Args)]
+pub struct WriteBattleTabletopArgs {
+    /// The destination binary battle tabletop file to write.
+    #[arg(index = 1)]
+    pub battle_tabletop_file: String,
+
+    /// Input path containing serialized data. Use "-" for stdin.
+    #[arg(short, long)]
+    pub input: String,
+
+    /// Serialization format of the input.
+    #[arg(short, long, default_value_t = Format::Json)]
+    #[clap(value_enum)]
+    pub format: Format,
+}
+
 #[derive(Clone, ValueEnum)]
 pub enum Format {
     Json,
     Ron,
 }
 
-pub fn run(args: &BattleTabletopArgs) -> anyhow::Result<()> {
-    if let Some(BattleTabletopSubcommands::Edit(edit_args)) = &args.subcommand {
-        edit_battle_tabletop_file(edit_args)?;
+impl std::fmt::Display for Format {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Format::Json => f.write_str("json"),
+            Format::Ron => f.write_str("ron"),
+        }
     }
+}
+
+pub fn run(args: &BattleTabletopArgs) -> anyhow::Result<()> {
+    match &args.subcommand {
+        Some(BattleTabletopSubcommands::Edit(edit_args)) => edit_battle_tabletop_file(edit_args)?,
+        Some(BattleTabletopSubcommands::Dump(dump_args)) => dump_battle_tabletop_file(dump_args)?,
+        Some(BattleTabletopSubcommands::Write(write_args)) => {
+            write_battle_tabletop_file(write_args)?
+        }
+        None => {}
+    }
+
+    Ok(())
+}
+
+fn dump_battle_tabletop_file(args: &DumpBattleTabletopArgs) -> anyhow::Result<()> {
+    let file = File::open(&args.battle_tabletop_file)?;
+    let battle_tabletop = Decoder::new(file).decode()?;
+
+    let as_string = match args.format {
+        Format::Ron => {
+            ron::ser::to_string_pretty(&battle_tabletop, ron::ser::PrettyConfig::default())?
+        }
+        Format::Json => serde_json::to_string_pretty(&battle_tabletop)?,
+    };
+
+    write_output_string(args.output.as_deref(), &as_string)
+}
+
+fn write_battle_tabletop_file(args: &WriteBattleTabletopArgs) -> anyhow::Result<()> {
+    let s = read_input_to_string(&args.input)?;
+    let battle_tabletop: BattleTabletop = match args.format {
+        Format::Ron => ron::de::from_str(&s)?,
+        Format::Json => serde_json::from_str(&s)?,
+    };
+
+    let file = File::create(&args.battle_tabletop_file)?;
+    Encoder::new(file).encode(&battle_tabletop)?;
 
     Ok(())
 }

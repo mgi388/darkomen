@@ -7,6 +7,8 @@ use std::{
 use clap::{Args, Subcommand, ValueEnum};
 use darkomen::project::*;
 
+use super::io::{read_input_to_string, write_output_string};
+
 #[derive(Args)]
 pub struct ProjectArgs {
     #[command(subcommand)]
@@ -16,6 +18,10 @@ pub struct ProjectArgs {
 #[derive(Subcommand)]
 pub enum ProjectSubcommands {
     Edit(EditProjectArgs),
+    /// Decode a binary project file and print its serialized form.
+    Dump(DumpProjectArgs),
+    /// Encode a serialized project description into the binary format.
+    Write(WriteProjectArgs),
 }
 
 #[derive(Args)]
@@ -34,16 +40,85 @@ pub struct EditProjectArgs {
     pub format: Format,
 }
 
+#[derive(Args)]
+pub struct DumpProjectArgs {
+    /// The path to the project file to read.
+    #[arg(index = 1)]
+    pub project_file: String,
+
+    /// Output path. Use "-" or omit for stdout.
+    #[arg(short, long)]
+    pub output: Option<String>,
+
+    /// Serialization format.
+    #[arg(short, long, default_value_t = Format::Json)]
+    #[clap(value_enum)]
+    pub format: Format,
+}
+
+#[derive(Args)]
+pub struct WriteProjectArgs {
+    /// The destination binary project file to write.
+    #[arg(index = 1)]
+    pub project_file: String,
+
+    /// Input path containing serialized data. Use "-" for stdin.
+    #[arg(short, long)]
+    pub input: String,
+
+    /// Serialization format of the input.
+    #[arg(short, long, default_value_t = Format::Json)]
+    #[clap(value_enum)]
+    pub format: Format,
+}
+
 #[derive(Clone, ValueEnum)]
 pub enum Format {
     Json,
     Ron,
 }
 
-pub fn run(args: &ProjectArgs) -> anyhow::Result<()> {
-    if let Some(ProjectSubcommands::Edit(edit_args)) = &args.subcommand {
-        edit_project_file(edit_args)?;
+impl std::fmt::Display for Format {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Format::Json => f.write_str("json"),
+            Format::Ron => f.write_str("ron"),
+        }
     }
+}
+
+pub fn run(args: &ProjectArgs) -> anyhow::Result<()> {
+    match &args.subcommand {
+        Some(ProjectSubcommands::Edit(edit_args)) => edit_project_file(edit_args)?,
+        Some(ProjectSubcommands::Dump(dump_args)) => dump_project_file(dump_args)?,
+        Some(ProjectSubcommands::Write(write_args)) => write_project_file(write_args)?,
+        None => {}
+    }
+
+    Ok(())
+}
+
+fn dump_project_file(args: &DumpProjectArgs) -> anyhow::Result<()> {
+    let file = File::open(&args.project_file)?;
+    let project = Decoder::new(file).decode()?;
+
+    let as_string = match args.format {
+        Format::Ron => ron::ser::to_string_pretty(&project, ron::ser::PrettyConfig::default())?,
+        Format::Json => serde_json::to_string_pretty(&project)?,
+    };
+
+    write_output_string(args.output.as_deref(), &as_string)
+}
+
+fn write_project_file(args: &WriteProjectArgs) -> anyhow::Result<()> {
+    let s = read_input_to_string(&args.input)?;
+    let project: Project = match args.format {
+        Format::Ron => ron::de::from_str(&s)?,
+        Format::Json => serde_json::from_str(&s)?,
+    };
+
+    let file = File::create(&args.project_file)?;
+    Encoder::new(file).encode(&project)?;
 
     Ok(())
 }
