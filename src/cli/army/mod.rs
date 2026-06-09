@@ -7,6 +7,8 @@ use std::{
 use clap::{Args, Subcommand, ValueEnum};
 use darkomen::army::*;
 
+use super::io::{read_input_to_string, write_output_string};
+
 #[derive(Args)]
 pub struct ArmyArgs {
     #[command(subcommand)]
@@ -16,6 +18,10 @@ pub struct ArmyArgs {
 #[derive(Subcommand)]
 pub enum ArmySubcommands {
     Edit(EditArmyArgs),
+    /// Decode a binary army file and print its serialized form.
+    Dump(DumpArmyArgs),
+    /// Encode a serialized army description into the binary format.
+    Write(WriteArmyArgs),
 }
 
 #[derive(Args)]
@@ -34,16 +40,85 @@ pub struct EditArmyArgs {
     pub format: Format,
 }
 
+#[derive(Args)]
+pub struct DumpArmyArgs {
+    /// The path to the army file to read.
+    #[arg(index = 1)]
+    pub army_file: String,
+
+    /// Output path. Use "-" or omit for stdout.
+    #[arg(short, long)]
+    pub output: Option<String>,
+
+    /// Serialization format.
+    #[arg(short, long, default_value_t = Format::Json)]
+    #[clap(value_enum)]
+    pub format: Format,
+}
+
+#[derive(Args)]
+pub struct WriteArmyArgs {
+    /// The destination binary army file to write.
+    #[arg(index = 1)]
+    pub army_file: String,
+
+    /// Input path containing serialized data. Use "-" for stdin.
+    #[arg(short, long)]
+    pub input: String,
+
+    /// Serialization format of the input.
+    #[arg(short, long, default_value_t = Format::Json)]
+    #[clap(value_enum)]
+    pub format: Format,
+}
+
 #[derive(Clone, ValueEnum)]
 pub enum Format {
     Json,
     Ron,
 }
 
-pub fn run(args: &ArmyArgs) -> anyhow::Result<()> {
-    if let Some(ArmySubcommands::Edit(edit_args)) = &args.subcommand {
-        edit_army_file(edit_args)?;
+impl std::fmt::Display for Format {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Format::Json => f.write_str("json"),
+            Format::Ron => f.write_str("ron"),
+        }
     }
+}
+
+pub fn run(args: &ArmyArgs) -> anyhow::Result<()> {
+    match &args.subcommand {
+        Some(ArmySubcommands::Edit(edit_args)) => edit_army_file(edit_args)?,
+        Some(ArmySubcommands::Dump(dump_args)) => dump_army_file(dump_args)?,
+        Some(ArmySubcommands::Write(write_args)) => write_army_file(write_args)?,
+        None => {}
+    }
+
+    Ok(())
+}
+
+fn dump_army_file(args: &DumpArmyArgs) -> anyhow::Result<()> {
+    let file = File::open(&args.army_file)?;
+    let army = Decoder::new(file).decode()?;
+
+    let as_string = match args.format {
+        Format::Ron => ron::ser::to_string_pretty(&army, ron::ser::PrettyConfig::default())?,
+        Format::Json => serde_json::to_string_pretty(&army)?,
+    };
+
+    write_output_string(args.output.as_deref(), &as_string)
+}
+
+fn write_army_file(args: &WriteArmyArgs) -> anyhow::Result<()> {
+    let s = read_input_to_string(&args.input)?;
+    let army: Army = match args.format {
+        Format::Ron => ron::de::from_str(&s)?,
+        Format::Json => serde_json::from_str(&s)?,
+    };
+
+    let file = File::create(&args.army_file)?;
+    Encoder::new(file).encode(&army)?;
 
     Ok(())
 }
