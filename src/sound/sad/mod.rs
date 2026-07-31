@@ -138,7 +138,7 @@ mod tests {
         let mut hasher = Sha256::new();
         hasher.update(wav.as_slice());
         let result = hasher.finalize();
-        let result_str = format!("{result:x}");
+        let result_str = hex::encode(result);
         assert_eq!(
             result_str,
             "28fb332692962c24f137fc6fffadaf47290cc4011c17b2b238c07c1235a108be"

@@ -7,7 +7,7 @@ use core::num::NonZeroU32;
 use bevy_reflect::prelude::*;
 use bitflags::bitflags;
 use num_enum::{IntoPrimitive, TryFromPrimitive};
-use rand::{seq::IndexedRandom as _, Rng};
+use rand::{seq::IndexedRandom as _, Rng, RngExt as _};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
