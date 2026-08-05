@@ -76,6 +76,16 @@ pub struct TextureDescriptor {
 }
 
 impl TextureDescriptor {
+    pub fn new(d: crate::graphics::TextureDescriptor) -> Self {
+        Self {
+            width: d.width as u32,
+            height: d.height as u32,
+            x: d.x,
+            y: d.y,
+            d,
+        }
+    }
+
     /// Returns the size of the texture as u32s.
     #[inline(always)]
     pub fn size(&self) -> UVec2 {

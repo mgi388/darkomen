@@ -262,12 +262,21 @@ pub struct MeetAnimatedSprite {
     pub frame_duration_millis: u32,
 }
 
-#[derive(Clone, Default, Deserialize, Serialize)]
+/// A condition that can be completed or failed during a battle.
+///
+/// Conditions are stored in a fixed-size array of 27 slots, where each slot
+/// represents a specific condition type (e.g., "defeat Carstein", "protect
+/// gold"). The array uses a linked list structure via `next_slot` to track
+/// which conditions were active in a given battle.
+///
+/// Slot 0 serves as the head of the linked list, pointing to the first active
+/// condition. The player's overall victory/defeat status is stored in slot 26.
+#[derive(Clone, Copy, Default, Deserialize, PartialEq, Serialize)]
 #[cfg_attr(feature = "debug", derive(Debug))]
 #[cfg_attr(
     feature = "bevy_reflect",
     derive(Reflect),
-    reflect(Default, Deserialize, Serialize)
+    reflect(Default, Deserialize, PartialEq, Serialize)
 )]
 #[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub struct Condition {
@@ -650,42 +659,6 @@ impl Regiment {
         self.unit_profile.display_name_index
     }
 
-    /// Marks the regiment as active.
-    pub fn mark_active(&mut self) {
-        self.flags.insert(RegimentFlags::ACTIVE);
-    }
-
-    /// Forces the regiment to be deployed.
-    pub fn mark_must_deploy(&mut self) {
-        self.flags.insert(RegimentFlags::MUST_DEPLOY);
-    }
-
-    /// Marks the regiment as temporary.
-    pub fn mark_temporary(&mut self) {
-        self.flags.insert(RegimentFlags::TEMPORARY);
-    }
-
-    /// Returns `true` if the regiment must be deployed.
-    pub fn must_deploy(&self) -> bool {
-        self.flags.contains(RegimentFlags::MUST_DEPLOY)
-    }
-
-    /// Returns `true` if the regiment is active.
-    pub fn is_active(&self) -> bool {
-        self.flags.contains(RegimentFlags::ACTIVE)
-    }
-
-    /// Returns `true` if the regiment is temporary.
-    pub fn is_temporary(&self) -> bool {
-        self.flags.contains(RegimentFlags::TEMPORARY)
-    }
-
-    /// Returns `true` if the regiment is deployable.
-    pub fn is_deployable(&self) -> bool {
-        self.flags.contains(RegimentFlags::ACTIVE)
-            && !self.flags.contains(RegimentFlags::NON_DEPLOYABLE)
-    }
-
     /// Returns the number of units in the regiment that are alive.
     #[inline(always)]
     pub fn alive_unit_count(&self) -> u8 {
@@ -1051,7 +1024,11 @@ bitflags! {
         const NEVER_RALLIES_OR_REGROUPS = 1 << 10;
         /// Permanently follows retreating units.
         const ALWAYS_PURSUES = 1 << 11;
-        /// Steam Tank flag. Can't enter close combat anymore.
+        /// Regiment cannot engage in melee combat. It cannot attack enemy
+        /// regiments in close combat and cannot be attacked by enemy regiments
+        /// in close combat.
+        ///
+        /// Used on the Imperial Steam Tank.
         const ENGINE_OF_WAR_RULE = 1 << 12;
         /// Regiment becomes invulnerable.
         const INDESTRUCTIBLE = 1 << 13;
@@ -1174,6 +1151,7 @@ pub enum WeaponClass {
 pub enum ProjectileClass {
     #[default]
     None,
+    /// Used by Night Goblin archers.
     ShortBow = 7,
     NormalBow = 8,
     ElvenBow = 9,

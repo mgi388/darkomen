@@ -1,7 +1,8 @@
-use adpcm::AdpcmBlock;
 use core::fmt::Debug;
-use pcm::Pcm16Block;
 use std::io;
+
+use adpcm::AdpcmBlock;
+use pcm::Pcm16Block;
 
 pub mod adpcm;
 pub mod pcm;

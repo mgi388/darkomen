@@ -50,6 +50,7 @@ impl ArmyAsset {
 
 /// A [`Handle`] to an [`ArmyAsset`] asset.
 #[derive(Clone, Component, Default, Deref, DerefMut, Eq, From, Hash, PartialEq, Reflect)]
+#[component(immutable)]
 #[cfg_attr(feature = "debug", derive(Debug))]
 #[reflect(Component, Default, Hash, PartialEq)]
 #[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
