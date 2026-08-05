@@ -537,8 +537,6 @@ pub struct Regiment {
     unknown1: [u8; 2],
     pub id: u32,
     pub mage_class: MageClass,
-    /// The regiment's maximum level of armor.
-    pub max_armor: u8,
     pub cost: u16,
     /// The index into the list of sprite sheet file names found in ENGREL.EXE
     /// for the regiment's banner.
@@ -567,10 +565,6 @@ pub struct Regiment {
     /// the regiment has a threat level of 4.
     pub total_experience: u16,
     pub duplicate_id: u8,
-    /// The regiment's minimum or base level of armor.
-    ///
-    /// This is displayed as the gold shields in the troop roster.
-    pub min_armor: u8,
     /// The spell book that is equipped to the regiment. A spell book is one of
     /// the magic items.
     ///
@@ -606,6 +600,27 @@ pub struct Regiment {
     /// total amount of gold captured by the army can be calculated by summing
     /// the gold captured by each regiment.
     pub last_battle_captured_gold: u16,
+    /// The regiment's minimum or base level of armor.
+    ///
+    /// This is used as a lookup for the number of the gold shields to display
+    /// in the troop roster.
+    pub min_armor_level: u8,
+    /// The maximum armor grade (protection tier) the regiment can achieve.
+    ///
+    /// This represents the highest level of armor protection this regiment can
+    /// be upgraded to, measured in armor grades from 0 (no armor) to 5
+    /// (heaviest armor). The value determines how many armor upgrade purchases
+    /// are available in the army book.
+    ///
+    /// Different regiment kinds have different maximum armor grades based on
+    /// their role and physiology:
+    ///
+    /// - Infantry: typically 2.
+    /// - Cavalry: typically 5.
+    ///
+    /// This is independent of which specific armor the regiment currently has
+    /// equipped or can equip.
+    pub max_armor_grade: u8,
     pub purchased_armor: u8,
     pub max_purchasable_armor: u8,
     pub repurchased_unit_count: u8,
@@ -1220,10 +1235,12 @@ pub struct UnitProfile {
     ///
     /// When you sell armor, this goes down by 1 for each armor shield sold.
     ///
-    /// If you have not purchased any armor, this is the same as `min_armor`.
+    /// If you have not purchased any armor, this is the same as
+    /// `min_armor_level`.
     ///
-    /// This is displayed as the silver shields in the troop roster.
-    pub armor: u8,
+    /// This is used as a lookup for the number of the silver shields to display
+    /// in the troop roster.
+    pub armor_level: u8,
     pub weapon_class: WeaponClass,
     pub class: RegimentClass,
     /// A value from 0 to 31, inclusive, that indicates the regiment's threat
