@@ -1,5 +1,6 @@
 mod decoder;
 mod encoder;
+mod file_name_flags;
 
 #[cfg(feature = "bevy_reflect")]
 use bevy_reflect::prelude::*;
@@ -9,6 +10,7 @@ use serde::{Deserialize, Serialize};
 
 pub use decoder::*;
 pub use encoder::*;
+pub use file_name_flags::*;
 
 /// Dark Omen's format for 3D models.
 #[derive(Clone, Default, Deserialize, Serialize)]
