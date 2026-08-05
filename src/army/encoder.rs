@@ -360,7 +360,7 @@ impl<W: Write> Encoder<W> {
         self.writer.write_all(&r.unknown1)?;
         self.writer.write_all(&r.id.to_le_bytes())?;
         self.writer.write_all(&[Into::<u8>::into(r.mage_class)])?;
-        self.writer.write_all(&[r.max_armor])?;
+        self.writer.write_all(&[r.max_armor_grade])?;
         self.writer.write_all(&r.cost.to_le_bytes())?;
         self.writer
             .write_all(&r.banner_sprite_sheet_index.to_le_bytes())?;
@@ -373,7 +373,7 @@ impl<W: Write> Encoder<W> {
         self.write_last_battle_stats(&r.last_battle_stats)?;
         self.writer.write_all(&r.total_experience.to_le_bytes())?;
         self.writer.write_all(&[r.duplicate_id])?;
-        self.writer.write_all(&[r.min_armor])?;
+        self.writer.write_all(&[r.min_armor_level])?;
         self.writer
             .write_all(&Into::<u16>::into(r.spell_book).to_le_bytes())?;
         self.writer.write_all(&r.magic_items[0].to_le_bytes())?;
@@ -414,7 +414,7 @@ impl<W: Write> Encoder<W> {
         self.writer.write_all(&[u.stats.attacks])?;
         self.writer.write_all(&[u.stats.leadership])?;
         self.writer.write_all(&[Into::<u8>::into(u.mount_class)])?;
-        self.writer.write_all(&[u.armor])?;
+        self.writer.write_all(&[u.armor_level])?;
         self.writer.write_all(&[Into::<u8>::into(u.weapon_class)])?;
         self.writer.write_all(&[Into::<u8>::into(u.class)])?;
         self.writer.write_all(&[u.point_value])?;
