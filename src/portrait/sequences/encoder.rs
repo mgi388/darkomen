@@ -59,18 +59,20 @@ impl<W: Write> Encoder<W> {
             Command::Delay { time } => [0x01, *time, 0x00, 0x00],
             Command::EndSequence => [0x02, 0x00, 0x00, 0x00],
             Command::RotateToKeyframe {
-                interpolation,
+                interpolation_mode,
                 time,
                 keyframe_index,
-            } => [0x03, *interpolation, *time, *keyframe_index],
+            } => [0x03, *interpolation_mode, *time, *keyframe_index],
             Command::Eyes { open } => [0x05, if *open { 0x01 } else { 0x00 }, 0x00, 0x00],
-            Command::Mouth { state } => [0x06, *state, 0x00, 0x00],
+            Command::Mouth {
+                encoded_frame: state,
+            } => [0x06, *state, 0x00, 0x00],
             Command::Loop => [0x08, 0x00, 0x00, 0x00],
             Command::LoopWithCounter {
                 counter_high,
                 counter_low,
             } => [0x09, *counter_high, *counter_low, 0x00],
-            Command::StartTalking {
+            Command::StartSpeaking {
                 facial_animation_index,
             } => [0x0A, *facial_animation_index, 0x00, 0x00],
             Command::MouthAnimation {
@@ -78,10 +80,10 @@ impl<W: Write> Encoder<W> {
             } => [0x0B, *facial_animation_index, 0x00, 0x00],
             Command::EndMouthAnimation => [0x0C, 0x00, 0x00, 0x00],
             Command::InitialRotateToKeyframe {
-                interpolation,
+                interpolation_mode,
                 time,
                 keyframe_index,
-            } => [0x13, *interpolation, *time, *keyframe_index],
+            } => [0x13, *interpolation_mode, *time, *keyframe_index],
             Command::Unknown { opcode, data } => [*opcode, data[0], data[1], data[2]],
         };
 

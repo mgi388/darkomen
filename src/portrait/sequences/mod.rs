@@ -53,93 +53,173 @@ pub struct Sequence {
 )]
 #[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub enum Command {
-    /// Delay command - introduces a parallel execution delay.
+    /// Delay command - pauses main sequence execution.
     ///
-    /// The delay is relative to the previous keyframe rotation command. If
-    /// delay time exceeds rotation time, the segment is extended.
+    /// **Timing:** `time` is in arbitrary game ticks (not frames). Dark Omen
+    /// likely ran at ~20 FPS, so scale accordingly for your target frame rate.
+    /// The delay timer decrements by 1 per game tick.
     ///
-    ///   - Byte 1: delay time (same scale as rotation commands).
+    /// **Behavior:** Blocks the main sequence (no new rotation/loop commands
+    /// execute) but facial animations continue independently, creating an
+    /// apparent "parallel" effect.
+    ///
+    /// **Implementation:** For Bevy at 64Hz, multiply by ~3.2x (20 FPS → 64 Hz).
+    /// Make the scale factor configurable and tune by comparing with game videos.
+    ///
+    ///   - Byte 1: delay time in game ticks (0-255).
     Delay { time: u8 },
 
-    /// End of sequence marker - appears before Loop (0x08) command.
+    /// End of sequence marker - prepares sequence for looping.
     ///
-    /// Connected to mouth/sound animation timing. Removing this can cause mouth
-    /// animation to end much earlier.
+    /// Appears before Loop (0x08) command. Connected to mouth/sound animation
+    /// timing - removing this can cause mouth animation to end prematurely.
+    /// The exact mechanism is unclear from the C code but empirically verified.
     EndSequence,
 
     /// Rotate to keyframe (standard).
     ///
-    /// Interpolates body/head rotation to the specified keyframe.
+    /// Interpolates body/head rotation from current pose to target keyframe.
     ///
-    ///   - Byte 1: interpolation control (0x00 or 0x04, affects curve
-    ///     behavior).
-    ///   - Byte 2: animation time/acceleration (0 = no rotation).
-    ///   - Byte 3: target keyframe index.
+    /// **Interpolation:** Controls the rotation curve shape. Research suggests
+    /// TCB splines (Kochanek-Bartels) with different tension/bias parameters:
+    ///   - `0x00`: One curve profile (exact parameters unknown)
+    ///   - `0x04`: Different curve profile (exact parameters unknown)
+    ///
+    /// **Note:** TCB parameters were discovered empirically, not from C code.
+    /// For implementation, start with SLERP (spherical linear interpolation)
+    /// and add curve variations later if needed.
+    ///
+    /// **Timing:** Same scale as Delay command (game ticks at ~20 FPS).
+    ///
+    ///   - Byte 1: interpolation curve type (0x00 or 0x04).
+    ///   - Byte 2: animation time in game ticks (0 = instant/no rotation).
+    ///   - Byte 3: target keyframe index (references .KEY file).
     RotateToKeyframe {
-        interpolation: u8,
+        interpolation_mode: u8,
         time: u8,
         keyframe_index: u8,
     },
 
-    /// Eyes state command.
+    /// Eyes state command - controls eye open/closed state.
     ///
-    /// Controls whether eyes are open or closed.
+    /// **Context-dependent behavior:**
+    ///   - **In main sequences**: Only takes effect when facial animation is
+    ///     active (started by StartSpeaking or MouthAnimation commands).
+    ///     Ignored otherwise.
+    ///   - **In facial sequences (126.SEQ/127.SEQ)**: Sets eye state that
+    ///     persists until the next Eyes command. Each Eyes command executes
+    ///     for 1 tick but the state remains until changed.
+    ///
+    /// **Implementation:** When processing facial animations, set the eye state
+    /// and leave it unchanged until the next Eyes command. Don't reset it every
+    /// frame.
     ///
     ///   - Byte 1: 0x00 = closed, 0x01 = open.
-    ///
-    /// Note: May be ignored if no mouth animation command (0x0A) is present.
     Eyes { open: bool },
 
-    /// Mouth animation command (used in 126.SEQ).
+    /// Mouth state command - sets mouth texture/sprite.
     ///
-    /// Controls mouth movement for facial animation.
+    /// **Timing:** Each Mouth command in facial sequences (126.SEQ/127.SEQ)
+    /// executes for 1 game tick, but the mouth state **persists until the next
+    /// Mouth command**. The facial animation is frame-by-frame data where each
+    /// command specifies the mouth state, but the state doesn't reset between
+    /// frames.
     ///
-    ///   - Byte 1: mouth state (e.g., 0x11 = oow, 0x06/0x02/0x10 = various
-    ///     states).
-    Mouth { state: u8 },
+    /// **State Value Format:** Composed of texture index (low nibble) and flags
+    /// (high nibble):
+    ///   - **Low nibble (0x0F)**: Mouth texture/sprite index (0-5)
+    ///     - 0 = closed
+    ///     - 1 = slightly open
+    ///     - 2 = more open
+    ///   - **High nibble (0xF0)**: Flags or modifiers
+    ///     - 0x10 (bit 4): Possibly emphasis or duration modifier
+    ///
+    /// **Common values:**
+    ///   - 0 (0x00) = closed mouth, no flags
+    ///   - 1 (0x01) = slightly open, no flags
+    ///   - 2 (0x02) = more open, no flags
+    ///   - 16 (0x10) = closed with flag set
+    ///   - 17 (0x11) = slightly open with flag set (possibly "oow" shape)
+    ///
+    /// **Implementation:** Extract texture index with `state & 0x0F` and flags
+    /// with `state & 0xF0`. Set the mouth state and leave it until the next
+    /// Mouth command changes it. At Bevy's 64Hz vs Dark Omen's ~20 FPS, you'll
+    /// need to either play at 3x speed or interpolate between states.
+    ///
+    ///   - Byte 1: encoded mouth frame (high nibble=column, low nibble=row into
+    ///     the texture atlas).
+    Mouth { encoded_frame: u8 },
 
-    /// End of animation set marker - causes the animation set to loop.
+    /// End of sequence marker - triggers looping or completion.
     ///
-    /// Found at the end of animation sets. If the animation was started, it
-    /// will loop back to the beginning.
+    /// When reached, either:
+    ///   - Loops back to start if looping is enabled (flag-controlled)
+    ///   - Marks animation as complete and cleans up state
+    ///
+    /// Found at the end of all sequences. Calls cleanup function which clears
+    /// state flags and removes portrait from active list.
     Loop,
 
-    /// Loop with frame counter.
+    /// Loop with counter - conditional looping based on counter state.
     ///
-    /// Similar to Loop (0x08) but includes counter/state tracking.
+    /// Similar to Loop (0x08) but includes counter/state tracking. The exact
+    /// behavior depends on counter value (stored at portrait state offset 132).
     ///
-    ///   - Byte 1: loop counter (high byte).
-    ///   - Byte 2: loop counter (low byte) or frame to jump to.
+    /// **Note:** Precise semantics unclear from C code - may involve jump
+    /// targets or frame references.
+    ///
+    ///   - Byte 1: counter high byte or state flag.
+    ///   - Byte 2: counter low byte or jump target.
     LoopWithCounter { counter_high: u8, counter_low: u8 },
 
-    /// Start talking - triggers mouth animation and audio.
+    /// Start speaking - triggers facial animation AND audio playback.
     ///
-    /// Uses mouth animation sequence (126.SEQ or 127.SEQ in battle) with audio
-    /// playback.
+    /// **This is the only command that triggers audio.** References a facial
+    /// animation sequence (from 126.SEQ for cutscenes, 127.SEQ for battle)
+    /// and starts audio playback via DirectSound.
     ///
-    ///   - Byte 1: facial animation sequence index to use.
+    /// **Behavior:** Sets audio flags (bits 4-5 at offset 130) and calls audio
+    /// start function. Facial animation can loop until audio ends or stop when
+    /// sound finishes (flag-controlled).
     ///
-    /// May be overridden to loop while animation plays or stop when sound ends.
-    StartTalking { facial_animation_index: u8 },
+    ///   - Byte 1: facial animation sequence index (0-31 for 126.SEQ, 0-15 for
+    ///     127.SEQ).
+    StartSpeaking { facial_animation_index: u8 },
 
-    /// Mouth animation without audio.
+    /// Mouth animation without audio - silent facial animation.
     ///
-    /// Similar to StartTalking (0x0A) but does not trigger audio playback.
+    /// **Identical to StartSpeaking (0x0A) except NO audio is triggered.**
+    /// Useful for idle animations, background character movement, or when
+    /// audio is handled separately.
     ///
-    ///   - Byte 1: facial animation sequence index to use.
+    ///   - Byte 1: facial animation sequence index (0-31 for 126.SEQ, 0-15 for
+    ///     127.SEQ).
     MouthAnimation { facial_animation_index: u8 },
 
-    /// End mouth animation.
+    /// End mouth animation - stops active facial animation.
     ///
-    /// Stops the currently playing facial/mouth animation.
+    /// Terminates the currently playing facial animation (started by
+    /// StartSpeaking or MouthAnimation). Does not affect audio playback.
     EndMouthAnimation,
 
-    /// Rotate to keyframe (initial) - same as 0x03 but only appears first.
+    /// Rotate to keyframe (initial) - first command marker.
     ///
-    /// Identical to [`Command::RotateToKeyframe`] but used as the first command
-    /// in a sequence. The 0x13 opcode only occurs as the first command.
+    /// **Functionally identical to [`Command::RotateToKeyframe`]** but with a
+    /// different opcode (0x13 vs 0x03). In the C code, both opcodes call the
+    /// same rotation function - there is no behavioral difference.
+    ///
+    /// **Purpose:** File format marker. The 0x13 opcode **only appears as the
+    /// first command** in a sequence, making it easy to identify sequence
+    /// boundaries when parsing raw binary data.
+    ///
+    /// **Implementation:** Treat identically to RotateToKeyframe but preserve
+    /// the distinction for accurate encoding/decoding.
+    ///
+    ///   - Byte 1: interpolation curve type (0x00 or 0x04).
+    ///   - Byte 2: animation time in game ticks.
+    ///   - Byte 3: target keyframe index.
     InitialRotateToKeyframe {
-        interpolation: u8,
+        interpolation_mode: u8,
         time: u8,
         keyframe_index: u8,
     },
