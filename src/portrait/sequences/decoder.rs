@@ -88,20 +88,22 @@ impl<R: Read + Seek> Decoder<R> {
             0x01 => Command::Delay { time: byte1 },
             0x02 => Command::EndSequence,
             0x03 => Command::RotateToKeyframe {
-                interpolation: byte1,
+                interpolation_mode: byte1,
                 time: byte2,
                 keyframe_index: byte3,
             },
             0x05 => Command::Eyes {
                 open: byte1 == 0x01,
             },
-            0x06 => Command::Mouth { state: byte1 },
+            0x06 => Command::Mouth {
+                encoded_frame: byte1,
+            },
             0x08 => Command::Loop,
             0x09 => Command::LoopWithCounter {
                 counter_high: byte1,
                 counter_low: byte2,
             },
-            0x0A => Command::StartTalking {
+            0x0A => Command::StartSpeaking {
                 facial_animation_index: byte1,
             },
             0x0B => Command::MouthAnimation {
@@ -109,7 +111,7 @@ impl<R: Read + Seek> Decoder<R> {
             },
             0x0C => Command::EndMouthAnimation,
             0x13 => Command::InitialRotateToKeyframe {
-                interpolation: byte1,
+                interpolation_mode: byte1,
                 time: byte2,
                 keyframe_index: byte3,
             },
