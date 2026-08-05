@@ -981,7 +981,7 @@ mod tests {
         println!("\n=== CONDITION SUMMARY ===\n");
 
         for (id, files) in &condition_data {
-            let obj_name = match *id {
+            let name = match *id {
                 ELIMINATE_ALL_ENEMIES_ID => "Eliminate all enemies",
                 KILL_DREAD_KING_ID => "Kill Dread King",
                 CRITICAL_REGIMENT_LOSE_CONDITION_ID => "Critical regiment lose condition",
@@ -1000,7 +1000,7 @@ mod tests {
             println!(
                 "Condition ID {}: {} (used in {} files)",
                 id,
-                obj_name,
+                name,
                 files.len()
             );
 
@@ -1030,8 +1030,8 @@ mod tests {
         println!("{:<5} {:<45} {:<10}", "ID", "Name", "Count");
         println!("{}", "-".repeat(60));
 
-        for (obj_id, files) in &condition_data {
-            let obj_name = match *obj_id {
+        for (id, files) in &condition_data {
+            let name = match *id {
                 ELIMINATE_ALL_ENEMIES_ID => "Eliminate all enemies",
                 KILL_DREAD_KING_ID => "Kill Dread King",
                 CRITICAL_REGIMENT_LOSE_CONDITION_ID => "Critical regiment lose condition",
@@ -1047,7 +1047,7 @@ mod tests {
                 _ => "Unknown",
             };
 
-            println!("{:<5} {:<45} {:<10}", obj_id, obj_name, files.len());
+            println!("{:<5} {:<45} {:<10}", id, name, files.len());
         }
     }
 
