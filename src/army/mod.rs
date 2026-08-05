@@ -754,15 +754,15 @@ bitflags! {
         /// and they battled fine and then the flag stayed off after the battle
         /// was finished (i.e., it wasn't reinstated after the battle).
         const UNKNOWN_REGIMENT_FLAG_4 = 1 << 4;
-        /// Set if the regiment is heavily damaged. Heavily damaged regiments
-        /// result in the leader's portrait being shown in the campaign with
-        /// blood on their face.
+        /// Set if the regiment is injured. Injured regiments result in the
+        /// leader's portrait being shown in the campaign with blood on their
+        /// face.
         ///
         /// This flag is cleared when entering the travel map, likely to
         /// represent that time has passed during the journey and the regiment
-        /// is no longer visibly heavily damaged, even if it may still be
+        /// is no longer visibly injured, even if it may still be
         /// under-strength.
-        const HEAVILY_DAMAGED = 1 << 5;
+        const INJURED = 1 << 5;
         /// Set if the regiment is non-deployable. Non-deployable regiments
         /// cannot be deployed to the battlefield and do not appear in the army
         /// reserve. This overrides the [`RegimentFlags::ACTIVE`] flag when
