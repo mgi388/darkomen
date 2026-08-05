@@ -134,8 +134,10 @@ pub struct Instance {
     pub unknown3: i32,
 }
 
-#[derive(Clone, Serialize)]
+#[derive(Clone, Copy, Serialize)]
 #[cfg_attr(feature = "debug", derive(Debug))]
+#[cfg_attr(feature = "bevy_reflect", derive(Reflect))]
+#[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
 pub enum Heightmap {
     /// The heightmap that includes the base terrain and furniture instances
     /// like buildings.
