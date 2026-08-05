@@ -1,9 +1,11 @@
 mod decoder;
 mod encoder;
 
-use super::audio::{Block, BlockTrait};
-use hound::{SampleFormat, WavSpec, WavWriter};
 use std::io;
+
+use hound::{SampleFormat, WavSpec, WavWriter};
+
+use super::audio::{Block, BlockTrait};
 
 pub use decoder::{DecodeError, Decoder};
 pub use encoder::{EncodeError, Encoder};
