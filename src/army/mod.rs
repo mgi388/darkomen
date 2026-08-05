@@ -270,20 +270,89 @@ pub struct MeetAnimatedSprite {
     reflect(Default, Deserialize, Serialize)
 )]
 #[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
-pub struct Objective {
-    pub unknown1: i32,
-    /// The ID of the objective.
+pub struct Condition {
+    /// Whether the condition slot was active/in-use in the last battle.
     ///
-    /// Interesting IDs:
+    /// Set to true when a condition is activated via the battle script, false
+    /// otherwise.
+    pub active_last_battle: bool,
+    /// Index of the next condition in the linked list chain.
     ///
-    /// - 1: Indicates if the enemy was victorious. When `result` is 1, the
-    ///   enemy won the battle. When `result` is 0, the player won the battle.
-    pub id: i32,
-    pub unknown2: i32,
-    /// The result of the objective.
-    pub result: i32,
-    pub unknown4: i32,
-    pub unknown5: i32,
+    /// Forms a singly-linked list of active conditions. A value of 0 indicates
+    /// the end of the chain.
+    pub next_slot: i32,
+    pub flags: ConditionFlags,
+    /// The condition result.
+    ///
+    /// The value depends on the condition ID.
+    ///
+    /// For example, for condition 26 (the primary battle condition), this
+    /// determines overall victory (when false) or defeat (when true). For
+    /// conditions 2, 5, 8 and 9 (kill specific enemy regiment), this determines
+    /// if the enemy regiment was killed (when true), or survived (when false).
+    pub result: bool,
+    /// First formatting argument when displaying condition text.
+    ///
+    /// Could be used by some condition messages that include dynamic values
+    /// (e.g., kill counts, losses suffered).
+    pub arg1: i32,
+    /// Second formatting argument when displaying condition text.
+    ///
+    /// Could be used by some condition messages that include dynamic values.
+    pub arg2: i32,
+}
+
+bitflags! {
+    #[repr(transparent)]
+    #[derive(Clone, Copy, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
+    #[cfg_attr(feature = "debug", derive(Debug))]
+    #[cfg_attr(feature = "bevy_reflect", derive(Reflect), reflect(opaque), reflect(Default, Deserialize, Hash, PartialEq, Serialize))]
+    #[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
+    pub struct ConditionFlags: u32 {
+        /// No flags are set. This is the default state.
+        const NONE = 0;
+        /// End battle immediately when the condition is met.
+        ///
+        /// Found on conditions 1 (all enemy regiments dead), 3 (critical
+        /// regiment), and 26 (all player regiments dead). When the condition
+        /// handler returns true, the battle ends immediately. Victory/defeat is
+        /// determined by which condition triggered:
+        ///
+        /// - Condition 1 met → Victory.
+        /// - Condition 26 met → Defeat.
+        /// - Condition 3 met → Sets condition 1 or 26 based on alignment.
+        const END_BATTLE_WHEN_MET = 1 << 0;
+        /// Check every frame during active battle.
+        ///
+        /// Used for conditions that need real-time monitoring like regiment
+        /// deaths, unit counts, or combat conditions. Stops checking once
+        /// battle end message is shown, unless
+        /// [`Self::ALLOW_CHECK_AFTER_BATTLE_END`] is also set.
+        const CHECK_DURING_BATTLE = 1 << 1;
+        /// Unknown. Only found on condition 26.
+        const UNKNOWN_FLAG_3 = 1 << 2;
+        /// Check once at battle conclusion.
+        ///
+        /// Called after combat ends but before the debrief screen. Used for
+        /// conditions that aggregate battle results like casualty percentages,
+        /// treasure collection, or kill counts.
+        const CHECK_AT_BATTLE_END = 1 << 3;
+        /// Allow checking after the battle end message is shown.
+        ///
+        /// Normally, conditions with [`Self::CHECK_DURING_BATTLE`] stop
+        /// evaluating once the battle end is triggered. This flag overrides
+        /// that behavior for the condition, allowing continued evaluation. Used
+        /// for scripted events that trigger after victory/defeat like the
+        /// fireworks in B1_05.
+        const ALLOW_CHECK_AFTER_BATTLE_END = 1 << 4;
+        /// Show condition result on the battle debrief screen.
+        ///
+        /// Shows the condition's completion status and any associated message
+        /// (e.g., "Count Carstein is destroyed, as are his plans for the
+        /// Jewel."). Uses [`Condition::arg1`] and [`Condition::arg2`] for
+        /// string formatting if needed.
+        const SHOW_RESULT_ON_DEBRIEF = 1 << 5;
+    }
 }
 
 #[derive(Clone, Default, Deserialize, Serialize)]
@@ -298,7 +367,7 @@ pub struct SaveGameFooter {
     unknown1: Vec<u8>,
     unknown1_as_u16s: Vec<u16>, // TODO: Remove, debug only.
     unknown1_as_u32s: Vec<u32>, // TODO: Remove, debug only.
-    pub objectives: Vec<Objective>,
+    pub conditions: Vec<Condition>,
     /// A history of path indices the player has traveled, accumulated across
     /// travel map screens to display the full journey, e.g., from Altdorf, over
     /// the Black Mountains, through Teufelbad and to the current location.
@@ -1530,8 +1599,8 @@ mod tests {
         );
 
         let save_game_footer = a.save_game_footer.as_ref().unwrap();
-        assert_eq!(save_game_footer.objectives.len(), 27);
-        assert_eq!(save_game_footer.objectives.first().unwrap().id, 26);
+        assert_eq!(save_game_footer.conditions.len(), 27);
+        assert_eq!(save_game_footer.conditions.first().unwrap().next_slot, 26);
         assert_eq!(save_game_footer.travel_path_history, vec![0, 1]);
 
         assert_eq!(a.regiments[0].last_battle_stats.unit_killed_count, 3);
@@ -1768,13 +1837,16 @@ mod tests {
             let file = File::open(path).unwrap();
             let army = Decoder::new(file).decode().unwrap();
 
-            // Every same game should at least have the following objectives.
+            // Every same game should at least have the following conditions.
             let save_game_footer = army.save_game_footer.as_ref().unwrap();
-            let required_objective_ids = [1, 3, 4, 7, 26];
-            for id in required_objective_ids {
+            let required_condition_ids = [1, 3, 4, 7, 26];
+            for id in required_condition_ids {
                 assert!(
-                    save_game_footer.objectives.iter().any(|obj| obj.id == id),
-                    "Save game {:?} is missing required objective ID: {}",
+                    save_game_footer
+                        .conditions
+                        .iter()
+                        .any(|c| c.next_slot == id),
+                    "Save game {:?} is missing required condition ID: {}",
                     path.file_name().unwrap(),
                     id
                 );

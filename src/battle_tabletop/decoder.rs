@@ -85,7 +85,7 @@ impl<R: Read + Seek> Decoder<R> {
             unknown2,
             unknown3,
         ) = self.read_battle_header()?;
-        let objectives = self.read_objectives()?;
+        let conditions = self.read_conditions()?;
         let (obstacles, obstacles_unknown1) = self.read_obstacles()?;
         let regions = self.read_regions()?;
         let nodes = self.read_nodes()?;
@@ -100,7 +100,7 @@ impl<R: Read + Seek> Decoder<R> {
             unknown1,
             unknown2,
             unknown3,
-            objectives,
+            conditions,
             obstacles,
             obstacles_unknown1,
             regions,
@@ -140,25 +140,25 @@ impl<R: Read + Seek> Decoder<R> {
         ))
     }
 
-    fn read_objectives(&mut self) -> Result<Vec<Objective>, DecodeError> {
+    fn read_conditions(&mut self) -> Result<Vec<Condition>, DecodeError> {
         let size = self.read_object_header(2)?;
 
-        let mut objectives = Vec::new();
+        let mut conditions = Vec::new();
 
         let mut i = 0;
         while i < size {
             let tuple = self.read_int_tuple_property::<i32>(3, 3)?;
 
-            objectives.push(Objective {
-                id: tuple[0],
-                value1: tuple[1],
-                value2: tuple[2],
+            conditions.push(Condition {
+                id: tuple[0] as u32,
+                arg1: tuple[1],
+                arg2: tuple[2],
             });
 
             i += 20;
         }
 
-        Ok(objectives)
+        Ok(conditions)
     }
 
     fn read_obstacles(&mut self) -> Result<(Vec<Obstacle>, i32), DecodeError> {

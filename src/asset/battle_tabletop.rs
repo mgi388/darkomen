@@ -42,8 +42,8 @@ impl BattleTabletopAsset {
     }
 
     #[inline(always)]
-    pub fn objectives(&self) -> &[Objective] {
-        &self.source.objectives
+    pub fn conditions(&self) -> &[Condition] {
+        &self.source.conditions
     }
 
     #[inline(always)]
