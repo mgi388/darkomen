@@ -44,8 +44,8 @@ pub struct BattleTabletop {
     unknown1: String,
     unknown2: String,
     unknown3: Vec<i32>,
-    /// A list of objectives relevant to the battle.
-    pub objectives: Vec<Objective>,
+    /// A list of conditions relevant to the battle.
+    pub conditions: Vec<Condition>,
     pub obstacles: Vec<Obstacle>,
     obstacles_unknown1: i32,
     pub regions: Vec<Region>,
@@ -53,41 +53,41 @@ pub struct BattleTabletop {
 }
 
 /// Win condition: Eliminate all enemy regiments.
-pub const ELIMINATE_ALL_ENEMIES_ID: i32 = 1;
+pub const ELIMINATE_ALL_ENEMIES_ID: u32 = 1;
 
 /// Win condition: Kill specific enemy regiment (Dread King).
 ///
 /// Used in B5_01 and B5_01B.
-pub const KILL_DREAD_KING_ID: i32 = 2;
+pub const KILL_DREAD_KING_ID: u32 = 2;
 
 /// Lose condition: Critical regiment must not be captured/killed.
-pub const CRITICAL_REGIMENT_LOSE_CONDITION_ID: i32 = 3;
+pub const CRITICAL_REGIMENT_LOSE_CONDITION_ID: u32 = 3;
 
 /// Configuration: Spatial sound effects preset.
-pub const SPATIAL_SOUND_EFFECT_PRESET_ID: i32 = 4;
+pub const SPATIAL_SOUND_EFFECT_PRESET_ID: u32 = 4;
 
 /// Win condition: Kill specific enemy regiment (Mannfred von Carstein).
 ///
 /// Used in B2_08.
-pub const KILL_MANNFRED_VON_CARSTEIN_ID: i32 = 5;
+pub const KILL_MANNFRED_VON_CARSTEIN_ID: u32 = 5;
 
 /// Scripted event: Victory fireworks celebration.
 ///
 /// Used in B1_05 for end-of-battle celebration.
-pub const FIREWORKS_ID: i32 = 6;
+pub const FIREWORKS_ID: u32 = 6;
 
 /// Configuration: Initial regiment orientation/facing direction.
-pub const INITIAL_REGIMENT_ORIENTATION_ID: i32 = 7;
+pub const INITIAL_REGIMENT_ORIENTATION_ID: u32 = 7;
 
 /// Win condition: Kill specific enemy regiment (Hand of Nagash).
 ///
 /// Used in B3_09.
-pub const KILL_HAND_OF_NAGASH_ID: i32 = 8;
+pub const KILL_HAND_OF_NAGASH_ID: u32 = 8;
 
 /// Win condition: Kill specific enemy regiment (Black Grail).
 ///
 /// Used in B4_10.
-pub const KILL_BLACK_GRAIL_ID: i32 = 9;
+pub const KILL_BLACK_GRAIL_ID: u32 = 9;
 
 /// Post-battle metric: Gold collected by specified alignment.
 ///
@@ -96,17 +96,17 @@ pub const KILL_BLACK_GRAIL_ID: i32 = 9;
 /// Typically checks enemy alignment with threshold 0 (did enemies loot
 /// anything?).
 ///
-/// TODO: Confirm this objective, it's probably not right. Update docs below
+/// TODO: Confirm this condition, it's probably not right. Update docs below
 /// too.
-pub const GOLD_COLLECTION_METRIC_ID: i32 = 10;
+pub const GOLD_COLLECTION_METRIC_ID: u32 = 10;
 
 /// Win condition: Inflict percentage casualties on enemy forces.
-pub const ENEMY_CASUALTIES_ID: i32 = 11;
+pub const ENEMY_CASUALTIES_ID: u32 = 11;
 
 /// Lose condition: All player regiments eliminated.
-pub const PLAYER_ELIMINATION_LOSE_CONDITION_ID: i32 = 26;
+pub const PLAYER_ELIMINATION_LOSE_CONDITION_ID: u32 = 26;
 
-/// Battle objective/condition definition.
+/// Battle condition definition.
 ///
 /// These represent various battle conditions, triggers, and configuration
 /// parameters.
@@ -133,30 +133,30 @@ pub const PLAYER_ELIMINATION_LOSE_CONDITION_ID: i32 = 26;
     reflect(Default, Deserialize, Serialize)
 )]
 #[cfg_attr(all(feature = "bevy_reflect", feature = "debug"), reflect(Debug))]
-pub struct Objective {
-    /// The ID of the objective. This determines which handler function
-    /// processes the objective and what the values mean.
+pub struct Condition {
+    /// The ID of the condition. This determines which handler function
+    /// processes the condition and what the values mean.
     ///
-    /// Used objective IDs:
+    /// Used condition IDs:
     ///
     /// - 1: Eliminate all enemy regiments (win condition).
-    ///   - `value1`: Unused.
-    ///   - `value2`: Unused.
+    ///   - `arg1`: Unused.
+    ///   - `arg2`: Unused.
     ///
     /// - 2, 5, 8, 9: Kill specific enemy regiment (win condition).
-    ///   - `value1`: Target regiment ID (e.g., 257 = "Hand of Nagash', 258 =
+    ///   - `arg1`: Target regiment ID (e.g., 257 = "Hand of Nagash', 258 =
     ///     "Dread King", 260 = "Mannfred von Carstein").
-    ///   - `value2`: Unused.
+    ///   - `arg2`: Unused.
     ///   - Note: Different IDs used for different battles/regiments.
     ///
     /// - 3: Critical regiment lose condition.
-    ///   - `value1`: Critical regiment ID (e.g., 1 = "Morgan Bernhardt").
-    ///   - `value2`: Unused.
+    ///   - `arg1`: Critical regiment ID (e.g., 1 = "Morgan Bernhardt").
+    ///   - `arg2`: Unused.
     ///   - If this regiment dies and is enemy-aligned: player wins.
     ///   - If this regiment dies and is player-aligned: player loses.
     ///
     /// - 4: Spatial sound effect configuration.
-    ///   - `value1`: Indicates the preset of sound effect packets to load. The
+    ///   - `arg1`: Indicates the preset of sound effect packets to load. The
     ///     battle can only spawn spatial sound effects from packets that are
     ///     part of this preset. Known presets:
     ///     - 1: "Forest River": Loads STREAM.H, TWITTER.H and WATAFALL.H.
@@ -167,51 +167,50 @@ pub struct Objective {
     ///     - 6: "Underground": Loads CAVERN.H.
     ///     - 7: "Mountain Stream": Loads MOUNTAIN.H, STREAM.H and WATAFALL.H.
     ///     - 8: "Mountain": Loads MOUNTAIN.H.
-    ///   - `value2`: Unused.
+    ///   - `arg2`: Unused.
     ///
     /// - 6: Victory fireworks.
-    ///   - `value1`: Number of firework particle effects to spawn.
-    ///   - `value2`: Starting node index for firework particle effect spawn
+    ///   - `arg1`: Number of firework particle effects to spawn.
+    ///   - `arg2`: Starting node index for firework particle effect spawn
     ///     positions.
     ///   - Spawns particle effects at consecutive node positions.
     ///
     /// - 7: Initial regiment orientation.
-    ///   - `value1`: Player regiment rotation (0-511, 0=north, 256=south).
-    ///   - `value2`: Enemy regiment rotation (0-511, 0=north, 256=south).
+    ///   - `arg1`: Player regiment rotation (0-511, 0=north, 256=south).
+    ///   - `arg2`: Enemy regiment rotation (0-511, 0=north, 256=south).
     ///
     /// - 10: Gold collection metric (post-battle evaluation).
-    ///   - `value1`: Alignment to check (0=Good, 64=Neutral, 128=Evil).
-    ///   - `value2`: Gold threshold.
+    ///   - `arg1`: Alignment to check (0=Good, 64=Neutral, 128=Evil).
+    ///   - `arg2`: Gold threshold.
     ///   - Evaluates after battle: Checks if specified alignment collected more
     ///     gold than threshold.
     ///   - Includes both carried gold and uncollected ground items.
-    ///   - Likely affects victory rating or determines if mission objectives
+    ///   - Likely affects victory rating or determines if mission conditions
     ///     were "perfectly" completed.
     ///   - Example: Check if enemies looted any treasure (threshold=0) to
     ///     determine "flawless victory" status.
     ///
     /// - 11: Enemy casualties percentage (win condition).
-    ///   - `value1`: Required casualty percentage (e.g., 75 = 75%).
-    ///   - `value2`: Initial enemy count (calculated at battle start).
+    ///   - `arg1`: Required casualty percentage (e.g., 75 = 75%).
+    ///   - `arg2`: Initial enemy count (calculated at battle start).
     ///
     /// - 12: Used in B5_01 and B5_01B but the handler does nothing so this was
     ///   likely unused/unfinished/cut content.
     ///
     /// - 26: Player elimination (lose condition).
-    ///   - `value1`: Current alive player regiment count (updated during
-    ///     battle).
-    ///   - `value2`: Initial player regiment count.
-    ///   - Always present in single-player battles.
-    pub id: i32,
+    ///   - `arg1`: Number of player regiments that died during the battle
+    ///     (updated during battle).
+    ///   - `arg2`: Unknown.
+    pub id: u32,
 
-    /// First parameter value. Meaning depends on objective ID.
-    pub value1: i32,
+    /// First parameter value. Meaning depends on condition ID.
+    pub arg1: i32,
 
-    /// Second parameter value. Meaning depends on objective ID.
-    pub value2: i32,
+    /// Second parameter value. Meaning depends on condition ID.
+    pub arg2: i32,
 }
 
-impl Objective {
+impl Condition {
     /// Returns the rotation in radians. 0 is north (up), π/2 is east (right), π
     /// is south (down), and 3π/2 is west (left).
     #[inline]
@@ -513,7 +512,7 @@ pub struct Node {
     /// direction is instead determined by the
     /// [`INITIAL_REGIMENT_ORIENTATION_ID`] battle condition. Use
     /// [`Node::rotation_radians`] or [`Node::rotation_degrees`] to convert the
-    /// raw objective rotation values to radians or degrees.
+    /// raw rotation value to radians or degrees.
     pub rotation: i32,
     pub node_id: u32,
     /// The ID of the regiment the node belongs to. Corresponds to the ID field
@@ -833,7 +832,7 @@ mod tests {
             }
 
             // Every 1-player battle tabletop should at least have the following
-            // objectives.
+            // conditions.
             for id in [
                 ELIMINATE_ALL_ENEMIES_ID,
                 CRITICAL_REGIMENT_LOSE_CONDITION_ID,
@@ -855,15 +854,15 @@ mod tests {
                 }
 
                 assert!(
-                    b.objectives.iter().any(|obj| obj.id == id),
-                    "Battle tabletop {:?} is missing required objective ID: {}",
+                    b.conditions.iter().any(|c| c.id == id),
+                    "Battle tabletop {:?} is missing required condition ID: {}",
                     path.file_name().unwrap(),
                     id
                 );
             }
 
             // Every multiplayer battle tabletop should have the following
-            // objectives.
+            // conditions.
             for id in [
                 ELIMINATE_ALL_ENEMIES_ID,
                 SPATIAL_SOUND_EFFECT_PRESET_ID,
@@ -876,8 +875,8 @@ mod tests {
                 }
 
                 assert!(
-                    b.objectives.iter().any(|obj| obj.id == id),
-                    "Battle tabletop {:?} is missing required objective ID: {}",
+                    b.conditions.iter().any(|c| c.id == id),
+                    "Battle tabletop {:?} is missing required condition ID: {}",
                     path.file_name().unwrap(),
                     id
                 );
@@ -926,7 +925,7 @@ mod tests {
     }
 
     #[test]
-    fn test_summarize_objectives() {
+    fn test_summarize_conditions() {
         use std::collections::{BTreeMap, BTreeSet};
 
         let d: PathBuf = [
@@ -937,8 +936,8 @@ mod tests {
         .iter()
         .collect();
 
-        // Map of objective_id -> file -> set of (value1, value2) pairs.
-        let mut objective_data: BTreeMap<i32, BTreeMap<String, BTreeSet<(i32, i32)>>> =
+        // Map of condition_id -> file -> set of (arg1, arg2) pairs.
+        let mut condition_data: BTreeMap<u32, BTreeMap<String, BTreeSet<(i32, i32)>>> =
             BTreeMap::new();
 
         fn visit_dirs(dir: &Path, cb: &mut dyn FnMut(&Path)) {
@@ -968,21 +967,21 @@ mod tests {
             let b = Decoder::new(file).decode().unwrap();
             let file_name = path.file_name().unwrap().to_string_lossy().to_string();
 
-            for obj in &b.objectives {
-                objective_data
-                    .entry(obj.id)
+            for c in &b.conditions {
+                condition_data
+                    .entry(c.id)
                     .or_default()
                     .entry(file_name.clone())
                     .or_default()
-                    .insert((obj.value1, obj.value2));
+                    .insert((c.arg1, c.arg2));
             }
         });
 
         // Print summary table.
-        println!("\n=== OBJECTIVE SUMMARY ===\n");
+        println!("\n=== CONDITION SUMMARY ===\n");
 
-        for (obj_id, files) in &objective_data {
-            let obj_name = match *obj_id {
+        for (id, files) in &condition_data {
+            let obj_name = match *id {
                 ELIMINATE_ALL_ENEMIES_ID => "Eliminate all enemies",
                 KILL_DREAD_KING_ID => "Kill Dread King",
                 CRITICAL_REGIMENT_LOSE_CONDITION_ID => "Critical regiment lose condition",
@@ -999,8 +998,8 @@ mod tests {
             };
 
             println!(
-                "Objective ID {}: {} (used in {} files)",
-                obj_id,
+                "Condition ID {}: {} (used in {} files)",
+                id,
                 obj_name,
                 files.len()
             );
@@ -1027,11 +1026,11 @@ mod tests {
         }
 
         // Print a simple frequency table.
-        println!("\n=== OBJECTIVE FREQUENCY ===\n");
+        println!("\n=== CONDITION FREQUENCY ===\n");
         println!("{:<5} {:<45} {:<10}", "ID", "Name", "Count");
         println!("{}", "-".repeat(60));
 
-        for (obj_id, files) in &objective_data {
+        for (obj_id, files) in &condition_data {
             let obj_name = match *obj_id {
                 ELIMINATE_ALL_ENEMIES_ID => "Eliminate all enemies",
                 KILL_DREAD_KING_ID => "Kill Dread King",

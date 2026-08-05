@@ -65,7 +65,7 @@ impl<W: Write> Encoder<W> {
     pub fn encode(&mut self, battle_tabletop: &BattleTabletop) -> Result<(), EncodeError> {
         self.write_btb_file_type()?;
         self.write_battle_header(battle_tabletop)?;
-        self.write_objectives(&battle_tabletop.objectives)?;
+        self.write_conditions(&battle_tabletop.conditions)?;
         self.write_obstacles(battle_tabletop, &battle_tabletop.obstacles)?;
         self.write_regions(&battle_tabletop.regions)?;
         self.write_nodes(&battle_tabletop.nodes)?;
@@ -97,12 +97,12 @@ impl<W: Write> Encoder<W> {
         Ok(())
     }
 
-    fn write_objectives(&mut self, objectives: &[Objective]) -> Result<(), EncodeError> {
-        let size = objectives.len() * 20; // objectives
+    fn write_conditions(&mut self, conditions: &[Condition]) -> Result<(), EncodeError> {
+        let size = conditions.len() * 20;
         self.write_object_header(2, size)?;
 
-        for objective in objectives {
-            self.write_int_tuple_property(3, &[objective.id, objective.value1, objective.value2])?;
+        for c in conditions {
+            self.write_int_tuple_property(3, &[c.id as i32, c.arg1, c.arg2])?;
         }
         Ok(())
     }
